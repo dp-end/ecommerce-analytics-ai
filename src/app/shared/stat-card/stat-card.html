@@ -1,0 +1,19 @@
+<div class="stat-card">
+  <div class="stat-icon" [style.background]="getAccentStyle()">
+    <span class="icon-emoji" [style.color]="getIconColor()">{{ icon }}</span>
+  </div>
+  <div class="stat-body">
+    <div class="stat-title">{{ title }}</div>
+    <div class="stat-value">{{ value }}</div>
+    <div class="stat-footer">
+      @if (change) {
+        <span class="stat-change" [class.positive]="isPositive()" [class.negative]="isNegative()">
+          {{ isPositive() ? '▲' : isNegative() ? '▼' : '' }} {{ change }}
+        </span>
+      }
+      @if (subtitle) {
+        <span class="stat-subtitle">{{ subtitle }}</span>
+      }
+    </div>
+  </div>
+</div>

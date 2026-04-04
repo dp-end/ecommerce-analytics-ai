@@ -1,0 +1,86 @@
+<div class="page fade-in">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Customer Reviews</h2>
+      <p class="page-subtitle">Monitor and respond to customer feedback</p>
+    </div>
+    <button class="btn btn-secondary btn-sm">📥 Export Reviews</button>
+  </div>
+
+  <!-- Summary + Chart -->
+  <div class="reviews-grid">
+    <!-- Rating Summary -->
+    <div class="card rating-summary">
+      <div class="card-title" style="margin-bottom:1rem">Rating Overview</div>
+      <div class="rating-big">
+        <div class="big-rating">{{ avgRating() }}</div>
+        <div class="stars-big">★★★★★</div>
+        <div class="total-reviews">Based on {{ reviews().length }} reviews</div>
+      </div>
+      <div class="rating-breakdown">
+        @for (bar of ratingBars(); track bar.star) {
+          <div class="rating-bar-row">
+            <span class="star-label">{{ bar.star }}★</span>
+            <div class="rating-bar-track">
+              <div class="rating-bar-fill" [style.width]="bar.pct + '%'"></div>
+            </div>
+            <span class="star-count">{{ bar.count }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Rating Distribution</div>
+      </div>
+      <div style="height:250px;position:relative">
+        <canvas #ratingChart></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reviews List -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">All Reviews</div>
+      <div style="display:flex;gap:0.5rem">
+        <select class="form-control" style="width:140px">
+          <option>All Stars</option>
+          <option>5 Stars</option>
+          <option>4 Stars</option>
+          <option>3 Stars</option>
+          <option>2 Stars</option>
+          <option>1 Star</option>
+        </select>
+      </div>
+    </div>
+    <div class="reviews-list">
+      @for (review of reviews(); track review.id) {
+        <div class="review-item">
+          <div class="review-header">
+            <div class="reviewer-info">
+              <div class="reviewer-av">{{ review.customer[0] }}</div>
+              <div>
+                <div class="reviewer-name">{{ review.customer }}</div>
+                <div class="review-product">{{ review.product }}</div>
+              </div>
+            </div>
+            <div class="review-meta">
+              <div class="review-stars" [class.high]="review.stars >= 4" [class.mid]="review.stars === 3" [class.low]="review.stars <= 2">
+                {{ review.stars }}★
+              </div>
+              <div class="review-date">{{ review.date }}</div>
+            </div>
+          </div>
+          <p class="review-text">{{ review.text }}</p>
+          <div class="review-footer">
+            <span class="helpful">👍 {{ review.helpful }} found helpful</span>
+            <button class="btn btn-ghost btn-sm">Reply</button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

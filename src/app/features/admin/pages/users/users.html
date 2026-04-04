@@ -1,0 +1,99 @@
+<div class="page fade-in">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">User Management</h2>
+      <p class="page-subtitle">Manage all platform users and their permissions</p>
+    </div>
+    <button class="btn btn-primary btn-sm">
+      <span>➕</span> Add User
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="card filters-card">
+    <div class="filters-row">
+      <div class="search-input-wrapper" style="flex:1; max-width: 360px;">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Search by name or email..."
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+        />
+      </div>
+      <select class="form-control" style="width:160px;" [value]="roleFilter()" (change)="roleFilter.set($any($event.target).value)">
+        <option value="all">All Roles</option>
+        <option value="admin">Admin</option>
+        <option value="corporate">Corporate</option>
+        <option value="individual">Individual</option>
+      </select>
+      <span class="result-count">{{ filteredUsers().length }} users found</span>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card" style="padding: 0; overflow: hidden;">
+    <div class="table-container" style="border: none; border-radius: var(--radius-lg);">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Joined</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of filteredUsers(); track user.id) {
+            <tr>
+              <td class="text-muted">#{{ user.id }}</td>
+              <td>
+                <div class="user-cell">
+                  <div class="user-av avatar avatar-sm avatar-purple">{{ user.avatar }}</div>
+                  <span class="user-name">{{ user.name }}</span>
+                </div>
+              </td>
+              <td class="text-secondary">{{ user.email }}</td>
+              <td>
+                <span class="badge" [ngClass]="getRoleBadge(user.role)">{{ user.role }}</span>
+              </td>
+              <td class="text-secondary">{{ user.joinedDate }}</td>
+              <td>
+                <span class="badge" [ngClass]="user.status === 'active' ? 'badge-green' : 'badge-red'">
+                  {{ user.status }}
+                </span>
+              </td>
+              <td>
+                <div class="action-btns">
+                  <button
+                    class="btn btn-sm"
+                    [ngClass]="user.status === 'active' ? 'btn-danger' : 'btn-success'"
+                    (click)="toggleStatus(user)"
+                  >
+                    {{ user.status === 'active' ? 'Suspend' : 'Activate' }}
+                  </button>
+                  <button class="btn btn-sm btn-danger" (click)="deleteUser(user.id)">
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">
+                  <div class="empty-state-icon">👥</div>
+                  <div class="empty-state-title">No users found</div>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

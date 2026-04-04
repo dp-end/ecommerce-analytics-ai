@@ -1,0 +1,96 @@
+<div class="page fade-in">
+  <!-- Hero Search -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">Find Amazing Products</h1>
+      <p class="hero-subtitle">Browse thousands of products from top sellers worldwide</p>
+      <div class="hero-search">
+        <svg class="search-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+          <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <input
+          type="text"
+          class="hero-input"
+          placeholder="Search for products, brands, categories..."
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+        />
+        <button class="btn btn-primary">Search</button>
+      </div>
+    </div>
+    @if (cartCount() > 0) {
+      <div class="cart-floating">
+        <span class="cart-icon">🛒</span>
+        <span class="cart-count">{{ cartCount() }} items in cart</span>
+      </div>
+    }
+  </div>
+
+  <!-- Category Tabs -->
+  <div class="category-tabs">
+    @for (cat of categories; track cat) {
+      <button
+        class="category-tab"
+        [class.active]="activeCategory() === cat"
+        (click)="activeCategory.set(cat)"
+      >
+        {{ cat === 'all' ? '🛍️ All' : cat }}
+      </button>
+    }
+  </div>
+
+  <!-- Results count -->
+  <div class="results-header">
+    <span class="results-count">{{ filteredProducts().length }} products found</span>
+    <select class="form-control" style="width:160px">
+      <option>Sort: Featured</option>
+      <option>Price: Low to High</option>
+      <option>Price: High to Low</option>
+      <option>Best Rated</option>
+    </select>
+  </div>
+
+  <!-- Products Grid -->
+  <div class="products-grid">
+    @for (product of filteredProducts(); track product.id) {
+      <div class="product-card card">
+        <div class="product-badge-wrapper">
+          <span class="badge badge-purple product-category-badge">{{ product.category }}</span>
+        </div>
+        <div class="product-image">
+          <span class="product-emoji">{{ product.emoji }}</span>
+        </div>
+        <div class="product-body">
+          <h3 class="product-name">{{ product.name }}</h3>
+          <p class="product-desc">{{ product.description }}</p>
+          <div class="product-rating">
+            <span class="stars">{{ getStars(product.rating) }}</span>
+            <span class="rating-num">{{ product.rating }}</span>
+            <span class="review-count">({{ product.reviews }})</span>
+          </div>
+          <div class="product-stock">
+            @if (product.stock > 20) {
+              <span class="badge badge-green">In Stock</span>
+            } @else if (product.stock > 0) {
+              <span class="badge badge-yellow">Low Stock ({{ product.stock }})</span>
+            } @else {
+              <span class="badge badge-red">Out of Stock</span>
+            }
+          </div>
+        </div>
+        <div class="product-footer">
+          <div class="product-price">${{ product.price.toFixed(2) }}</div>
+          <button
+            class="btn btn-sm"
+            [ngClass]="isInCart(product) ? 'btn-success' : 'btn-primary'"
+            [disabled]="product.stock === 0"
+            (click)="addToCart(product)"
+          >
+            {{ isInCart(product) ? '✅ Added' : '🛒 Add to Cart' }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
