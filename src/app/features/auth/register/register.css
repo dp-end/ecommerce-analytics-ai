@@ -1,52 +1,18 @@
 .register-page {
   min-height: 100vh;
-  background: var(--bg-primary);
+  background: #F5F5F5;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.bg-decoration {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.bg-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.1;
-}
-
-.bg-blob-1 {
-  width: 500px;
-  height: 500px;
-  background: var(--accent-purple);
-  top: -150px;
-  right: -150px;
-}
-
-.bg-blob-2 {
-  width: 400px;
-  height: 400px;
-  background: var(--accent-blue);
-  bottom: -100px;
-  left: -100px;
 }
 
 .register-container {
   width: 100%;
-  max-width: 460px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  max-width: 440px;
+  background: #fff;
   border-radius: var(--radius-xl);
   padding: 2.5rem;
-  position: relative;
-  z-index: 1;
   box-shadow: var(--shadow-lg);
 }
 
@@ -58,23 +24,19 @@
 }
 
 .logo-icon {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #5b21b6, #7c3aed);
-  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  background: var(--accent-primary);
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
 }
 
 .brand-name {
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #c4b5fd, #7c3aed);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent-primary);
   letter-spacing: -0.03em;
 }
 
@@ -85,11 +47,12 @@
 .form-title {
   font-size: 1.5rem;
   font-weight: 700;
+  color: var(--text-primary);
   margin-bottom: 0.375rem;
 }
 
 .form-subtitle {
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-size: 0.875rem;
 }
 
@@ -105,7 +68,7 @@
 .form-label {
   display: block;
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-secondary);
   margin-bottom: 0.375rem;
 }
@@ -113,8 +76,8 @@
 .form-control {
   width: 100%;
   padding: 0.75rem 0.875rem;
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
+  background: #fff;
+  border: 1.5px solid var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-size: 0.875rem;
@@ -124,61 +87,12 @@
 }
 
 .form-control:focus {
-  border-color: var(--accent-purple);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(255, 96, 0, 0.12);
 }
 
 .form-control::placeholder {
-  color: var(--text-muted);
-}
-
-.role-cards {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.role-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 1rem 0.5rem;
-  background: var(--bg-input);
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  text-align: center;
-}
-
-.role-card input {
-  display: none;
-}
-
-.role-card:hover {
-  border-color: rgba(124, 58, 237, 0.4);
-  background: var(--bg-hover);
-}
-
-.role-card.selected {
-  border-color: var(--accent-purple);
-  background: rgba(124, 58, 237, 0.08);
-}
-
-.role-icon {
-  font-size: 1.5rem;
-}
-
-.role-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.role-desc {
-  font-size: 0.7rem;
-  color: var(--text-muted);
+  color: #BBBBBB;
 }
 
 .error-alert {
@@ -186,8 +100,8 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(220, 38, 38, 0.06);
+  border: 1px solid rgba(220, 38, 38, 0.2);
   border-radius: var(--radius-md);
   color: var(--accent-red);
   font-size: 0.85rem;
@@ -198,12 +112,15 @@
   width: 100%;
   padding: 0.875rem;
   margin-top: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
 }
 
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.4);
   border-top-color: #fff;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -213,7 +130,7 @@
 .form-footer {
   margin-top: 1.25rem;
   text-align: center;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: var(--text-muted);
   display: flex;
   align-items: center;
@@ -222,10 +139,20 @@
 }
 
 .login-link {
-  color: var(--accent-purple-light);
-  font-weight: 500;
+  color: var(--accent-primary);
+  font-weight: 600;
 }
 
 .login-link:hover {
-  color: var(--accent-purple);
+  color: var(--accent-primary-dark);
+}
+
+@media (max-width: 480px) {
+  .register-page {
+    padding: 1rem;
+  }
+
+  .register-container {
+    padding: 2rem 1.5rem;
+  }
 }

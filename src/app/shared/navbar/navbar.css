@@ -57,8 +57,8 @@
 }
 
 .search-input:focus {
-  border-color: var(--accent-purple);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(255, 96, 0, 0.10);
 }
 
 .search-input::placeholder {
@@ -102,7 +102,7 @@
 .icon-btn:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
-  border-color: var(--accent-purple);
+  border-color: var(--accent-primary);
 }
 
 .notif-badge {
@@ -111,7 +111,7 @@
   right: -4px;
   width: 16px;
   height: 16px;
-  background: var(--accent-purple);
+  background: var(--accent-primary);
   color: #fff;
   font-size: 0.6rem;
   font-weight: 700;
@@ -156,7 +156,7 @@
 
 .notif-mark-read {
   font-size: 0.75rem;
-  color: var(--accent-purple-light);
+  color: var(--accent-primary-light);
   background: none;
   border: none;
   cursor: pointer;
@@ -164,7 +164,7 @@
 }
 
 .notif-mark-read:hover {
-  color: var(--accent-purple);
+  color: var(--accent-primary);
 }
 
 .notif-list {
@@ -190,7 +190,7 @@
 }
 
 .notif-item.unread {
-  background: rgba(124, 58, 237, 0.04);
+  background: rgba(255, 96, 0, 0.04);
 }
 
 .notif-dot {
@@ -203,7 +203,7 @@
 }
 
 .notif-dot.visible {
-  background: var(--accent-purple);
+  background: var(--accent-primary);
 }
 
 .notif-content {
@@ -238,7 +238,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #5b21b6, #7c3aed);
+  background: var(--accent-primary);
   color: #fff;
   display: flex;
   align-items: center;

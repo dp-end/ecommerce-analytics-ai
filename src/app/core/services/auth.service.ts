@@ -1,25 +1,15 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { User, UserRole } from '../models/user.model';
 
-const MOCK_USERS: Record<string, User> = {
-  admin: {
-    id: 1,
-    email: 'admin@datapulse.io',
-    name: 'Alex Admin',
-    role: 'admin',
-  },
-  corporate: {
-    id: 2,
-    email: 'corp@datapulse.io',
-    name: 'Corporate User',
-    role: 'corporate',
-  },
-  individual: {
-    id: 3,
-    email: 'user@datapulse.io',
-    name: 'John Doe',
-    role: 'individual',
-  },
+const EMAIL_ROLE_MAP: Record<string, UserRole> = {
+  'admin@datapulse.io': 'admin',
+  'corp@datapulse.io': 'corporate',
+};
+
+const MOCK_USERS: Record<UserRole, Omit<User, 'email'>> = {
+  admin: { id: 1, name: 'Alex Admin', role: 'admin' },
+  corporate: { id: 2, name: 'Mağaza Yöneticisi', role: 'corporate' },
+  individual: { id: 3, name: 'Kullanıcı', role: 'individual' },
 };
 
 @Injectable({ providedIn: 'root' })
@@ -43,15 +33,16 @@ export class AuthService {
     }
   }
 
-  login(email: string, password: string, role: UserRole): boolean {
-    const user = MOCK_USERS[role];
-    if (user) {
-      const loggedUser: User = { ...user, email };
-      this.currentUser.set(loggedUser);
-      localStorage.setItem('datapulse_user', JSON.stringify(loggedUser));
-      return true;
-    }
-    return false;
+  login(email: string, password: string): boolean {
+    if (!email || !password) return false;
+
+    const role: UserRole = EMAIL_ROLE_MAP[email.toLowerCase()] ?? 'individual';
+    const base = MOCK_USERS[role];
+
+    const loggedUser: User = { ...base, email };
+    this.currentUser.set(loggedUser);
+    localStorage.setItem('datapulse_user', JSON.stringify(loggedUser));
+    return true;
   }
 
   logout(): void {

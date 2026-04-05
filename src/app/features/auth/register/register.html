@@ -1,80 +1,56 @@
 <div class="register-page">
-  <div class="bg-decoration">
-    <div class="bg-blob bg-blob-1"></div>
-    <div class="bg-blob bg-blob-2"></div>
-  </div>
-
   <div class="register-container">
     <!-- Logo -->
     <div class="brand-logo">
       <div class="logo-icon">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="M3 3v18h18" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round"/>
-          <path d="M7 16l4-4 4 4 4-8" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M3 3v18h18" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M7 16l4-4 4 4 4-8" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
       <span class="brand-name">DataPulse</span>
     </div>
 
     <div class="form-header">
-      <h1 class="form-title">Create your account</h1>
-      <p class="form-subtitle">Join thousands of businesses on DataPulse</p>
+      <h1 class="form-title">Hesap Oluştur</h1>
+      <p class="form-subtitle">DataPulse'a hemen üye olun</p>
     </div>
 
     <form (ngSubmit)="onSubmit()" class="register-form">
       <!-- Name -->
       <div class="form-group">
-        <label class="form-label">Full Name</label>
+        <label class="form-label">Ad Soyad</label>
         <input
           type="text"
           class="form-control"
           [value]="name()"
           (input)="name.set($any($event.target).value)"
-          placeholder="Your full name"
+          placeholder="Adınız ve soyadınız"
         />
       </div>
 
       <!-- Email -->
       <div class="form-group">
-        <label class="form-label">Email Address</label>
+        <label class="form-label">E-posta Adresi</label>
         <input
           type="email"
           class="form-control"
           [value]="email()"
           (input)="email.set($any($event.target).value)"
-          placeholder="your@email.com"
+          placeholder="ornek@email.com"
         />
       </div>
 
       <!-- Password -->
       <div class="form-group">
-        <label class="form-label">Password</label>
+        <label class="form-label">Şifre</label>
         <input
           type="password"
           class="form-control"
           [value]="password()"
           (input)="password.set($any($event.target).value)"
-          placeholder="Minimum 6 characters"
+          placeholder="En az 6 karakter"
         />
-      </div>
-
-      <!-- Role -->
-      <div class="form-group">
-        <label class="form-label">Account Type</label>
-        <div class="role-cards">
-          <label class="role-card" [class.selected]="role() === 'individual'">
-            <input type="radio" name="role" value="individual" [checked]="role() === 'individual'" (change)="role.set('individual')" />
-            <span class="role-icon">👤</span>
-            <span class="role-label">Individual</span>
-            <span class="role-desc">Shop & track orders</span>
-          </label>
-          <label class="role-card" [class.selected]="role() === 'corporate'">
-            <input type="radio" name="role" value="corporate" [checked]="role() === 'corporate'" (change)="role.set('corporate')" />
-            <span class="role-icon">🏢</span>
-            <span class="role-label">Corporate</span>
-            <span class="role-desc">Manage your store</span>
-          </label>
-        </div>
       </div>
 
       @if (error()) {
@@ -85,16 +61,16 @@
 
       <button type="submit" class="btn btn-primary btn-lg submit-btn" [disabled]="loading()">
         @if (loading()) {
-          <span class="spinner"></span> Creating Account...
+          <span class="spinner"></span> Hesap Oluşturuluyor...
         } @else {
-          Create Account
+          Üye Ol
         }
       </button>
     </form>
 
     <div class="form-footer">
-      <span>Already have an account?</span>
-      <a routerLink="/login" class="login-link">Sign in</a>
+      <span>Zaten üye misiniz?</span>
+      <a routerLink="/login" class="login-link">Giriş Yap</a>
     </div>
   </div>
 </div>

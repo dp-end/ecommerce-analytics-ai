@@ -1,10 +1,4 @@
 <div class="login-page">
-  <!-- Background decoration -->
-  <div class="bg-decoration">
-    <div class="bg-blob bg-blob-1"></div>
-    <div class="bg-blob bg-blob-2"></div>
-  </div>
-
   <div class="login-container">
     <!-- Left Panel: Branding -->
     <div class="login-branding">
@@ -12,37 +6,37 @@
         <div class="brand-logo">
           <div class="logo-icon-lg">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-              <path d="M3 3v18h18" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round"/>
-              <path d="M7 16l4-4 4 4 4-8" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 3v18h18" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M7 16l4-4 4 4 4-8" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
           <span class="brand-name">DataPulse</span>
         </div>
-        <h2 class="brand-tagline">E-Commerce Analytics Platform</h2>
+        <h2 class="brand-tagline">Akıllı E-Ticaret Platformu</h2>
         <p class="brand-description">
-          Gain powerful insights into your store's performance. Make data-driven decisions with real-time analytics and AI-powered recommendations.
+          Mağazanızı büyütmek, siparişlerinizi takip etmek ve veriye dayalı kararlar almak için tek platform.
         </p>
 
         <div class="brand-features">
           <div class="feature-item">
             <span class="feature-icon">📊</span>
             <div>
-              <div class="feature-title">Real-time Analytics</div>
-              <div class="feature-desc">Live dashboards with instant insights</div>
+              <div class="feature-title">Gerçek Zamanlı Analizler</div>
+              <div class="feature-desc">Anlık satış ve stok takibi</div>
+            </div>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">🛍️</span>
+            <div>
+              <div class="feature-title">Kolay Alışveriş</div>
+              <div class="feature-desc">Milyonlarca ürün, hızlı teslimat</div>
             </div>
           </div>
           <div class="feature-item">
             <span class="feature-icon">🤖</span>
             <div>
-              <div class="feature-title">AI Assistant</div>
-              <div class="feature-desc">Get AI-powered recommendations</div>
-            </div>
-          </div>
-          <div class="feature-item">
-            <span class="feature-icon">🚀</span>
-            <div>
-              <div class="feature-title">Scale Fast</div>
-              <div class="feature-desc">Tools built for growing businesses</div>
+              <div class="feature-title">AI Asistan</div>
+              <div class="feature-desc">Akıllı ürün ve analiz önerileri</div>
             </div>
           </div>
         </div>
@@ -51,11 +45,11 @@
       <div class="brand-stats">
         <div class="stat-pill">
           <span class="stat-number">50K+</span>
-          <span class="stat-label">Active Stores</span>
+          <span class="stat-label">Aktif Mağaza</span>
         </div>
         <div class="stat-pill">
-          <span class="stat-number">$2.4B</span>
-          <span class="stat-label">GMV Tracked</span>
+          <span class="stat-number">2M+</span>
+          <span class="stat-label">Müşteri</span>
         </div>
         <div class="stat-pill">
           <span class="stat-number">99.9%</span>
@@ -68,42 +62,23 @@
     <div class="login-form-panel">
       <div class="login-form-wrapper">
         <div class="form-header">
-          <h1 class="form-title">Welcome back</h1>
-          <p class="form-subtitle">Sign in to your DataPulse account</p>
-        </div>
-
-        <!-- Role Selector -->
-        <div class="role-selector">
-          <label class="form-label">Select Role (Demo)</label>
-          <div class="role-tabs">
-            <button
-              class="role-tab"
-              [class.active]="role() === 'admin'"
-              (click)="selectRole('admin')"
-            >
-              <span>🛡️</span> Admin
-            </button>
-            <button
-              class="role-tab"
-              [class.active]="role() === 'corporate'"
-              (click)="selectRole('corporate')"
-            >
-              <span>🏢</span> Corporate
-            </button>
-            <button
-              class="role-tab"
-              [class.active]="role() === 'individual'"
-              (click)="selectRole('individual')"
-            >
-              <span>👤</span> Individual
-            </button>
+          <div class="mobile-logo">
+            <div class="logo-icon-sm">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M3 3v18h18" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M7 16l4-4 4 4 4-8" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <span class="mobile-brand-name">DataPulse</span>
           </div>
+          <h1 class="form-title">Hoş Geldiniz</h1>
+          <p class="form-subtitle">Hesabınıza giriş yapın</p>
         </div>
 
         <form (ngSubmit)="onSubmit()" class="login-form">
           <!-- Email -->
           <div class="form-group">
-            <label class="form-label">Email Address</label>
+            <label class="form-label">E-posta Adresi</label>
             <div class="input-wrapper">
               <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/>
@@ -114,7 +89,7 @@
                 class="form-control"
                 [value]="email()"
                 (input)="email.set($any($event.target).value)"
-                placeholder="Enter your email"
+                placeholder="ornek@email.com"
                 autocomplete="email"
               />
             </div>
@@ -122,7 +97,7 @@
 
           <!-- Password -->
           <div class="form-group">
-            <label class="form-label">Password</label>
+            <label class="form-label">Şifre</label>
             <div class="input-wrapper">
               <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
@@ -133,7 +108,7 @@
                 class="form-control"
                 [value]="password()"
                 (input)="password.set($any($event.target).value)"
-                placeholder="Enter your password"
+                placeholder="Şifrenizi girin"
                 autocomplete="current-password"
               />
               <button type="button" class="password-toggle" (click)="showPassword.update(v => !v)">
@@ -152,15 +127,15 @@
           <!-- Demo hint -->
           <div class="demo-hint">
             <span class="hint-icon">💡</span>
-            <span>Demo: Use any password. Email is auto-filled for selected role.</span>
+            <span>Demo: Herhangi bir şifre ile giriş yapabilirsiniz. Rol e-postaya göre belirlenir.</span>
           </div>
 
           <!-- Submit -->
           <button type="submit" class="btn btn-primary btn-lg submit-btn" [disabled]="loading()">
             @if (loading()) {
-              <span class="spinner"></span> Signing In...
+              <span class="spinner"></span> Giriş Yapılıyor...
             } @else {
-              Sign In
+              Giriş Yap
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -169,8 +144,8 @@
         </form>
 
         <div class="form-footer">
-          <span>Don't have an account?</span>
-          <a routerLink="/register" class="register-link">Create account</a>
+          <span>Hesabınız yok mu?</span>
+          <a routerLink="/register" class="register-link">Üye Ol</a>
         </div>
       </div>
     </div>
