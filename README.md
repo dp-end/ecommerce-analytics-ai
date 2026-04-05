@@ -1,59 +1,48 @@
-# Project
+# 🚀 AI-Powered E-Commerce Analytics Platform
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.3.
+Bu platform, karmaşık e-ticaret verilerini yapay zeka yardımıyla anlamlandırmak için tasarlanmış, uçtan uca bir analiz çözümüdür. Kullanıcıların veritabanı sorgularını teknik bilgi gerektirmeden doğal dilde (Text2SQL) gerçekleştirmesine olanak tanıyan çoklu ajanlı (multi-agent) bir AI mimarisine sahiptir.
 
-## Development server
+---
 
-To start a local development server, run:
+## 🌟 Öne Çıkan Özellikler
 
-```bash
-ng serve
-```
+- **🤖 AI Chatbot (Text2SQL):** Kullanıcıların "Geçen ay en çok satan 5 ürün hangisi?" gibi sorularını anlık olarak SQL sorgularına dönüştüren ve veritabanından veri çeken entegre yapay zeka modülü.
+- **📊 Çoklu Rol Yönetimi:** - **Admin:** Sistem geneli denetim ve audit log takibi.
+  - **Kurumsal (Store Owner):** Satış analizleri, stok takibi ve müşteri yorum analizi.
+  - **Bireysel (Customer):** Sipariş geçmişi ve profil yönetimi.
+- **🛡️ Gelişmiş Güvenlik:** Role-based access control (RBAC) ve Angular Guards ile korunan route yapıları.
+- **⚡ Modern Frontend Mimari:** Angular 19'un yeni nesil özellikleriyle (Signals, Standalone Components) optimize edilmiş yüksek performanslı arayüz.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+## 🛠️ Teknoloji Yığını
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- **Frontend:** [Angular 19](https://angular.dev/), TypeScript, RxJS, CSS3.
+- **Backend:** Spring Boot (Java), PostgreSQL.
+- **AI/LLM:** Multi-Agent AI Framework, Text2SQL Modeling.
+- **Araçlar:** Git, VS Code, Docker.
 
-```bash
-ng generate component component-name
-```
+---
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## 🏗️ Proje Mimarisi
 
-```bash
-ng generate --help
-```
+Proje, sürdürülebilirlik ve ölçeklenebilirlik için modüler bir yapıda kurgulanmıştır:
 
-## Building
+- **Core:** Authentication, Interceptors, Guards ve merkezi servisler.
+- **Features:** İşlevsel modüller (Admin dashboard, Chatbot, Analytics).
+- **Shared:** Reusable UI bileşenleri (Navbar, Sidebar, Stat-cards).
 
-To build the project run:
 
-```bash
-ng build
-```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+---
 
-## Running unit tests
+## 🚀 Kurulum ve Çalıştırma
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+### Gereksinimler
+- Node.js (v18+)
+- Angular CLI
 
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+### Adımlar
+1. Projeyi klonlayın:
+   ```bash
+   git clone [https://github.com/dp-end/ecommerce-analytics-ai.git](https://github.com/dp-end/ecommerce-analytics-ai.git)
