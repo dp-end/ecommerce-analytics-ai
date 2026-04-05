@@ -1,0 +1,125 @@
+<div class="dashboard fade-in">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Store Dashboard</h2>
+      <p class="page-subtitle">Your store performance at a glance</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary btn-sm">📅 This Week</button>
+      <button class="btn btn-primary btn-sm">📥 Export</button>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="stats-grid">
+    <app-stat-card icon="💰" title="Total Revenue" value="$178K" change="+24.3%" subtitle="vs last month" accentColor="purple"/>
+    <app-stat-card icon="📦" title="Total Orders" value="2,341" change="+18.1%" subtitle="vs last month" accentColor="blue"/>
+    <app-stat-card icon="👥" title="Customers" value="1,284" change="+11.5%" subtitle="vs last month" accentColor="green"/>
+    <app-stat-card icon="⭐" title="Avg Rating" value="4.6" change="+0.2" subtitle="from reviews" accentColor="orange"/>
+  </div>
+
+  <!-- Charts + Orders -->
+  <div class="content-grid">
+    <!-- Revenue Chart -->
+    <div class="card chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Weekly Revenue</div>
+          <div class="card-subtitle">Revenue trend for the past 7 days</div>
+        </div>
+        <div class="legend-dot">
+          <span class="dot"></span>
+          <span style="font-size:0.75rem;color:var(--text-muted)">Revenue</span>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <canvas #revenueChart></canvas>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="card side-stats">
+      <div class="card-header">
+        <div class="card-title">Quick Stats</div>
+      </div>
+      <div class="quick-stats-list">
+        <div class="quick-stat">
+          <span class="qs-icon">🛍️</span>
+          <div class="qs-info">
+            <div class="qs-label">Total Products</div>
+            <div class="qs-value">248</div>
+          </div>
+          <span class="badge badge-green">+5 new</span>
+        </div>
+        <div class="quick-stat">
+          <span class="qs-icon">📦</span>
+          <div class="qs-info">
+            <div class="qs-label">Pending Orders</div>
+            <div class="qs-value">34</div>
+          </div>
+          <span class="badge badge-yellow">Action needed</span>
+        </div>
+        <div class="quick-stat">
+          <span class="qs-icon">🚚</span>
+          <div class="qs-info">
+            <div class="qs-label">In Transit</div>
+            <div class="qs-value">127</div>
+          </div>
+          <span class="badge badge-blue">On time</span>
+        </div>
+        <div class="quick-stat">
+          <span class="qs-icon">↩️</span>
+          <div class="qs-info">
+            <div class="qs-label">Return Requests</div>
+            <div class="qs-value">8</div>
+          </div>
+          <span class="badge badge-red">Review</span>
+        </div>
+        <div class="quick-stat">
+          <span class="qs-icon">💬</span>
+          <div class="qs-info">
+            <div class="qs-label">New Reviews</div>
+            <div class="qs-value">23</div>
+          </div>
+          <span class="badge badge-purple">This week</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Orders -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Recent Orders</div>
+      <button class="btn btn-secondary btn-sm">View All Orders</button>
+    </div>
+    <div class="table-container" style="border:none;border-radius:0">
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of recentOrders(); track order.id) {
+            <tr>
+              <td style="font-weight:600;font-family:var(--font-mono);font-size:0.8rem">{{ order.id }}</td>
+              <td>{{ order.customer }}</td>
+              <td style="color:var(--text-secondary)">{{ order.products }} items</td>
+              <td style="font-weight:600">${{ order.total.toFixed(2) }}</td>
+              <td>
+                <span class="badge" [ngClass]="getStatusClass(order.status)">{{ order.status }}</span>
+              </td>
+              <td style="color:var(--text-muted);font-size:0.8rem">{{ order.date }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

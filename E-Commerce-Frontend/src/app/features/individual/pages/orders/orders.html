@@ -1,0 +1,91 @@
+<div class="page fade-in">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">My Orders</h2>
+      <p class="page-subtitle">Track and manage your order history</p>
+    </div>
+  </div>
+
+  <!-- Status Filter -->
+  <div class="status-tabs">
+    @for (status of statusOptions; track status) {
+      <button class="status-tab" [class.active]="statusFilter() === status" (click)="statusFilter.set(status)">
+        @if (status !== 'all') {
+          {{ getStatusIcon(status) }}
+        }
+        {{ status === 'all' ? 'All Orders' : status.charAt(0).toUpperCase() + status.slice(1) }}
+      </button>
+    }
+  </div>
+
+  <!-- Orders Cards -->
+  <div class="orders-list">
+    @for (order of filteredOrders(); track order.id) {
+      <div class="order-card card">
+        <div class="order-header">
+          <div class="order-id-section">
+            <span class="order-id">{{ order.id }}</span>
+            <span class="order-date">Placed on {{ order.date }}</span>
+          </div>
+          <span class="badge" [ngClass]="getStatusClass(order.status)">
+            {{ getStatusIcon(order.status) }} {{ order.status }}
+          </span>
+        </div>
+
+        <div class="order-items">
+          @for (item of order.items; track item) {
+            <span class="item-tag">{{ item }}</span>
+          }
+        </div>
+
+        <div class="order-footer">
+          <div class="order-info">
+            <span class="order-products">{{ order.products }} item{{ order.products > 1 ? 's' : '' }}</span>
+            <span class="order-total">${{ order.total.toFixed(2) }}</span>
+          </div>
+          <div class="order-actions">
+            @if (order.status === 'shipped' || order.status === 'processing') {
+              <button class="btn btn-secondary btn-sm">🔍 Track Order</button>
+            }
+            @if (order.status === 'completed') {
+              <button class="btn btn-ghost btn-sm">↩️ Return</button>
+              <button class="btn btn-primary btn-sm">🔄 Reorder</button>
+            }
+            <button class="btn btn-ghost btn-sm">📄 Invoice</button>
+          </div>
+        </div>
+
+        <!-- Tracking Bar -->
+        @if (order.status !== 'cancelled') {
+          <div class="tracking-bar">
+            <div class="tracking-step" [class.done]="true">
+              <div class="step-dot"></div>
+              <div class="step-label">Ordered</div>
+            </div>
+            <div class="tracking-line" [class.done]="order.status !== 'pending'"></div>
+            <div class="tracking-step" [class.done]="order.status !== 'pending'">
+              <div class="step-dot"></div>
+              <div class="step-label">Processing</div>
+            </div>
+            <div class="tracking-line" [class.done]="order.status === 'shipped' || order.status === 'completed'"></div>
+            <div class="tracking-step" [class.done]="order.status === 'shipped' || order.status === 'completed'">
+              <div class="step-dot"></div>
+              <div class="step-label">Shipped</div>
+            </div>
+            <div class="tracking-line" [class.done]="order.status === 'completed'"></div>
+            <div class="tracking-step" [class.done]="order.status === 'completed'">
+              <div class="step-dot"></div>
+              <div class="step-label">Delivered</div>
+            </div>
+          </div>
+        }
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <div class="empty-state-icon">📦</div>
+        <div class="empty-state-title">No orders found</div>
+        <p style="font-size:0.875rem;color:var(--text-muted)">You haven't placed any orders yet.</p>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,29 @@
+.page { display: flex; flex-direction: column; gap: 1.5rem; }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; }
+.page-title { font-size: 1.375rem; font-weight: 700; margin-bottom: 0.25rem; }
+.page-subtitle { color: var(--text-secondary); font-size: 0.875rem; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.status-tab {
+  padding: 0.4rem 0.875rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.status-tab:hover { background: var(--bg-hover); color: var(--text-secondary); }
+.status-tab.active { background: var(--accent-purple); border-color: var(--accent-purple); color: #fff; }
+
+@media (max-width: 1200px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}

@@ -1,0 +1,31 @@
+<div class="shell-layout">
+  <app-sidebar role="corporate" />
+  <div class="shell-main">
+    <app-navbar [pageTitle]="'Corporate Portal'" />
+    <main class="shell-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+
+<style>
+  .shell-layout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--bg-primary);
+  }
+
+  .shell-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .shell-content {
+    flex: 1;
+    padding: 1.75rem;
+    overflow-y: auto;
+  }
+</style>

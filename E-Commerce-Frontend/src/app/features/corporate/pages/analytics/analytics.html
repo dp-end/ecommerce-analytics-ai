@@ -1,0 +1,110 @@
+<div class="page fade-in">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Analytics</h2>
+      <p class="page-subtitle">Deep dive into your store performance metrics</p>
+    </div>
+    <div class="header-actions">
+      <select class="form-control" style="width:160px">
+        <option>Last 12 Months</option>
+        <option>Last 6 Months</option>
+        <option>Last 30 Days</option>
+      </select>
+      <button class="btn btn-primary btn-sm">📥 Export Report</button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="stats-grid">
+    <app-stat-card icon="💰" title="Monthly Revenue" value="$134K" change="+24.3%" subtitle="vs last month" accentColor="purple"/>
+    <app-stat-card icon="🔄" title="Conversion Rate" value="3.8%" change="+0.4%" subtitle="vs last month" accentColor="green"/>
+    <app-stat-card icon="🛒" title="Avg Order Value" value="$89.20" change="+$12" subtitle="vs last month" accentColor="blue"/>
+    <app-stat-card icon="↩️" title="Return Rate" value="2.1%" change="-0.3%" subtitle="vs last month" accentColor="orange"/>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-grid">
+    <div class="card chart-card">
+      <div class="card-header">
+        <div class="card-title">Sales Trends (Full Year)</div>
+        <span class="badge badge-purple">2025</span>
+      </div>
+      <div style="height:280px;position:relative">
+        <canvas #salesChart></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Sales by Category</div>
+      </div>
+      <div style="height:280px;position:relative">
+        <canvas #categoryChart></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Performance Table -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Top Performing Products</div>
+      <button class="btn btn-ghost btn-sm">View All</button>
+    </div>
+    <div class="table-container" style="border:none;border-radius:0">
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Units Sold</th>
+            <th>Revenue</th>
+            <th>Growth</th>
+            <th>Rating</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:0.5rem"><span>🎧</span> Wireless Headphones</div></td>
+            <td style="color:var(--text-secondary)">Electronics</td>
+            <td>234</td>
+            <td style="font-weight:600">$70,166</td>
+            <td><span class="badge badge-green">+28%</span></td>
+            <td>⭐ 4.8</td>
+          </tr>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:0.5rem"><span>⌚</span> Smart Watch</div></td>
+            <td style="color:var(--text-secondary)">Electronics</td>
+            <td>178</td>
+            <td style="font-weight:600">$71,022</td>
+            <td><span class="badge badge-green">+19%</span></td>
+            <td>⭐ 4.7</td>
+          </tr>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:0.5rem"><span>👟</span> Running Shoes</div></td>
+            <td style="color:var(--text-secondary)">Fashion</td>
+            <td>312</td>
+            <td style="font-weight:600">$55,848</td>
+            <td><span class="badge badge-green">+35%</span></td>
+            <td>⭐ 4.7</td>
+          </tr>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:0.5rem"><span>✨</span> Vitamin C Serum</div></td>
+            <td style="color:var(--text-secondary)">Beauty</td>
+            <td>523</td>
+            <td style="font-weight:600">$23,535</td>
+            <td><span class="badge badge-red">-5%</span></td>
+            <td>⭐ 4.6</td>
+          </tr>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:0.5rem"><span>🔊</span> Bluetooth Speaker</div></td>
+            <td style="color:var(--text-secondary)">Electronics</td>
+            <td>189</td>
+            <td style="font-weight:600">$24,381</td>
+            <td><span class="badge badge-green">+12%</span></td>
+            <td>⭐ 4.4</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
