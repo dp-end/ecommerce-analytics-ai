@@ -1,0 +1,25 @@
+{
+  "properties": [
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "description": "Secret key used for signing JWT tokens."
+    },
+    {
+      "name": "jwt.expiration",
+      "type": "java.lang.Long",
+      "description": "JWT token expiration time in milliseconds."
+    },
+    {
+      "name": "ai.gemini.api-key",
+      "type": "java.lang.String",
+      "description": "Google Gemini API key."
+    },
+    {
+      "name": "ai.gemini.model",
+      "type": "java.lang.String",
+      "description": "Gemini model name (e.g. gemini-2.0-flash).",
+      "defaultValue": "gemini-2.0-flash-lite"
+    }
+  ]
+}
