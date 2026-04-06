@@ -30,9 +30,7 @@ export class LoginComponent {
     this.loading.set(true);
     this.error.set('');
 
-    await new Promise(r => setTimeout(r, 500));
-
-    const success = this.authService.login(this.email(), this.password());
+    const success = await this.authService.login(this.email(), this.password());
 
     if (success) {
       const role = this.authService.getCurrentRole();
@@ -47,7 +45,7 @@ export class LoginComponent {
           this.router.navigate(['/individual/home']);
       }
     } else {
-      this.error.set('Giriş başarısız. Lütfen tekrar deneyin.');
+      this.error.set('Giriş başarısız. E-posta veya şifre hatalı.');
     }
 
     this.loading.set(false);

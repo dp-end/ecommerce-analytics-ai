@@ -1,9 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CartService } from '../../../../core/services/cart.service';
+import { ApiService } from '../../../../core/services/api.service';
+import { OrderDto, CustomerProfileDto } from '../../../../core/models/api.models';
 
 @Component({
   selector: 'app-individual-profile',
@@ -12,9 +14,10 @@ import { CartService } from '../../../../core/services/cart.service';
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
-export class IndividualProfileComponent {
+export class IndividualProfileComponent implements OnInit {
   authService = inject(AuthService);
   cartService = inject(CartService);
+  private api = inject(ApiService);
 
   user = this.authService.currentUser;
 
@@ -31,18 +34,36 @@ export class IndividualProfileComponent {
     sms: false,
   });
 
-  stats = [
-    { icon: '📦', label: 'Total Orders', value: '24' },
-    { icon: '🛒', label: 'Cart Items', value: String(this.cartService.count()) },
-    { icon: '💳', label: 'Total Spent', value: '$1,284' },
-    { icon: '⭐', label: 'Reviews Left', value: '8' },
-  ];
+  profile = signal<CustomerProfileDto | null>(null);
+  recentOrders = signal<OrderDto[]>([]);
 
-  recentOrders = [
-    { id: '#ORD-001', date: 'Dec 28, 2024', items: 3, total: '$267.40', status: 'delivered' },
-    { id: '#ORD-002', date: 'Jan 05, 2025', items: 1, total: '$89.20', status: 'shipped' },
-    { id: '#ORD-003', date: 'Jan 14, 2025', items: 2, total: '$134.00', status: 'processing' },
-  ];
+  stats = signal([
+    { icon: '📦', label: 'Total Orders', value: '0' },
+    { icon: '🛒', label: 'Cart Items', value: '0' },
+    { icon: '💳', label: 'Total Spent', value: '$0' },
+    { icon: '⭐', label: 'Reviews Left', value: '0' },
+  ]);
+
+  ngOnInit(): void {
+    const currentUser = this.user();
+    if (!currentUser) return;
+
+    this.api.getMyOrders().subscribe({
+      next: orders => {
+        this.recentOrders.set(orders.slice(0, 3));
+        this.stats.update(s => s.map(st =>
+          st.label === 'Total Orders' ? { ...st, value: String(orders.length) } :
+          st.label === 'Cart Items' ? { ...st, value: String(this.cartService.count()) } :
+          st.label === 'Total Spent' ? { ...st, value: '$' + orders.reduce((sum, o) => sum + o.grandTotal, 0).toFixed(0) } :
+          st
+        ));
+      },
+    });
+
+    this.api.getUserProfile(currentUser.id).subscribe({
+      next: p => this.profile.set(p),
+    });
+  }
 
   startEdit(): void {
     const u = this.user();
@@ -67,11 +88,14 @@ export class IndividualProfileComponent {
 
   statusClass(status: string): string {
     const map: Record<string, string> = {
-      delivered: 'badge-green',
-      shipped: 'badge-blue',
-      processing: 'badge-yellow',
-      cancelled: 'badge-red',
+      completed: 'badge-green', shipped: 'badge-blue',
+      processing: 'badge-yellow', cancelled: 'badge-red',
     };
-    return map[status] ?? 'badge-gray';
+    return map[status.toLowerCase()] ?? 'badge-gray';
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('tr-TR');
   }
 }

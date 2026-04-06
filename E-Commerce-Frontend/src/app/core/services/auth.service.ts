@@ -1,19 +1,14 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { User, UserRole } from '../models/user.model';
-
-const EMAIL_ROLE_MAP: Record<string, UserRole> = {
-  'admin@datapulse.io': 'admin',
-  'corp@datapulse.io': 'corporate',
-};
-
-const MOCK_USERS: Record<UserRole, Omit<User, 'email'>> = {
-  admin: { id: 1, name: 'Alex Admin', role: 'admin' },
-  corporate: { id: 2, name: 'Mağaza Yöneticisi', role: 'corporate' },
-  individual: { id: 3, name: 'Kullanıcı', role: 'individual' },
-};
+import { AuthResponse } from '../models/api.models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private http = inject(HttpClient);
+
   currentUser = signal<User | null>(null);
   isAuthenticated = computed(() => this.currentUser() !== null);
 
@@ -25,29 +20,49 @@ export class AuthService {
     try {
       const stored = localStorage.getItem('datapulse_user');
       if (stored) {
-        const user: User = JSON.parse(stored);
-        this.currentUser.set(user);
+        this.currentUser.set(JSON.parse(stored));
       }
     } catch {
       localStorage.removeItem('datapulse_user');
     }
   }
 
-  login(email: string, password: string): boolean {
-    if (!email || !password) return false;
+  async login(email: string, password: string): Promise<boolean> {
+    try {
+      const res = await firstValueFrom(
+        this.http.post<AuthResponse>(`${environment.apiUrl}/api/auth/login`, { email, password })
+      );
+      this.saveSession(res);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
-    const role: UserRole = EMAIL_ROLE_MAP[email.toLowerCase()] ?? 'individual';
-    const base = MOCK_USERS[role];
+  async register(name: string, email: string, password: string): Promise<boolean> {
+    try {
+      const res = await firstValueFrom(
+        this.http.post<AuthResponse>(`${environment.apiUrl}/api/auth/register`, { name, email, password })
+      );
+      this.saveSession(res);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
-    const loggedUser: User = { ...base, email };
-    this.currentUser.set(loggedUser);
-    localStorage.setItem('datapulse_user', JSON.stringify(loggedUser));
-    return true;
+  private saveSession(res: AuthResponse): void {
+    const role = res.role.toLowerCase() as UserRole;
+    const user: User = { id: res.id, name: res.name, email: res.email, role, avatar: res.avatar };
+    localStorage.setItem('datapulse_token', res.token);
+    localStorage.setItem('datapulse_user', JSON.stringify(user));
+    this.currentUser.set(user);
   }
 
   logout(): void {
     this.currentUser.set(null);
     localStorage.removeItem('datapulse_user');
+    localStorage.removeItem('datapulse_token');
   }
 
   getCurrentRole(): UserRole | null {

@@ -59,9 +59,9 @@
               </td>
               <td class="text-secondary">{{ user.email }}</td>
               <td>
-                <span class="badge" [ngClass]="getRoleBadge(user.role)">{{ user.role }}</span>
+                <span class="badge" [ngClass]="getRoleBadge(user.roleType)">{{ user.roleType }}</span>
               </td>
-              <td class="text-secondary">{{ user.joinedDate }}</td>
+              <td class="text-secondary">{{ user.createdAt | slice:0:10 }}</td>
               <td>
                 <span class="badge" [ngClass]="user.status === 'active' ? 'badge-green' : 'badge-red'">
                   {{ user.status }}

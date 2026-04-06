@@ -38,7 +38,7 @@
             <span class="store-emoji">{{ getCategoryEmoji(store.category) }}</span>
           </div>
           <div class="store-status-wrapper">
-            <span class="badge" [ngClass]="store.status === 'open' ? 'badge-green' : 'badge-red'">
+            <span class="badge" [ngClass]="store.status.toUpperCase() === 'OPEN' ? 'badge-green' : 'badge-red'">
               {{ store.status }}
             </span>
           </div>
@@ -46,19 +46,19 @@
 
         <div class="store-info">
           <h3 class="store-name">{{ store.name }}</h3>
-          <p class="store-owner">by {{ store.owner }}</p>
+          <p class="store-owner">by {{ store.ownerName }}</p>
           <span class="store-category">{{ store.category }}</span>
         </div>
 
         <div class="store-metrics">
           <div class="metric">
-            <span class="metric-value">{{ formatRevenue(store.revenue) }}</span>
-            <span class="metric-label">Revenue</span>
+            <span class="metric-value">⭐ {{ store.rating }}</span>
+            <span class="metric-label">Rating</span>
           </div>
           <div class="metric-divider"></div>
           <div class="metric">
-            <span class="metric-value">{{ store.orders.toLocaleString() }}</span>
-            <span class="metric-label">Orders</span>
+            <span class="metric-value">{{ store.category ?? '—' }}</span>
+            <span class="metric-label">Category</span>
           </div>
           <div class="metric-divider"></div>
           <div class="metric">
@@ -69,10 +69,10 @@
 
         <button
           class="btn w-full btn-sm"
-          [ngClass]="store.status === 'open' ? 'btn-danger' : 'btn-success'"
+          [ngClass]="store.status.toUpperCase() === 'OPEN' ? 'btn-danger' : 'btn-success'"
           (click)="toggleStatus(store)"
         >
-          {{ store.status === 'open' ? '🔒 Close Store' : '🔓 Open Store' }}
+          {{ store.status.toUpperCase() === 'OPEN' ? '🔒 Close Store' : '🔓 Open Store' }}
         </button>
       </div>
     }

@@ -1,8 +1,9 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService, MockProduct } from '../../../../core/services/mock-data.service';
+import { ApiService } from '../../../../core/services/api.service';
 import { CartService } from '../../../../core/services/cart.service';
+import { ProductDto } from '../../../../core/models/api.models';
 
 @Component({
   selector: 'app-individual-home',
@@ -11,35 +12,44 @@ import { CartService } from '../../../../core/services/cart.service';
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
-export class IndividualHomeComponent {
-  private mockData = inject(MockDataService);
+export class IndividualHomeComponent implements OnInit {
+  private api = inject(ApiService);
   cartService = inject(CartService);
 
-  products = signal<MockProduct[]>(this.mockData.getProducts());
+  products = signal<ProductDto[]>([]);
   searchQuery = signal('');
   activeCategory = signal('all');
+  loading = signal(false);
 
   categories = ['all', 'Electronics', 'Furniture', 'Food', 'Sports', 'Fashion', 'Beauty', 'Home'];
 
   filteredProducts = computed(() => {
     let list = this.products();
     if (this.activeCategory() !== 'all') {
-      list = list.filter(p => p.category === this.activeCategory());
+      list = list.filter(p => p.categoryName === this.activeCategory());
     }
     if (this.searchQuery()) {
       const q = this.searchQuery().toLowerCase();
-      list = list.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+      list = list.filter(p => p.name.toLowerCase().includes(q) || (p.categoryName ?? '').toLowerCase().includes(q));
     }
     return list;
   });
 
   cartCount = computed(() => this.cartService.count());
 
-  addToCart(product: MockProduct): void {
+  ngOnInit(): void {
+    this.loading.set(true);
+    this.api.getProducts().subscribe({
+      next: products => { this.products.set(products); this.loading.set(false); },
+      error: () => this.loading.set(false),
+    });
+  }
+
+  addToCart(product: ProductDto): void {
     this.cartService.addItem(product);
   }
 
-  isInCart(product: MockProduct): boolean {
+  isInCart(product: ProductDto): boolean {
     return this.cartService.items().some(i => i.product.id === product.id);
   }
 

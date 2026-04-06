@@ -1,7 +1,8 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService, MockProduct } from '../../../../core/services/mock-data.service';
+import { ApiService } from '../../../../core/services/api.service';
+import { ProductDto } from '../../../../core/models/api.models';
 
 @Component({
   selector: 'app-corporate-products',
@@ -10,22 +11,23 @@ import { MockDataService, MockProduct } from '../../../../core/services/mock-dat
   templateUrl: './products.html',
   styleUrl: './products.css',
 })
-export class CorporateProductsComponent {
-  private mockData = inject(MockDataService);
+export class CorporateProductsComponent implements OnInit {
+  private api = inject(ApiService);
 
-  products = signal<MockProduct[]>(this.mockData.getProducts());
+  products = signal<ProductDto[]>([]);
   searchQuery = signal('');
   categoryFilter = signal('all');
   showAddModal = signal(false);
+  loading = signal(false);
 
-  newProduct = signal({ name: '', price: 0, stock: 0, category: 'Electronics', emoji: '📦', description: '' });
+  newProduct = signal({ name: '', unitPrice: 0, stock: 0, categoryName: 'Electronics', emoji: '📦', description: '' });
 
   categories = ['Electronics', 'Furniture', 'Food', 'Sports', 'Fashion', 'Beauty', 'Home'];
 
   filteredProducts = computed(() => {
     let list = this.products();
     if (this.categoryFilter() !== 'all') {
-      list = list.filter(p => p.category === this.categoryFilter());
+      list = list.filter(p => p.categoryName === this.categoryFilter());
     }
     if (this.searchQuery()) {
       const q = this.searchQuery().toLowerCase();
@@ -34,27 +36,36 @@ export class CorporateProductsComponent {
     return list;
   });
 
+  ngOnInit(): void {
+    this.loading.set(true);
+    this.api.getProducts().subscribe({
+      next: products => { this.products.set(products); this.loading.set(false); },
+      error: () => this.loading.set(false),
+    });
+  }
+
   deleteProduct(id: number): void {
-    this.products.update(prods => prods.filter(p => p.id !== id));
+    this.api.deleteProduct(id).subscribe({
+      next: () => this.products.update(prods => prods.filter(p => p.id !== id)),
+    });
   }
 
   addProduct(): void {
     const np = this.newProduct();
     if (!np.name) return;
-    const newProd: MockProduct = {
-      id: Date.now(),
+    this.api.createProduct({
       name: np.name,
-      price: np.price,
+      unitPrice: np.unitPrice,
       stock: np.stock,
-      category: np.category,
-      emoji: np.emoji || '📦',
-      rating: 0,
-      reviews: 0,
       description: np.description,
-    };
-    this.products.update(prods => [...prods, newProd]);
-    this.showAddModal.set(false);
-    this.newProduct.set({ name: '', price: 0, stock: 0, category: 'Electronics', emoji: '📦', description: '' });
+      emoji: np.emoji,
+    }).subscribe({
+      next: created => {
+        this.products.update(prods => [...prods, created]);
+        this.showAddModal.set(false);
+        this.newProduct.set({ name: '', unitPrice: 0, stock: 0, categoryName: 'Electronics', emoji: '📦', description: '' });
+      },
+    });
   }
 
   getStockClass(stock: number): string {

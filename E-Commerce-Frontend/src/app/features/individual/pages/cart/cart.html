@@ -18,8 +18,8 @@
             <div class="item-emoji">{{ item.product.emoji }}</div>
             <div class="item-info">
               <div class="item-name">{{ item.product.name }}</div>
-              <div class="item-category">{{ item.product.category }}</div>
-              <div class="item-price">${{ item.product.price.toFixed(2) }}</div>
+              <div class="item-category">{{ item.product.categoryName }}</div>
+              <div class="item-price">${{ item.product.unitPrice.toFixed(2) }}</div>
             </div>
             <div class="item-controls">
               <div class="qty-control">
@@ -27,7 +27,7 @@
                 <span class="qty-value">{{ item.qty }}</span>
                 <button class="qty-btn" (click)="updateQty(item.product.id, item.qty + 1)">+</button>
               </div>
-              <div class="item-subtotal">${{ (item.product.price * item.qty).toFixed(2) }}</div>
+              <div class="item-subtotal">${{ (item.product.unitPrice * item.qty).toFixed(2) }}</div>
               <button class="btn btn-ghost btn-sm remove-btn" (click)="removeItem(item.product.id)">✕</button>
             </div>
           </div>

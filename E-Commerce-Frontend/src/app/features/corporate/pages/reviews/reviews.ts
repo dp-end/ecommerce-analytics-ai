@@ -1,7 +1,8 @@
 import { Component, OnInit, ViewChild, ElementRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
-import { MockDataService, MockReview } from '../../../../core/services/mock-data.service';
+import { ApiService } from '../../../../core/services/api.service';
+import { ReviewDto } from '../../../../core/models/api.models';
 
 Chart.register(...registerables);
 
@@ -15,23 +16,33 @@ Chart.register(...registerables);
 export class CorporateReviewsComponent implements OnInit {
   @ViewChild('ratingChart', { static: true }) ratingChartRef!: ElementRef<HTMLCanvasElement>;
 
-  private mockData = inject(MockDataService);
-  reviews = signal<MockReview[]>(this.mockData.getReviews());
-
+  private api = inject(ApiService);
+  reviews = signal<ReviewDto[]>([]);
   avgRating = signal(0);
+  ratingBars = signal<{ star: number; count: number; pct: number }[]>([]);
+  loading = signal(false);
 
   ngOnInit(): void {
-    const total = this.reviews().reduce((sum, r) => sum + r.stars, 0);
-    this.avgRating.set(Math.round((total / this.reviews().length) * 10) / 10);
-    this.computeRatingBars();
-    this.initChart();
+    this.loading.set(true);
+    this.api.getReviews().subscribe({
+      next: reviews => {
+        this.reviews.set(reviews);
+        this.loading.set(false);
+        if (reviews.length > 0) {
+          const total = reviews.reduce((sum, r) => sum + r.starRating, 0);
+          this.avgRating.set(Math.round((total / reviews.length) * 10) / 10);
+          this.computeRatingBars(reviews);
+          this.initChart(reviews);
+        }
+      },
+      error: () => this.loading.set(false),
+    });
   }
 
-  private initChart(): void {
+  private initChart(reviews: ReviewDto[]): void {
     const distribution = [1, 2, 3, 4, 5].map(star =>
-      this.reviews().filter(r => r.stars === star).length
+      reviews.filter(r => r.starRating === star).length
     );
-
     new Chart(this.ratingChartRef.nativeElement, {
       type: 'bar',
       data: {
@@ -40,14 +51,12 @@ export class CorporateReviewsComponent implements OnInit {
           label: 'Reviews',
           data: distribution,
           backgroundColor: ['rgba(239,68,68,0.7)', 'rgba(249,115,22,0.7)', 'rgba(245,158,11,0.7)', 'rgba(37,99,235,0.7)', 'rgba(16,185,129,0.7)'],
-          borderColor: ['#ef4444','#f97316','#f59e0b','#2563eb','#10b981'],
-          borderWidth: 1,
-          borderRadius: 4,
+          borderColor: ['#ef4444', '#f97316', '#f59e0b', '#2563eb', '#10b981'],
+          borderWidth: 1, borderRadius: 4,
         }],
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
           tooltip: { backgroundColor: '#161b22', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e' },
@@ -64,14 +73,17 @@ export class CorporateReviewsComponent implements OnInit {
     return '★'.repeat(count) + '☆'.repeat(5 - count);
   }
 
-  ratingBars = signal<{ star: number; count: number; pct: number }[]>([]);
-
-  private computeRatingBars(): void {
-    const total = this.reviews().length;
+  private computeRatingBars(reviews: ReviewDto[]): void {
+    const total = reviews.length;
     const bars = [5, 4, 3, 2, 1].map(star => {
-      const count = this.reviews().filter(r => r.stars === star).length;
+      const count = reviews.filter(r => r.starRating === star).length;
       return { star, count, pct: total > 0 ? Math.round(count / total * 100) : 0 };
     });
     this.ratingBars.set(bars);
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('tr-TR');
   }
 }

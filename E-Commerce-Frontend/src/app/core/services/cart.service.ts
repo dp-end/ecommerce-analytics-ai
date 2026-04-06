@@ -1,37 +1,22 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { MockDataService, MockProduct } from './mock-data.service';
+import { ProductDto } from '../models/api.models';
 
 export interface CartItem {
-  product: MockProduct;
+  product: ProductDto;
   qty: number;
 }
 
 @Injectable({ providedIn: 'root' })
 export class CartService {
-  private mockData = new MockDataService();
-
-  items = signal<CartItem[]>(this._getInitialItems());
+  items = signal<CartItem[]>([]);
 
   count = computed(() => this.items().reduce((sum, item) => sum + item.qty, 0));
 
   total = computed(() =>
-    this.items().reduce((sum, item) => sum + item.product.price * item.qty, 0)
+    this.items().reduce((sum, item) => sum + item.product.unitPrice * item.qty, 0)
   );
 
-  private _getInitialItems(): CartItem[] {
-    const products = this.mockData.getProducts();
-    const headphones = products.find(p => p.name.toLowerCase().includes('headphone'));
-    const watch = products.find(p => p.name.toLowerCase().includes('watch'));
-    const yoga = products.find(p => p.name.toLowerCase().includes('yoga'));
-
-    const items: CartItem[] = [];
-    if (headphones) items.push({ product: headphones, qty: 1 });
-    if (watch) items.push({ product: watch, qty: 2 });
-    if (yoga) items.push({ product: yoga, qty: 1 });
-    return items;
-  }
-
-  addItem(product: MockProduct): void {
+  addItem(product: ProductDto): void {
     this.items.update(items => {
       const existing = items.find(i => i.product.id === product.id);
       if (existing) {

@@ -79,7 +79,7 @@
             <span class="badge" [ngClass]="getActivityClass(item.type)">{{ item.type }}</span>
             <div class="activity-content">
               <div class="activity-action">{{ item.action }}</div>
-              <div class="activity-meta">{{ item.user }} &middot; {{ item.time }}</div>
+              <div class="activity-meta">{{ item.userName }} &middot; {{ formatTime(item.createdAt) }}</div>
             </div>
           </div>
         }
@@ -107,25 +107,18 @@
           </tr>
         </thead>
         <tbody>
-          @for (store of topStores(); track store.id) {
+          @for (store of topStores(); track store.storeId) {
             <tr>
               <td>
                 <div class="store-name">
                   <span class="store-icon">🏪</span>
-                  {{ store.name }}
+                  {{ store.storeName }}
                 </div>
               </td>
-              <td class="text-secondary">{{ store.owner }}</td>
-              <td class="text-secondary">{{ store.category }}</td>
               <td class="font-semibold">{{ formatRevenue(store.revenue) }}</td>
-              <td class="text-secondary">{{ store.orders.toLocaleString() }}</td>
+              <td class="text-secondary">{{ store.orderCount.toLocaleString() }}</td>
               <td>
                 <span class="rating">⭐ {{ store.rating }}</span>
-              </td>
-              <td>
-                <span class="badge" [ngClass]="store.status === 'open' ? 'badge-green' : 'badge-red'">
-                  {{ store.status }}
-                </span>
               </td>
             </tr>
           }

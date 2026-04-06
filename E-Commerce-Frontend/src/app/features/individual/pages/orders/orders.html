@@ -25,7 +25,7 @@
         <div class="order-header">
           <div class="order-id-section">
             <span class="order-id">{{ order.id }}</span>
-            <span class="order-date">Placed on {{ order.date }}</span>
+            <span class="order-date">Placed on {{ formatDate(order.createdAt) }}</span>
           </div>
           <span class="badge" [ngClass]="getStatusClass(order.status)">
             {{ getStatusIcon(order.status) }} {{ order.status }}
@@ -33,15 +33,15 @@
         </div>
 
         <div class="order-items">
-          @for (item of order.items; track item) {
-            <span class="item-tag">{{ item }}</span>
+          @for (item of order.items; track item.id) {
+            <span class="item-tag">{{ item.productName }}</span>
           }
         </div>
 
         <div class="order-footer">
           <div class="order-info">
-            <span class="order-products">{{ order.products }} item{{ order.products > 1 ? 's' : '' }}</span>
-            <span class="order-total">${{ order.total.toFixed(2) }}</span>
+            <span class="order-products">{{ order.items.length }} item{{ order.items.length > 1 ? 's' : '' }}</span>
+            <span class="order-total">${{ order.grandTotal.toFixed(2) }}</span>
           </div>
           <div class="order-actions">
             @if (order.status === 'shipped' || order.status === 'processing') {

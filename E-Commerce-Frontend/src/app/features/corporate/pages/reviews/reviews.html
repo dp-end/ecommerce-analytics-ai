@@ -61,20 +61,20 @@
         <div class="review-item">
           <div class="review-header">
             <div class="reviewer-info">
-              <div class="reviewer-av">{{ review.customer[0] }}</div>
+              <div class="reviewer-av">{{ review.customerName[0] }}</div>
               <div>
-                <div class="reviewer-name">{{ review.customer }}</div>
-                <div class="review-product">{{ review.product }}</div>
+                <div class="reviewer-name">{{ review.customerName }}</div>
+                <div class="review-product">{{ review.productName }}</div>
               </div>
             </div>
             <div class="review-meta">
-              <div class="review-stars" [class.high]="review.stars >= 4" [class.mid]="review.stars === 3" [class.low]="review.stars <= 2">
-                {{ review.stars }}★
+              <div class="review-stars" [class.high]="review.starRating >= 4" [class.mid]="review.starRating === 3" [class.low]="review.starRating <= 2">
+                {{ review.starRating }}★
               </div>
-              <div class="review-date">{{ review.date }}</div>
+              <div class="review-date">{{ formatDate(review.createdAt) }}</div>
             </div>
           </div>
-          <p class="review-text">{{ review.text }}</p>
+          <p class="review-text">{{ review.reviewText }}</p>
           <div class="review-footer">
             <span class="helpful">👍 {{ review.helpful }} found helpful</span>
             <button class="btn btn-ghost btn-sm">Reply</button>

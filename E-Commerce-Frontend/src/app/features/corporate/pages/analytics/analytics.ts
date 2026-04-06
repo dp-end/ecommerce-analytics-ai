@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, inject } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
 import { StatCardComponent } from '../../../../shared/stat-card/stat-card';
-import { MockDataService } from '../../../../core/services/mock-data.service';
+import { ApiService } from '../../../../core/services/api.service';
 
 Chart.register(...registerables);
 
@@ -17,23 +17,25 @@ export class CorporateAnalyticsComponent implements OnInit {
   @ViewChild('salesChart', { static: true }) salesChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('categoryChart', { static: true }) categoryChartRef!: ElementRef<HTMLCanvasElement>;
 
-  private mockData = inject(MockDataService);
+  private api = inject(ApiService);
 
   ngOnInit(): void {
     this.initSalesChart();
-    this.initCategoryChart();
+    this.api.getRevenueByStore().subscribe({ next: stores => this.initCategoryChart(stores) });
   }
 
   private initSalesChart(): void {
-    const data = this.mockData.getAnalyticsData();
+    const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const revenue = [42000, 58000, 51000, 73000, 68000, 89000, 95000, 87000, 102000, 115000, 98000, 134000];
+    const orders = [420, 580, 510, 730, 680, 890, 950, 870, 1020, 1150, 980, 1340];
     new Chart(this.salesChartRef.nativeElement, {
       type: 'line',
       data: {
-        labels: data.labels,
+        labels,
         datasets: [
           {
             label: 'Revenue',
-            data: data.revenue,
+            data: revenue,
             borderColor: '#7c3aed',
             backgroundColor: 'rgba(124,58,237,0.08)',
             fill: true,
@@ -43,7 +45,7 @@ export class CorporateAnalyticsComponent implements OnInit {
           },
           {
             label: 'Orders × 100',
-            data: data.orders.map(v => v * 100),
+            data: orders.map(v => v * 100),
             borderColor: '#2563eb',
             backgroundColor: 'rgba(37,99,235,0.04)',
             fill: true,
@@ -68,14 +70,13 @@ export class CorporateAnalyticsComponent implements OnInit {
     });
   }
 
-  private initCategoryChart(): void {
-    const data = this.mockData.getCategoryBreakdown();
+  private initCategoryChart(stores: { storeName: string; revenue: number }[]): void {
     new Chart(this.categoryChartRef.nativeElement, {
       type: 'doughnut',
       data: {
-        labels: data.labels,
+        labels: stores.map(s => s.storeName),
         datasets: [{
-          data: data.data,
+          data: stores.map(s => s.revenue),
           backgroundColor: ['#7c3aed','#2563eb','#10b981','#06b6d4','#f59e0b','#f97316'],
           borderColor: '#161b22',
           borderWidth: 3,

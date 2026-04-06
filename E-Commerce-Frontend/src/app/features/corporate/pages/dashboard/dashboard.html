@@ -109,13 +109,13 @@
           @for (order of recentOrders(); track order.id) {
             <tr>
               <td style="font-weight:600;font-family:var(--font-mono);font-size:0.8rem">{{ order.id }}</td>
-              <td>{{ order.customer }}</td>
-              <td style="color:var(--text-secondary)">{{ order.products }} items</td>
-              <td style="font-weight:600">${{ order.total.toFixed(2) }}</td>
+              <td>{{ order.customerName }}</td>
+              <td style="color:var(--text-secondary)">{{ order.items.length }} items</td>
+              <td style="font-weight:600">${{ order.grandTotal.toFixed(2) }}</td>
               <td>
                 <span class="badge" [ngClass]="getStatusClass(order.status)">{{ order.status }}</span>
               </td>
-              <td style="color:var(--text-muted);font-size:0.8rem">{{ order.date }}</td>
+              <td style="color:var(--text-muted);font-size:0.8rem">{{ formatDate(order.createdAt) }}</td>
             </tr>
           }
         </tbody>

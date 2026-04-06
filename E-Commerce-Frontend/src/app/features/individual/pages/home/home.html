@@ -56,7 +56,7 @@
     @for (product of filteredProducts(); track product.id) {
       <div class="product-card card">
         <div class="product-badge-wrapper">
-          <span class="badge badge-purple product-category-badge">{{ product.category }}</span>
+          <span class="badge badge-purple product-category-badge">{{ product.categoryName }}</span>
         </div>
         <div class="product-image">
           <span class="product-emoji">{{ product.emoji }}</span>
@@ -67,7 +67,7 @@
           <div class="product-rating">
             <span class="stars">{{ getStars(product.rating) }}</span>
             <span class="rating-num">{{ product.rating }}</span>
-            <span class="review-count">({{ product.reviews }})</span>
+            <span class="review-count">({{ product.rating | number:'1.0-0' }}★)</span>
           </div>
           <div class="product-stock">
             @if (product.stock > 20) {
@@ -80,7 +80,7 @@
           </div>
         </div>
         <div class="product-footer">
-          <div class="product-price">${{ product.price.toFixed(2) }}</div>
+          <div class="product-price">${{ product.unitPrice.toFixed(2) }}</div>
           <button
             class="btn btn-sm"
             [ngClass]="isInCart(product) ? 'btn-success' : 'btn-primary'"

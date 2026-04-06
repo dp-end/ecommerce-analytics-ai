@@ -1,7 +1,8 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService, MockUser } from '../../../../core/services/mock-data.service';
+import { ApiService } from '../../../../core/services/api.service';
+import { UserDto } from '../../../../core/models/api.models';
 
 @Component({
   selector: 'app-admin-users',
@@ -10,17 +11,18 @@ import { MockDataService, MockUser } from '../../../../core/services/mock-data.s
   templateUrl: './users.html',
   styleUrl: './users.css',
 })
-export class AdminUsersComponent {
-  private mockData = inject(MockDataService);
+export class AdminUsersComponent implements OnInit {
+  private api = inject(ApiService);
 
   searchQuery = signal('');
   roleFilter = signal('all');
-  users = signal<MockUser[]>(this.mockData.getUsers());
+  users = signal<UserDto[]>([]);
+  loading = signal(false);
 
   filteredUsers = computed(() => {
     let list = this.users();
     if (this.roleFilter() !== 'all') {
-      list = list.filter(u => u.role === this.roleFilter());
+      list = list.filter(u => u.roleType.toLowerCase() === this.roleFilter());
     }
     if (this.searchQuery()) {
       const q = this.searchQuery().toLowerCase();
@@ -29,20 +31,37 @@ export class AdminUsersComponent {
     return list;
   });
 
-  getRoleBadge(role: string): string {
-    return { admin: 'badge-red', corporate: 'badge-blue', individual: 'badge-green' }[role] || 'badge-gray';
+  ngOnInit(): void {
+    this.loading.set(true);
+    this.api.getUsers().subscribe({
+      next: users => { this.users.set(users); this.loading.set(false); },
+      error: () => this.loading.set(false),
+    });
   }
 
-  toggleStatus(user: MockUser): void {
-    this.users.update(users =>
-      users.map(u => u.id === user.id
-        ? { ...u, status: u.status === 'active' ? 'suspended' : 'active' }
-        : u
-      )
-    );
+  getRoleBadge(role: string): string {
+    const r = role.toLowerCase();
+    return { admin: 'badge-red', corporate: 'badge-blue', individual: 'badge-green' }[r] || 'badge-gray';
+  }
+
+  getStatusBadge(status: string): string {
+    return status.toUpperCase() === 'ACTIVE' ? 'badge-green' : 'badge-red';
+  }
+
+  toggleStatus(user: UserDto): void {
+    const newStatus = user.status.toUpperCase() === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    this.api.updateUserStatus(user.id, newStatus).subscribe({
+      next: updated => this.users.update(users => users.map(u => u.id === updated.id ? updated : u)),
+    });
   }
 
   deleteUser(id: number): void {
-    this.users.update(users => users.filter(u => u.id !== id));
+    this.api.deleteUser(id).subscribe({
+      next: () => this.users.update(users => users.filter(u => u.id !== id)),
+    });
+  }
+
+  getInitials(name: string): string {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   }
 }

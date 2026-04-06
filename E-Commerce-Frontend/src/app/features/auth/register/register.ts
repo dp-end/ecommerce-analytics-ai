@@ -35,9 +35,7 @@ export class RegisterComponent {
     this.loading.set(true);
     this.error.set('');
 
-    await new Promise(r => setTimeout(r, 700));
-
-    const success = this.authService.login(this.email(), this.password());
+    const success = await this.authService.register(this.name(), this.email(), this.password());
 
     if (success) {
       const role = this.authService.getCurrentRole();
@@ -52,7 +50,7 @@ export class RegisterComponent {
           this.router.navigate(['/individual/home']);
       }
     } else {
-      this.error.set('Kayıt başarısız. Lütfen tekrar deneyin.');
+      this.error.set('Kayıt başarısız. Bu e-posta adresi kullanımda olabilir.');
     }
 
     this.loading.set(false);

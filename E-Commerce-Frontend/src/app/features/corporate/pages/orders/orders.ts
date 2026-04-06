@@ -1,7 +1,8 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService, MockOrder } from '../../../../core/services/mock-data.service';
+import { ApiService } from '../../../../core/services/api.service';
+import { OrderDto } from '../../../../core/models/api.models';
 
 @Component({
   selector: 'app-corporate-orders',
@@ -10,40 +11,53 @@ import { MockDataService, MockOrder } from '../../../../core/services/mock-data.
   templateUrl: './orders.html',
   styleUrl: './orders.css',
 })
-export class CorporateOrdersComponent {
-  private mockData = inject(MockDataService);
+export class CorporateOrdersComponent implements OnInit {
+  private api = inject(ApiService);
 
-  orders = signal<MockOrder[]>(this.mockData.getOrders());
+  orders = signal<OrderDto[]>([]);
   statusFilter = signal('all');
   searchQuery = signal('');
+  loading = signal(false);
 
   filteredOrders = computed(() => {
     let list = this.orders();
     if (this.statusFilter() !== 'all') {
-      list = list.filter(o => o.status === this.statusFilter());
+      list = list.filter(o => o.status.toLowerCase() === this.statusFilter());
     }
     if (this.searchQuery()) {
       const q = this.searchQuery().toLowerCase();
-      list = list.filter(o => o.id.toLowerCase().includes(q) || o.customer.toLowerCase().includes(q));
+      list = list.filter(o =>
+        String(o.id).toLowerCase().includes(q) || o.customerName.toLowerCase().includes(q)
+      );
     }
     return list;
   });
 
-  getStatusClass(status: string): string {
-    const map: Record<string, string> = {
-      pending: 'badge-yellow',
-      processing: 'badge-blue',
-      shipped: 'badge-cyan',
-      completed: 'badge-green',
-      cancelled: 'badge-red',
-    };
-    return map[status] || 'badge-gray';
+  ngOnInit(): void {
+    this.loading.set(true);
+    this.api.getOrders().subscribe({
+      next: orders => { this.orders.set(orders); this.loading.set(false); },
+      error: () => this.loading.set(false),
+    });
   }
 
-  fulfilOrder(order: MockOrder): void {
-    this.orders.update(orders =>
-      orders.map(o => o.id === order.id ? { ...o, status: 'shipped' as MockOrder['status'] } : o)
-    );
+  getStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      pending: 'badge-yellow', processing: 'badge-blue',
+      shipped: 'badge-cyan', completed: 'badge-green', cancelled: 'badge-red',
+    };
+    return map[status.toLowerCase()] || 'badge-gray';
+  }
+
+  fulfilOrder(order: OrderDto): void {
+    this.api.updateOrderStatus(order.id, 'SHIPPED').subscribe({
+      next: updated => this.orders.update(orders => orders.map(o => o.id === updated.id ? updated : o)),
+    });
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('tr-TR');
   }
 
   statusOptions = ['all', 'pending', 'processing', 'shipped', 'completed', 'cancelled'];

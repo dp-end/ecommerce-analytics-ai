@@ -52,26 +52,26 @@
             <tr>
               <td>
                 <div class="customer-cell">
-                  <div class="customer-av">{{ getInitials(customer.name) }}</div>
+                  <div class="customer-av">{{ getInitials(customer.userName) }}</div>
                   <div>
-                    <div style="font-weight:500">{{ customer.name }}</div>
+                    <div style="font-weight:500">{{ customer.userName }}</div>
                     <div style="font-size:0.75rem;color:var(--text-muted)">{{ customer.email }}</div>
                   </div>
                 </div>
               </td>
               <td style="color:var(--text-secondary)">{{ customer.city }}</td>
               <td>
-                <span class="badge" [ngClass]="getMembershipBadge(customer.membership)">
-                  {{ customer.membership === 'gold' ? '🥇' : customer.membership === 'silver' ? '🥈' : '🥉' }}
-                  {{ customer.membership }}
+                <span class="badge" [ngClass]="getMembershipBadge(customer.membershipType)">
+                  {{ customer.membershipType.toUpperCase() === 'GOLD' ? '🥇' : customer.membershipType.toUpperCase() === 'SILVER' ? '🥈' : '🥉' }}
+                  {{ customer.membershipType }}
                 </span>
               </td>
               <td style="font-weight:600">${{ customer.totalSpend.toLocaleString() }}</td>
-              <td style="color:var(--text-secondary)">{{ customer.orders }}</td>
+              <td style="color:var(--text-secondary)">{{ customer.itemsPurchased }}</td>
               <td>
-                <span class="badge" [ngClass]="customer.status === 'active' ? 'badge-green' : 'badge-gray'">{{ customer.status }}</span>
+                <span class="badge" [ngClass]="customer.satisfactionLevel === 'HIGH' ? 'badge-green' : 'badge-gray'">{{ customer.satisfactionLevel ?? '—' }}</span>
               </td>
-              <td style="color:var(--text-muted);font-size:0.8rem">{{ customer.joinedDate }}</td>
+              <td style="color:var(--text-muted);font-size:0.8rem">{{ customer.city }}</td>
             </tr>
           }
         </tbody>

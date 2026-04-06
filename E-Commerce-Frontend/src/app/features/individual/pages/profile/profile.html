@@ -18,7 +18,7 @@
 
   <!-- Stats -->
   <div class="stats-grid">
-    @for (s of stats; track s.label) {
+    @for (s of stats(); track s.label) {
       <div class="card stat-card">
         <div class="stat-icon">{{ s.icon }}</div>
         <div>
@@ -145,12 +145,12 @@
               </tr>
             </thead>
             <tbody>
-              @for (order of recentOrders; track order.id) {
+              @for (order of recentOrders(); track order.id) {
                 <tr>
-                  <td style="font-weight:600;color:var(--accent-purple)">{{ order.id }}</td>
-                  <td style="color:var(--text-secondary)">{{ order.date }}</td>
-                  <td>{{ order.items }} items</td>
-                  <td style="font-weight:600">{{ order.total }}</td>
+                  <td style="font-weight:600;color:var(--accent-purple)">#{{ order.id }}</td>
+                  <td style="color:var(--text-secondary)">{{ formatDate(order.createdAt) }}</td>
+                  <td>{{ order.items.length }} items</td>
+                  <td style="font-weight:600">${{ order.grandTotal.toFixed(2) }}</td>
                   <td><span class="badge" [ngClass]="statusClass(order.status)">{{ order.status }}</span></td>
                 </tr>
               }

@@ -32,16 +32,16 @@
           <span class="product-emoji">{{ product.emoji }}</span>
         </div>
         <div class="product-body">
-          <span class="product-category">{{ product.category }}</span>
+          <span class="product-category">{{ product.categoryName }}</span>
           <h4 class="product-name">{{ product.name }}</h4>
           <p class="product-desc">{{ product.description }}</p>
           <div class="product-rating">
             <span class="stars">⭐ {{ product.rating }}</span>
-            <span style="font-size:0.75rem;color:var(--text-muted)">({{ product.reviews }})</span>
+            <span style="font-size:0.75rem;color:var(--text-muted)">(0)</span>
           </div>
         </div>
         <div class="product-footer">
-          <div class="product-price">${{ product.price.toFixed(2) }}</div>
+          <div class="product-price">${{ product.unitPrice.toFixed(2) }}</div>
           <span class="badge" [ngClass]="getStockClass(product.stock)">{{ product.stock }} in stock</span>
         </div>
         <div class="product-actions">
@@ -68,7 +68,7 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
             <div class="form-group">
               <label class="form-label">Price ($)</label>
-              <input type="number" class="form-control" [value]="newProduct().price" (input)="newProduct.update(p => ({...p, price: +$any($event.target).value}))" />
+              <input type="number" class="form-control" [value]="newProduct().unitPrice" (input)="newProduct.update(p => ({...p, price: +$any($event.target).value}))" />
             </div>
             <div class="form-group">
               <label class="form-label">Stock</label>
@@ -78,7 +78,7 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
             <div class="form-group">
               <label class="form-label">Category</label>
-              <select class="form-control" [value]="newProduct().category" (change)="newProduct.update(p => ({...p, category: $any($event.target).value}))">
+              <select class="form-control" [value]="newProduct().categoryName" (change)="newProduct.update(p => ({...p, category: $any($event.target).value}))">
                 @for (cat of categories; track cat) {
                   <option [value]="cat">{{ cat }}</option>
                 }

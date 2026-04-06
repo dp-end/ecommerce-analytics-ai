@@ -1,7 +1,8 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService } from '../../../../core/services/mock-data.service';
+import { ApiService } from '../../../../core/services/api.service';
+import { AuditLogDto } from '../../../../core/models/api.models';
 
 @Component({
   selector: 'app-admin-audit-logs',
@@ -25,10 +26,10 @@ import { MockDataService } from '../../../../core/services/mock-data.service';
           </div>
           <select class="form-control" style="width:160px" [value]="typeFilter()" (change)="typeFilter.set($any($event.target).value)">
             <option value="all">All Types</option>
-            <option value="success">Success</option>
-            <option value="warning">Warning</option>
-            <option value="error">Error</option>
-            <option value="info">Info</option>
+            <option value="SUCCESS">Success</option>
+            <option value="WARNING">Warning</option>
+            <option value="ERROR">Error</option>
+            <option value="INFO">Info</option>
           </select>
         </div>
       </div>
@@ -46,15 +47,16 @@ import { MockDataService } from '../../../../core/services/mock-data.service';
               </tr>
             </thead>
             <tbody>
+              @if (loading()) {
+                <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-secondary)">Loading...</td></tr>
+              }
               @for (log of filteredLogs(); track log.id) {
                 <tr>
                   <td style="color:var(--text-muted);font-size:0.85rem">#{{ log.id }}</td>
-                  <td>
-                    <span class="badge" [ngClass]="getBadge(log.type)">{{ log.type }}</span>
-                  </td>
+                  <td><span class="badge" [ngClass]="getBadge(log.type)">{{ log.type }}</span></td>
                   <td style="max-width:400px">{{ log.action }}</td>
-                  <td style="color:var(--text-secondary)">{{ log.user }}</td>
-                  <td style="color:var(--text-muted);white-space:nowrap">{{ log.time }}</td>
+                  <td style="color:var(--text-secondary)">{{ log.userName }}</td>
+                  <td style="color:var(--text-muted);white-space:nowrap">{{ formatTime(log.createdAt) }}</td>
                 </tr>
               }
             </tbody>
@@ -65,23 +67,39 @@ import { MockDataService } from '../../../../core/services/mock-data.service';
   `,
   styles: [`.page { display:flex;flex-direction:column; }`],
 })
-export class AdminAuditLogsComponent {
-  private mockData = inject(MockDataService);
-  logs = this.mockData.getActivityLog();
+export class AdminAuditLogsComponent implements OnInit {
+  private api = inject(ApiService);
+
+  logs = signal<AuditLogDto[]>([]);
+  loading = signal(false);
   search = signal('');
   typeFilter = signal('all');
 
   filteredLogs = computed(() => {
-    let list = this.logs;
-    if (this.typeFilter() !== 'all') list = list.filter(l => l.type === this.typeFilter());
+    let list = this.logs();
+    if (this.typeFilter() !== 'all') list = list.filter(l => l.type.toUpperCase() === this.typeFilter());
     if (this.search()) {
       const q = this.search().toLowerCase();
-      list = list.filter(l => l.action.toLowerCase().includes(q) || l.user.toLowerCase().includes(q));
+      list = list.filter(l => l.action.toLowerCase().includes(q) || l.userName.toLowerCase().includes(q));
     }
     return list;
   });
 
+  ngOnInit(): void {
+    this.loading.set(true);
+    this.api.getAuditLogs().subscribe({
+      next: logs => { this.logs.set(logs); this.loading.set(false); },
+      error: () => this.loading.set(false),
+    });
+  }
+
   getBadge(type: string): string {
-    return { success: 'badge-green', warning: 'badge-yellow', error: 'badge-red', info: 'badge-blue' }[type] || 'badge-gray';
+    const map: Record<string, string> = { SUCCESS: 'badge-green', WARNING: 'badge-yellow', ERROR: 'badge-red', INFO: 'badge-blue' };
+    return map[type?.toUpperCase()] || 'badge-gray';
+  }
+
+  formatTime(dateStr: string): string {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
   }
 }

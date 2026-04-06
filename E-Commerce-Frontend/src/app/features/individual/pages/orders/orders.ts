@@ -1,7 +1,8 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService, MockOrder } from '../../../../core/services/mock-data.service';
+import { ApiService } from '../../../../core/services/api.service';
+import { OrderDto } from '../../../../core/models/api.models';
 
 @Component({
   selector: 'app-individual-orders',
@@ -10,38 +11,45 @@ import { MockDataService, MockOrder } from '../../../../core/services/mock-data.
   templateUrl: './orders.html',
   styleUrl: './orders.css',
 })
-export class IndividualOrdersComponent {
-  private mockData = inject(MockDataService);
+export class IndividualOrdersComponent implements OnInit {
+  private api = inject(ApiService);
 
-  orders = signal<MockOrder[]>(this.mockData.getOrders());
+  orders = signal<OrderDto[]>([]);
   statusFilter = signal('all');
+  loading = signal(false);
 
   filteredOrders = computed(() => {
     const list = this.orders();
     if (this.statusFilter() === 'all') return list;
-    return list.filter(o => o.status === this.statusFilter());
+    return list.filter(o => o.status.toLowerCase() === this.statusFilter());
   });
+
+  ngOnInit(): void {
+    this.loading.set(true);
+    this.api.getMyOrders().subscribe({
+      next: orders => { this.orders.set(orders); this.loading.set(false); },
+      error: () => this.loading.set(false),
+    });
+  }
 
   getStatusClass(status: string): string {
     const map: Record<string, string> = {
-      pending: 'badge-yellow',
-      processing: 'badge-blue',
-      shipped: 'badge-cyan',
-      completed: 'badge-green',
-      cancelled: 'badge-red',
+      pending: 'badge-yellow', processing: 'badge-blue',
+      shipped: 'badge-cyan', completed: 'badge-green', cancelled: 'badge-red',
     };
-    return map[status] || 'badge-gray';
+    return map[status.toLowerCase()] || 'badge-gray';
   }
 
   getStatusIcon(status: string): string {
     const map: Record<string, string> = {
-      pending: '⏳',
-      processing: '⚙️',
-      shipped: '🚚',
-      completed: '✅',
-      cancelled: '❌',
+      pending: '⏳', processing: '⚙️', shipped: '🚚', completed: '✅', cancelled: '❌',
     };
-    return map[status] || '📦';
+    return map[status.toLowerCase()] || '📦';
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('tr-TR');
   }
 
   statusOptions = ['all', 'pending', 'processing', 'shipped', 'completed', 'cancelled'];
