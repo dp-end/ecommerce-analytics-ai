@@ -156,3 +156,37 @@
     padding: 2rem 1.5rem;
   }
 }
+
+/* ── Rol Seçimi ── */
+.role-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.role-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1rem 0.75rem;
+  background: var(--bg-tertiary, #f3f4f6);
+  border: 2px solid transparent;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.role-card:hover {
+  border-color: #7c3aed44;
+}
+
+.role-card.active {
+  border-color: #7c3aed;
+  background: #7c3aed14;
+}
+
+.role-icon  { font-size: 1.75rem; }
+.role-label { font-size: 0.875rem; font-weight: 600; }
+.role-desc  { font-size: 0.72rem; color: #6b7280; }
+

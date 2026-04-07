@@ -62,18 +62,19 @@
           </div>
           <div class="metric-divider"></div>
           <div class="metric">
-            <span class="metric-value">⭐ {{ store.rating }}</span>
-            <span class="metric-label">Rating</span>
+            <span class="metric-value">{{ store.createdAt | slice:0:10 }}</span>
+            <span class="metric-label">Joined</span>
           </div>
         </div>
 
-        <button
-          class="btn w-full btn-sm"
-          [ngClass]="store.status.toUpperCase() === 'OPEN' ? 'btn-danger' : 'btn-success'"
-          (click)="toggleStatus(store)"
-        >
-          {{ store.status.toUpperCase() === 'OPEN' ? '🔒 Close Store' : '🔓 Open Store' }}
-        </button>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-sm" style="flex:1"
+            [ngClass]="store.status.toUpperCase() === 'OPEN' ? 'btn-danger' : 'btn-success'"
+            (click)="toggleStatus(store)">
+            {{ store.status.toUpperCase() === 'OPEN' ? '🔒 Close' : '🔓 Open' }}
+          </button>
+          <button class="btn btn-sm btn-danger" (click)="deleteStore(store.id)">🗑️</button>
+        </div>
       </div>
     }
   </div>

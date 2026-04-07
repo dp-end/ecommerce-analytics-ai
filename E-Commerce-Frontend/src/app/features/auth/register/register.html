@@ -17,6 +17,22 @@
     </div>
 
     <form (ngSubmit)="onSubmit()" class="register-form">
+      <!-- Rol Seçimi -->
+      <div class="role-selector">
+        <button type="button" class="role-card" [class.active]="roleType() === 'INDIVIDUAL'"
+          (click)="roleType.set('INDIVIDUAL')">
+          <span class="role-icon">🛒</span>
+          <span class="role-label">Bireysel</span>
+          <span class="role-desc">Alışveriş yapın</span>
+        </button>
+        <button type="button" class="role-card" [class.active]="roleType() === 'CORPORATE'"
+          (click)="roleType.set('CORPORATE')">
+          <span class="role-icon">🏪</span>
+          <span class="role-label">Kurumsal</span>
+          <span class="role-desc">Mağaza açın</span>
+        </button>
+      </div>
+
       <!-- Name -->
       <div class="form-group">
         <label class="form-label">Ad Soyad</label>

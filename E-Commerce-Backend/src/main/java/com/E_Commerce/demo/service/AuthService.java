@@ -4,8 +4,10 @@ import com.E_Commerce.demo.dto.request.LoginRequest;
 import com.E_Commerce.demo.dto.request.RegisterRequest;
 import com.E_Commerce.demo.dto.response.AuthResponse;
 import com.E_Commerce.demo.entity.CustomerProfile;
+import com.E_Commerce.demo.entity.Store;
 import com.E_Commerce.demo.entity.User;
 import com.E_Commerce.demo.repository.CustomerProfileRepository;
+import com.E_Commerce.demo.repository.StoreRepository;
 import com.E_Commerce.demo.repository.UserRepository;
 import com.E_Commerce.demo.security.JwtUtil;
 import com.E_Commerce.demo.security.UserDetailsServiceImpl;
@@ -23,6 +25,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final CustomerProfileRepository customerProfileRepository;
+    private final StoreRepository storeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
@@ -44,10 +47,14 @@ public class AuthService {
                 .build();
         userRepository.save(user);
 
-        CustomerProfile profile = CustomerProfile.builder()
-                .user(user)
-                .build();
-        customerProfileRepository.save(profile);
+        customerProfileRepository.save(CustomerProfile.builder().user(user).build());
+
+        if (user.getRoleType() == User.RoleType.CORPORATE) {
+            storeRepository.save(Store.builder()
+                    .name(user.getName() + "'s Store")
+                    .owner(user)
+                    .build());
+        }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtUtil.generateToken(userDetails);

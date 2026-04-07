@@ -39,10 +39,10 @@ export class AuthService {
     }
   }
 
-  async register(name: string, email: string, password: string): Promise<boolean> {
+  async register(name: string, email: string, password: string, roleType: string = 'INDIVIDUAL'): Promise<boolean> {
     try {
       const res = await firstValueFrom(
-        this.http.post<AuthResponse>(`${environment.apiUrl}/api/auth/register`, { name, email, password })
+        this.http.post<AuthResponse>(`${environment.apiUrl}/api/auth/register`, { name, email, password, roleType })
       );
       this.saveSession(res);
       return true;

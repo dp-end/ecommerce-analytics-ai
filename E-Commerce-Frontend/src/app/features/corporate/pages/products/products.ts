@@ -119,8 +119,14 @@ export class CorporateProductsComponent implements OnInit {
         this.showAddModal.set(false);
         this.saving.set(false);
       },
-      error: () => {
-        this.errorMsg.set('Ürün eklenirken hata oluştu. Lütfen tekrar deneyin.');
+      error: (err) => {
+        const body = err?.error;
+        if (body?.fieldErrors) {
+          const msgs = Object.entries(body.fieldErrors).map(([k, v]) => `${k}: ${v}`).join(', ');
+          this.errorMsg.set(msgs);
+        } else {
+          this.errorMsg.set(body?.message || 'Ürün eklenirken hata oluştu.');
+        }
         this.saving.set(false);
       },
     });

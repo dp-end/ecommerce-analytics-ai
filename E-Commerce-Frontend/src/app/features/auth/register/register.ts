@@ -15,18 +15,18 @@ export class RegisterComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  name = signal('');
-  email = signal('');
+  name     = signal('');
+  email    = signal('');
   password = signal('');
-  error = signal('');
-  loading = signal(false);
+  roleType = signal<'INDIVIDUAL' | 'CORPORATE'>('INDIVIDUAL');
+  error    = signal('');
+  loading  = signal(false);
 
   async onSubmit(): Promise<void> {
     if (!this.name() || !this.email() || !this.password()) {
       this.error.set('Lütfen tüm alanları doldurun.');
       return;
     }
-
     if (this.password().length < 6) {
       this.error.set('Şifre en az 6 karakter olmalıdır.');
       return;
@@ -35,7 +35,7 @@ export class RegisterComponent {
     this.loading.set(true);
     this.error.set('');
 
-    const success = await this.authService.register(this.name(), this.email(), this.password());
+    const success = await this.authService.register(this.name(), this.email(), this.password(), this.roleType());
 
     if (success) {
       const role = this.authService.getCurrentRole();

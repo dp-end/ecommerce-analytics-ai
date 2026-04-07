@@ -40,7 +40,7 @@ public class Product {
 
     private String emoji;
 
-    @Column(name = "image_url", columnDefinition = "TEXT")
+    @Column(name = "image_url", columnDefinition = "MEDIUMTEXT")
     private String imageUrl;
 
     @Builder.Default
