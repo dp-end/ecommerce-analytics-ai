@@ -40,6 +40,9 @@ public class Product {
 
     private String emoji;
 
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
+
     @Builder.Default
     private Double rating = 0.0;
 

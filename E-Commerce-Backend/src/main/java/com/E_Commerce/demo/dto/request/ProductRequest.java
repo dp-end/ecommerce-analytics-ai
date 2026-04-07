@@ -20,4 +20,5 @@ public class ProductRequest {
     private Integer stock = 0;
     private String description;
     private String emoji;
+    private String imageUrl;
 }

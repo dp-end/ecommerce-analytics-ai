@@ -101,7 +101,8 @@ export class ApiService {
 
   createProduct(data: {
     name: string; unitPrice: number; stock?: number;
-    description?: string; emoji?: string; storeId?: number; categoryId?: number; sku?: string;
+    description?: string; emoji?: string; imageUrl?: string;
+    storeId?: number; categoryId?: number; sku?: string;
   }): Observable<ProductDto> {
     return this.http.post<ProductDto>(`${this.base}/api/products`, data);
   }

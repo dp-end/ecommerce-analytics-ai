@@ -46,6 +46,7 @@ export interface ProductDto {
   stock: number;
   description?: string;
   emoji?: string;
+  imageUrl?: string;
   rating: number;
 }
 

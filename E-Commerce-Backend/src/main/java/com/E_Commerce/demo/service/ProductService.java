@@ -69,6 +69,7 @@ public class ProductService {
                 .stock(request.getStock() != null ? request.getStock() : 0)
                 .description(request.getDescription())
                 .emoji(request.getEmoji())
+                .imageUrl(request.getImageUrl())
                 .build();
         return ProductDto.from(productRepository.save(product));
     }

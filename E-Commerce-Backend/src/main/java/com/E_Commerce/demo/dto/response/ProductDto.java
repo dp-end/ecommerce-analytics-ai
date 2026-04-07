@@ -17,6 +17,7 @@ public class ProductDto {
     private Integer stock;
     private String description;
     private String emoji;
+    private String imageUrl;
     private Double rating;
 
     public static ProductDto from(Product p) {
@@ -32,6 +33,7 @@ public class ProductDto {
                 .stock(p.getStock())
                 .description(p.getDescription())
                 .emoji(p.getEmoji())
+                .imageUrl(p.getImageUrl())
                 .rating(p.getRating())
                 .build();
     }

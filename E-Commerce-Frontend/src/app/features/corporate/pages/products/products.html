@@ -4,100 +4,176 @@
       <h2 class="page-title">Products</h2>
       <p class="page-subtitle">Manage your product catalog</p>
     </div>
-    <button class="btn btn-primary btn-sm" (click)="showAddModal.set(true)">
-      ➕ Add Product
-    </button>
+    <button class="btn btn-primary btn-sm" (click)="openAddModal()">➕ Add Product</button>
   </div>
 
   <!-- Filters -->
   <div class="filters-row">
     <div class="search-input-wrapper" style="flex:1;max-width:340px">
       <span class="search-icon">🔍</span>
-      <input type="text" class="form-control" placeholder="Search products..." [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
+      <input type="text" class="form-control" placeholder="Search products..."
+        [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
     </div>
-    <select class="form-control" style="width:180px" [value]="categoryFilter()" (change)="categoryFilter.set($any($event.target).value)">
+    <select class="form-control" style="width:200px"
+      [value]="categoryFilter()" (change)="categoryFilter.set($any($event.target).value)">
       <option value="all">All Categories</option>
-      @for (cat of categories; track cat) {
-        <option [value]="cat">{{ cat }}</option>
+      @for (cat of categories(); track cat.id) {
+        <option [value]="cat.id">{{ cat.name }}</option>
       }
     </select>
-    <span style="color:var(--text-muted);font-size:0.8rem">{{ filteredProducts().length }} products</span>
+    <span style="color:var(--text-muted);font-size:0.85rem">{{ filteredProducts().length }} products</span>
   </div>
 
-  <!-- Products Grid -->
-  <div class="products-grid">
-    @for (product of filteredProducts(); track product.id) {
-      <div class="product-card card">
-        <div class="product-img">
-          <span class="product-emoji">{{ product.emoji }}</span>
-        </div>
-        <div class="product-body">
-          <span class="product-category">{{ product.categoryName }}</span>
-          <h4 class="product-name">{{ product.name }}</h4>
-          <p class="product-desc">{{ product.description }}</p>
-          <div class="product-rating">
-            <span class="stars">⭐ {{ product.rating }}</span>
-            <span style="font-size:0.75rem;color:var(--text-muted)">(0)</span>
+  <!-- Grid -->
+  @if (loading()) {
+    <p style="color:var(--text-muted);text-align:center;padding:2rem">Loading...</p>
+  } @else if (filteredProducts().length === 0) {
+    <div class="empty-state">
+      <div class="empty-state-icon">📦</div>
+      <div class="empty-state-title">No products yet</div>
+      <p style="color:var(--text-muted);font-size:0.875rem">Click "Add Product" to get started.</p>
+    </div>
+  } @else {
+    <div class="products-grid">
+      @for (product of filteredProducts(); track product.id) {
+        <div class="product-card card">
+          <div class="product-img">
+            @if (product.imageUrl) {
+              <img [src]="product.imageUrl" [alt]="product.name" class="product-image" />
+            } @else {
+              <span class="product-emoji">{{ product.emoji || '📦' }}</span>
+            }
+          </div>
+          <div class="product-body">
+            <span class="product-category">{{ product.categoryName || '—' }}</span>
+            <h4 class="product-name">{{ product.name }}</h4>
+            <p class="product-desc">{{ product.description }}</p>
+          </div>
+          <div class="product-footer">
+            <div class="product-price">${{ product.unitPrice.toFixed(2) }}</div>
+            <span class="badge" [ngClass]="getStockBadge(product.stock)">
+              {{ product.stock }} in stock
+            </span>
+          </div>
+          <div class="product-actions">
+            <button class="btn btn-danger btn-sm" style="margin-left:auto" (click)="deleteProduct(product.id)">🗑️</button>
           </div>
         </div>
-        <div class="product-footer">
-          <div class="product-price">${{ product.unitPrice.toFixed(2) }}</div>
-          <span class="badge" [ngClass]="getStockClass(product.stock)">{{ product.stock }} in stock</span>
-        </div>
-        <div class="product-actions">
-          <button class="btn btn-secondary btn-sm" style="flex:1">✏️ Edit</button>
-          <button class="btn btn-danger btn-sm" (click)="deleteProduct(product.id)">🗑️</button>
-        </div>
-      </div>
-    }
-  </div>
+      }
+    </div>
+  }
 
-  <!-- Add Product Modal -->
+  <!-- Modal -->
   @if (showAddModal()) {
     <div class="modal-overlay" (click)="showAddModal.set(false)">
       <div class="modal" (click)="$event.stopPropagation()">
+
         <div class="modal-header">
           <h3>Add New Product</h3>
           <button class="btn btn-ghost btn-icon" (click)="showAddModal.set(false)">✕</button>
         </div>
+
         <div class="modal-body">
-          <div class="form-group">
-            <label class="form-label">Product Name</label>
-            <input type="text" class="form-control" [value]="newProduct().name" (input)="newProduct.update(p => ({...p, name: $any($event.target).value}))" placeholder="Product name" />
+
+          <!-- Image Upload -->
+          <div class="image-upload-area" (click)="imgInput.click()">
+            @if (imagePreview()) {
+              <img [src]="imagePreview()" alt="preview" class="image-preview" />
+              <div class="image-overlay">🔄 Change Image</div>
+            } @else {
+              <div class="upload-placeholder">
+                <span class="upload-icon">🖼️</span>
+                <span class="upload-text">Click to upload image</span>
+                <span class="upload-hint">PNG, JPG · max 2MB</span>
+              </div>
+            }
+            <input #imgInput type="file" accept="image/*" style="display:none"
+              (change)="onImageSelected($event)" />
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+
+          <!-- Store -->
+          <div class="form-group">
+            <label class="form-label">Store *</label>
+            @if (storesLoading()) {
+              <p style="color:var(--text-muted);font-size:.85rem">Mağazalar yükleniyor...</p>
+            } @else if (myStores().length === 0) {
+              <p class="form-error">Henüz mağazanız yok. Önce Stores sayfasından bir mağaza oluşturun.</p>
+            } @else {
+              <select class="form-control"
+                [value]="newProduct().storeId"
+                (change)="newProduct.update(p => ({...p, storeId: +$any($event.target).value}))">
+                @for (s of myStores(); track s.id) {
+                  <option [value]="s.id">{{ s.name }}</option>
+                }
+              </select>
+            }
+          </div>
+
+          <!-- Name -->
+          <div class="form-group">
+            <label class="form-label">Product Name *</label>
+            <input type="text" class="form-control" placeholder="e.g. Wireless Headphones"
+              [value]="newProduct().name"
+              (input)="newProduct.update(p => ({...p, name: $any($event.target).value}))" />
+          </div>
+
+          <!-- Price & Stock -->
+          <div class="form-row-2">
             <div class="form-group">
-              <label class="form-label">Price ($)</label>
-              <input type="number" class="form-control" [value]="newProduct().unitPrice" (input)="newProduct.update(p => ({...p, price: +$any($event.target).value}))" />
+              <label class="form-label">Price ($) *</label>
+              <input type="number" class="form-control" min="0.01" step="0.01"
+                [value]="newProduct().unitPrice"
+                (input)="newProduct.update(p => ({...p, unitPrice: +$any($event.target).value}))" />
             </div>
             <div class="form-group">
               <label class="form-label">Stock</label>
-              <input type="number" class="form-control" [value]="newProduct().stock" (input)="newProduct.update(p => ({...p, stock: +$any($event.target).value}))" />
+              <input type="number" class="form-control" min="0"
+                [value]="newProduct().stock"
+                (input)="newProduct.update(p => ({...p, stock: +$any($event.target).value}))" />
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+
+          <!-- Category & Emoji -->
+          <div class="form-row-2">
             <div class="form-group">
               <label class="form-label">Category</label>
-              <select class="form-control" [value]="newProduct().categoryName" (change)="newProduct.update(p => ({...p, category: $any($event.target).value}))">
-                @for (cat of categories; track cat) {
-                  <option [value]="cat">{{ cat }}</option>
+              <select class="form-control"
+                [value]="newProduct().categoryId"
+                (change)="newProduct.update(p => ({...p, categoryId: +$any($event.target).value}))">
+                @for (cat of categories(); track cat.id) {
+                  <option [value]="cat.id">{{ cat.name }}</option>
                 }
               </select>
             </div>
             <div class="form-group">
               <label class="form-label">Emoji Icon</label>
-              <input type="text" class="form-control" [value]="newProduct().emoji" (input)="newProduct.update(p => ({...p, emoji: $any($event.target).value}))" placeholder="📦" />
+              <input type="text" class="form-control" placeholder="📦"
+                [value]="newProduct().emoji"
+                (input)="newProduct.update(p => ({...p, emoji: $any($event.target).value}))" />
             </div>
           </div>
+
+          <!-- Description -->
           <div class="form-group">
             <label class="form-label">Description</label>
-            <input type="text" class="form-control" [value]="newProduct().description" (input)="newProduct.update(p => ({...p, description: $any($event.target).value}))" placeholder="Brief product description" />
+            <textarea class="form-control" rows="2" placeholder="Brief product description"
+              [value]="newProduct().description"
+              (input)="newProduct.update(p => ({...p, description: $any($event.target).value}))"></textarea>
           </div>
+
+          @if (errorMsg()) {
+            <p class="form-error">{{ errorMsg() }}</p>
+          }
         </div>
+
         <div class="modal-footer">
           <button class="btn btn-secondary" (click)="showAddModal.set(false)">Cancel</button>
-          <button class="btn btn-primary" (click)="addProduct()">Add Product</button>
+          <button class="btn btn-primary" (click)="addProduct()"
+            [disabled]="saving() || storesLoading() || myStores().length === 0">
+            @if (saving()) { Adding... } @else { Add Product }
+          </button>
         </div>
+
       </div>
     </div>
   }
