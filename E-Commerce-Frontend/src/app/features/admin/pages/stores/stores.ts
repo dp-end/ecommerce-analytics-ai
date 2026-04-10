@@ -14,24 +14,39 @@ import { StoreDto } from '../../../../core/models/api.models';
 export class AdminStoresComponent implements OnInit {
   private api = inject(ApiService);
 
-  stores = signal<StoreDto[]>([]);
-  searchQuery = signal('');
+  stores       = signal<StoreDto[]>([]);
+  searchQuery  = signal('');
   statusFilter = signal('all');
-  loading = signal(false);
+  loading      = signal(false);
+  showModal    = signal(false);
+  saving       = signal(false);
+  errorMsg     = signal('');
+  successMsg   = signal('');
+
+  newAccount = signal({
+    storeName: '', ownerName: '', email: '', password: '', category: '',
+  });
+
+  categories = ['Electronics','Fashion','Food','Furniture','Sports','Beauty','Home','Books','Toys','Automotive'];
 
   filteredStores = computed(() => {
     let list = this.stores();
-    if (this.statusFilter() !== 'all') {
+    if (this.statusFilter() !== 'all')
       list = list.filter(s => s.status.toLowerCase() === this.statusFilter());
-    }
     if (this.searchQuery()) {
       const q = this.searchQuery().toLowerCase();
-      list = list.filter(s => s.name.toLowerCase().includes(q) || s.ownerName.toLowerCase().includes(q));
+      list = list.filter(s =>
+        s.name.toLowerCase().includes(q) || s.ownerName.toLowerCase().includes(q)
+      );
     }
     return list;
   });
 
   ngOnInit(): void {
+    this.loadStores();
+  }
+
+  loadStores(): void {
     this.loading.set(true);
     this.api.getStores().subscribe({
       next: stores => { this.stores.set(stores); this.loading.set(false); },
@@ -39,33 +54,56 @@ export class AdminStoresComponent implements OnInit {
     });
   }
 
+  openModal(): void {
+    this.errorMsg.set('');
+    this.successMsg.set('');
+    this.newAccount.set({ storeName: '', ownerName: '', email: '', password: '', category: '' });
+    this.showModal.set(true);
+  }
+
+  createStore(): void {
+    const f = this.newAccount();
+    if (!f.storeName.trim()) { this.errorMsg.set('Mağaza adı boş olamaz.');    return; }
+    if (!f.ownerName.trim()) { this.errorMsg.set('Sahip adı boş olamaz.');     return; }
+    if (!f.email.trim())     { this.errorMsg.set('E-posta boş olamaz.');        return; }
+    if (f.password.length < 6) { this.errorMsg.set('Şifre en az 6 karakter.'); return; }
+
+    this.saving.set(true);
+    this.errorMsg.set('');
+    this.api.createStoreAccount(f).subscribe({
+      next: (result) => {
+        this.successMsg.set(`"${result.storeName}" mağazası oluşturuldu. Giriş: ${result.email}`);
+        this.saving.set(false);
+        this.loadStores();
+        setTimeout(() => this.showModal.set(false), 2000);
+      },
+      error: (err) => {
+        this.errorMsg.set(err?.error?.message || 'Mağaza oluşturulamadı.');
+        this.saving.set(false);
+      },
+    });
+  }
+
   toggleStatus(store: StoreDto): void {
     const newStatus = store.status.toUpperCase() === 'OPEN' ? 'CLOSED' : 'OPEN';
     this.api.updateStoreStatus(store.id, newStatus).subscribe({
-      next: updated => this.stores.update(stores => stores.map(s => s.id === updated.id ? updated : s)),
+      next: updated => this.stores.update(list => list.map(s => s.id === updated.id ? updated : s)),
     });
   }
 
   deleteStore(id: number): void {
+    if (!confirm('Bu mağazayı silmek istediğinize emin misiniz?')) return;
     this.api.deleteStore(id).subscribe({
-      next: () => this.stores.update(stores => stores.filter(s => s.id !== id)),
+      next: () => this.stores.update(list => list.filter(s => s.id !== id)),
     });
   }
 
-  formatRevenue(v: number): string {
-    return '$' + (v / 1000).toFixed(0) + 'K';
-  }
-
   getCategoryEmoji(cat?: string): string {
-    if (!cat) return '🏪';
     const map: Record<string, string> = {
-      Electronics: '💻', Fashion: '👗', 'Food & Kitchen': '🍳', Sports: '⚽',
-      'Home & Garden': '🌿', Books: '📚', 'Pet Supplies': '🐾', Beauty: '✨',
+      Electronics: '💻', Fashion: '👗', Food: '🍳', Sports: '⚽',
+      Furniture: '🛋️', Home: '🏠', Books: '📚', Beauty: '✨',
+      Toys: '🧸', Automotive: '🚗',
     };
-    return map[cat] || '🏪';
-  }
-
-  getStatusBadge(status: string): string {
-    return status.toUpperCase() === 'OPEN' ? 'badge-green' : 'badge-gray';
+    return map[cat ?? ''] || '🏪';
   }
 }

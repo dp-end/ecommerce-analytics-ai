@@ -20,6 +20,10 @@ export const individualRoutes: Routes = [
         loadComponent: () => import('./pages/cart/cart').then(m => m.IndividualCartComponent),
       },
       {
+        path: 'checkout',
+        loadComponent: () => import('./pages/checkout/checkout').then(m => m.IndividualCheckoutComponent),
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./pages/profile/profile').then(m => m.IndividualProfileComponent),
       },

@@ -2,11 +2,13 @@ package com.E_Commerce.demo.controller;
 
 import com.E_Commerce.demo.dto.request.ProductRequest;
 import com.E_Commerce.demo.dto.response.ProductDto;
+import com.E_Commerce.demo.entity.User;
 import com.E_Commerce.demo.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -48,6 +50,12 @@ public class ProductController {
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<ProductDto>> getByCategory(@PathVariable Long categoryId) {
         return ResponseEntity.ok(productService.getByCategory(categoryId));
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<ProductDto>> getMyProducts(Authentication authentication) {
+        User currentUser = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(productService.getMyProducts(currentUser));
     }
 
     @GetMapping("/low-stock")

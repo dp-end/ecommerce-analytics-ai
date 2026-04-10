@@ -18,7 +18,6 @@ export class RegisterComponent {
   name     = signal('');
   email    = signal('');
   password = signal('');
-  roleType = signal<'INDIVIDUAL' | 'CORPORATE'>('INDIVIDUAL');
   error    = signal('');
   loading  = signal(false);
 
@@ -35,7 +34,7 @@ export class RegisterComponent {
     this.loading.set(true);
     this.error.set('');
 
-    const success = await this.authService.register(this.name(), this.email(), this.password(), this.roleType());
+    const success = await this.authService.register(this.name(), this.email(), this.password());
 
     if (success) {
       const role = this.authService.getCurrentRole();

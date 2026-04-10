@@ -45,11 +45,7 @@ export class CorporateProductsComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loading.set(true);
-    this.api.getProducts().subscribe({
-      next: p => { this.products.set(p); this.loading.set(false); },
-      error: () => this.loading.set(false),
-    });
+    this.loadMyProducts();
     this.api.getMyStores().subscribe({
       next: stores => {
         this.myStores.set(stores);
@@ -65,6 +61,14 @@ export class CorporateProductsComponent implements OnInit {
         if (cats.length > 0)
           this.newProduct.update(p => ({ ...p, categoryId: cats[0].id }));
       },
+    });
+  }
+
+  private loadMyProducts(): void {
+    this.loading.set(true);
+    this.api.getMyProducts().subscribe({
+      next: p => { this.products.set(p); this.loading.set(false); },
+      error: () => this.loading.set(false),
     });
   }
 
@@ -114,10 +118,10 @@ export class CorporateProductsComponent implements OnInit {
       storeId:     np.storeId,
       categoryId:  np.categoryId || undefined,
     }).subscribe({
-      next: created => {
-        this.products.update(list => [...list, created]);
+      next: () => {
         this.showAddModal.set(false);
         this.saving.set(false);
+        this.loadMyProducts();
       },
       error: (err) => {
         const body = err?.error;

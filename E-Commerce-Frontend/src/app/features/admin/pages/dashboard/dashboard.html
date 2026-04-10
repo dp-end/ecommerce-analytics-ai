@@ -20,33 +20,29 @@
     <app-stat-card
       icon="💰"
       title="Total Revenue"
-      value="$1.24M"
-      change="+18.2%"
-      subtitle="vs last month"
+      [value]="formatTotalRevenue(stats()?.totalRevenue ?? 0)"
+      subtitle="tüm zamanlar"
       accentColor="purple"
     />
     <app-stat-card
       icon="📦"
       title="Total Orders"
-      value="8,947"
-      change="+12.5%"
-      subtitle="vs last month"
+      [value]="(stats()?.totalOrders ?? 0).toLocaleString()"
+      subtitle="toplam sipariş"
       accentColor="blue"
     />
     <app-stat-card
       icon="👥"
       title="Active Users"
-      value="24,381"
-      change="+9.1%"
-      subtitle="vs last month"
+      [value]="(stats()?.totalUsers ?? 0).toLocaleString()"
+      subtitle="kayıtlı kullanıcı"
       accentColor="green"
     />
     <app-stat-card
       icon="🏪"
       title="Active Stores"
-      value="148"
-      change="+4"
-      subtitle="new this month"
+      [value]="(stats()?.totalStores ?? 0).toLocaleString()"
+      subtitle="kayıtlı mağaza"
       accentColor="orange"
     />
   </div>

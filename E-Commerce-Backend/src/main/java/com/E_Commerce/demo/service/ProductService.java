@@ -5,6 +5,7 @@ import com.E_Commerce.demo.dto.response.ProductDto;
 import com.E_Commerce.demo.entity.Category;
 import com.E_Commerce.demo.entity.Product;
 import com.E_Commerce.demo.entity.Store;
+import com.E_Commerce.demo.entity.User;
 import com.E_Commerce.demo.repository.CategoryRepository;
 import com.E_Commerce.demo.repository.ProductRepository;
 import com.E_Commerce.demo.repository.StoreRepository;
@@ -42,6 +43,13 @@ public class ProductService {
 
     public List<ProductDto> search(String keyword) {
         return productRepository.searchByName(keyword).stream().map(ProductDto::from).toList();
+    }
+
+    public List<ProductDto> getMyProducts(User currentUser) {
+        List<Long> storeIds = storeRepository.findByOwnerId(currentUser.getId())
+                .stream().map(Store::getId).toList();
+        if (storeIds.isEmpty()) return List.of();
+        return productRepository.findByStoreIdIn(storeIds).stream().map(ProductDto::from).toList();
     }
 
     public List<ProductDto> getLowStock(Integer threshold) {

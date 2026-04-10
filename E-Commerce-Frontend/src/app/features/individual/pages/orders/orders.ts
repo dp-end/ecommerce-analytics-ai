@@ -47,6 +47,14 @@ export class IndividualOrdersComponent implements OnInit {
     return map[status.toLowerCase()] || '📦';
   }
 
+  getStatusLabel(status: string): string {
+    const map: Record<string, string> = {
+      pending: 'Beklemede', processing: 'İşleniyor',
+      shipped: 'Kargoda', completed: 'Teslim Edildi', cancelled: 'İptal',
+    };
+    return map[status.toLowerCase()] || status;
+  }
+
   formatDate(dateStr: string): string {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('tr-TR');

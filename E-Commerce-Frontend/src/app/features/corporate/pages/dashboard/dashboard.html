@@ -2,34 +2,57 @@
   <div class="page-header">
     <div>
       <h2 class="page-title">Store Dashboard</h2>
-      <p class="page-subtitle">Your store performance at a glance</p>
+      <p class="page-subtitle">{{ myStore()?.name ?? 'Mağazanız' }} — güncel performans</p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-secondary btn-sm">📅 This Week</button>
-      <button class="btn btn-primary btn-sm">📥 Export</button>
+      <button class="btn btn-secondary btn-sm">📅 Son 7 Gün</button>
     </div>
   </div>
 
   <!-- KPI Cards -->
   <div class="stats-grid">
-    <app-stat-card icon="💰" title="Total Revenue" value="$178K" change="+24.3%" subtitle="vs last month" accentColor="purple"/>
-    <app-stat-card icon="📦" title="Total Orders" value="2,341" change="+18.1%" subtitle="vs last month" accentColor="blue"/>
-    <app-stat-card icon="👥" title="Customers" value="1,284" change="+11.5%" subtitle="vs last month" accentColor="green"/>
-    <app-stat-card icon="⭐" title="Avg Rating" value="4.6" change="+0.2" subtitle="from reviews" accentColor="orange"/>
+    <app-stat-card
+      icon="💰"
+      title="Total Revenue"
+      [value]="formatRevenue(totalRevenue())"
+      subtitle="toplam gelir"
+      accentColor="purple"
+    />
+    <app-stat-card
+      icon="📦"
+      title="Total Orders"
+      [value]="totalOrders().toLocaleString()"
+      subtitle="toplam sipariş"
+      accentColor="blue"
+    />
+    <app-stat-card
+      icon="👥"
+      title="Customers"
+      [value]="uniqueCustomers().toLocaleString()"
+      subtitle="benzersiz müşteri"
+      accentColor="green"
+    />
+    <app-stat-card
+      icon="⭐"
+      title="Avg Rating"
+      [value]="avgRating() > 0 ? avgRating().toFixed(1) : '—'"
+      subtitle="ortalama puan"
+      accentColor="orange"
+    />
   </div>
 
-  <!-- Charts + Orders -->
+  <!-- Charts + Quick Stats -->
   <div class="content-grid">
     <!-- Revenue Chart -->
     <div class="card chart-card">
       <div class="card-header">
         <div>
-          <div class="card-title">Weekly Revenue</div>
-          <div class="card-subtitle">Revenue trend for the past 7 days</div>
+          <div class="card-title">Günlük Gelir</div>
+          <div class="card-subtitle">Son 7 günün gelir trendi</div>
         </div>
         <div class="legend-dot">
           <span class="dot"></span>
-          <span style="font-size:0.75rem;color:var(--text-muted)">Revenue</span>
+          <span style="font-size:0.75rem;color:var(--text-muted)">Gelir</span>
         </div>
       </div>
       <div class="chart-wrapper">
@@ -40,48 +63,49 @@
     <!-- Quick Stats -->
     <div class="card side-stats">
       <div class="card-header">
-        <div class="card-title">Quick Stats</div>
+        <div class="card-title">Hızlı Durum</div>
       </div>
       <div class="quick-stats-list">
         <div class="quick-stat">
           <span class="qs-icon">🛍️</span>
           <div class="qs-info">
-            <div class="qs-label">Total Products</div>
-            <div class="qs-value">248</div>
+            <div class="qs-label">Toplam Ürün</div>
+            <div class="qs-value">{{ productCount() }}</div>
           </div>
-          <span class="badge badge-green">+5 new</span>
         </div>
         <div class="quick-stat">
-          <span class="qs-icon">📦</span>
+          <span class="qs-icon">⏳</span>
           <div class="qs-info">
-            <div class="qs-label">Pending Orders</div>
-            <div class="qs-value">34</div>
+            <div class="qs-label">Bekleyen Siparişler</div>
+            <div class="qs-value">{{ pendingCount() }}</div>
           </div>
-          <span class="badge badge-yellow">Action needed</span>
+          @if (pendingCount() > 0) {
+            <span class="badge badge-yellow">İşlem gerekli</span>
+          }
         </div>
         <div class="quick-stat">
           <span class="qs-icon">🚚</span>
           <div class="qs-info">
-            <div class="qs-label">In Transit</div>
-            <div class="qs-value">127</div>
+            <div class="qs-label">Kargoda</div>
+            <div class="qs-value">{{ shippedCount() }}</div>
           </div>
-          <span class="badge badge-blue">On time</span>
+          @if (shippedCount() > 0) {
+            <span class="badge badge-blue">Yolda</span>
+          }
         </div>
         <div class="quick-stat">
-          <span class="qs-icon">↩️</span>
+          <span class="qs-icon">✅</span>
           <div class="qs-info">
-            <div class="qs-label">Return Requests</div>
-            <div class="qs-value">8</div>
+            <div class="qs-label">Tamamlanan</div>
+            <div class="qs-value">{{ completedCount() }}</div>
           </div>
-          <span class="badge badge-red">Review</span>
         </div>
         <div class="quick-stat">
           <span class="qs-icon">💬</span>
           <div class="qs-info">
-            <div class="qs-label">New Reviews</div>
-            <div class="qs-value">23</div>
+            <div class="qs-label">Toplam Değerlendirme</div>
+            <div class="qs-value">{{ reviews().length }}</div>
           </div>
-          <span class="badge badge-purple">This week</span>
         </div>
       </div>
     </div>
@@ -90,36 +114,43 @@
   <!-- Recent Orders -->
   <div class="card">
     <div class="card-header">
-      <div class="card-title">Recent Orders</div>
-      <button class="btn btn-secondary btn-sm">View All Orders</button>
+      <div class="card-title">Son Siparişler</div>
     </div>
     <div class="table-container" style="border:none;border-radius:0">
-      <table>
-        <thead>
-          <tr>
-            <th>Order ID</th>
-            <th>Customer</th>
-            <th>Items</th>
-            <th>Total</th>
-            <th>Status</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (order of recentOrders(); track order.id) {
+      @if (recentOrders().length === 0) {
+        <p style="padding:2rem;text-align:center;color:var(--text-muted);font-size:0.875rem">
+          Henüz sipariş bulunmuyor.
+        </p>
+      } @else {
+        <table>
+          <thead>
             <tr>
-              <td style="font-weight:600;font-family:var(--font-mono);font-size:0.8rem">{{ order.id }}</td>
-              <td>{{ order.customerName }}</td>
-              <td style="color:var(--text-secondary)">{{ order.items.length }} items</td>
-              <td style="font-weight:600">${{ order.grandTotal.toFixed(2) }}</td>
-              <td>
-                <span class="badge" [ngClass]="getStatusClass(order.status)">{{ order.status }}</span>
-              </td>
-              <td style="color:var(--text-muted);font-size:0.8rem">{{ formatDate(order.createdAt) }}</td>
+              <th>Sipariş No</th>
+              <th>Müşteri</th>
+              <th>Ürün Sayısı</th>
+              <th>Toplam</th>
+              <th>Durum</th>
+              <th>Tarih</th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (order of recentOrders(); track order.id) {
+              <tr>
+                <td style="font-weight:600;font-family:var(--font-mono);font-size:0.8rem">#{{ order.id }}</td>
+                <td>{{ order.customerName }}</td>
+                <td style="color:var(--text-secondary)">{{ order.items.length }} ürün</td>
+                <td style="font-weight:600">${{ order.grandTotal.toFixed(2) }}</td>
+                <td>
+                  <span class="badge" [ngClass]="getStatusClass(order.status)">
+                    {{ getStatusLabel(order.status) }}
+                  </span>
+                </td>
+                <td style="color:var(--text-muted);font-size:0.8rem">{{ formatDate(order.createdAt) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
     </div>
   </div>
 </div>

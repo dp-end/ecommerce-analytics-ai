@@ -89,6 +89,12 @@ export class AdminDashboardComponent implements OnInit {
     return '$' + (v / 1000).toFixed(0) + 'K';
   }
 
+  formatTotalRevenue(v: number): string {
+    if (v >= 1_000_000) return '$' + (v / 1_000_000).toFixed(2) + 'M';
+    if (v >= 1_000)     return '$' + (v / 1_000).toFixed(1) + 'K';
+    return '$' + v.toFixed(2);
+  }
+
   formatTime(dateStr: string): string {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });

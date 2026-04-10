@@ -11,6 +11,7 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByStoreId(Long storeId);
+    List<Product> findByStoreIdIn(List<Long> storeIds);
     List<Product> findByCategoryId(Long categoryId);
     List<Product> findByStockLessThanEqual(Integer threshold);
 

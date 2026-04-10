@@ -84,6 +84,10 @@ export class ApiService {
     return this.http.delete<void>(`${this.base}/api/stores/${id}`);
   }
 
+  createStoreAccount(data: { storeName: string; ownerName: string; email: string; password: string; category?: string }): Observable<any> {
+    return this.http.post(`${this.base}/api/admin/store-accounts`, data);
+  }
+
   // ─── Products ──────────────────────────────────────────────────────────────
   getProducts(params?: { search?: string; storeId?: number; categoryId?: number }): Observable<ProductDto[]> {
     let url = `${this.base}/api/products`;
@@ -93,6 +97,10 @@ export class ApiService {
     if (params?.categoryId) query.push(`categoryId=${params.categoryId}`);
     if (query.length) url += '?' + query.join('&');
     return this.http.get<ProductDto[]>(url);
+  }
+
+  getMyProducts(): Observable<ProductDto[]> {
+    return this.http.get<ProductDto[]>(`${this.base}/api/products/my`);
   }
 
   getProductById(id: number): Observable<ProductDto> {

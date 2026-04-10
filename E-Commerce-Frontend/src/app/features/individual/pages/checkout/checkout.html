@@ -1,0 +1,197 @@
+<div class="page fade-in">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Ödeme</h2>
+      <p class="page-subtitle">Siparişini tamamlamak için bilgileri gir</p>
+    </div>
+    <a routerLink="../cart" class="btn btn-ghost btn-sm">← Sepete Dön</a>
+  </div>
+
+  @if (items().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">🛒</div>
+      <h3>Sepetiniz boş</h3>
+      <a routerLink="../home" class="btn btn-primary">Alışverişe Başla</a>
+    </div>
+  } @else {
+    <div class="checkout-layout">
+
+      <!-- LEFT: Forms -->
+      <div class="checkout-forms">
+
+        <!-- Delivery -->
+        <div class="card section-card">
+          <div class="section-title">
+            <span class="section-num">1</span>
+            Teslimat Bilgileri
+          </div>
+          <div class="form-grid">
+            <div class="form-group full">
+              <label class="form-label">Ad Soyad *</label>
+              <input type="text" class="form-control" placeholder="Ad Soyad"
+                [value]="address().fullName"
+                (input)="address.update(a => ({...a, fullName: $any($event.target).value}))" />
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Adres *</label>
+              <input type="text" class="form-control" placeholder="Mahalle, Sokak, Bina No"
+                [value]="address().street"
+                (input)="address.update(a => ({...a, street: $any($event.target).value}))" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Şehir *</label>
+              <input type="text" class="form-control" placeholder="İstanbul"
+                [value]="address().city"
+                (input)="address.update(a => ({...a, city: $any($event.target).value}))" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Telefon</label>
+              <input type="tel" class="form-control" placeholder="05XX XXX XX XX"
+                [value]="address().phone"
+                (input)="address.update(a => ({...a, phone: $any($event.target).value}))" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="card section-card">
+          <div class="section-title">
+            <span class="section-num">2</span>
+            Ödeme Yöntemi
+          </div>
+
+          <div class="payment-options">
+            <label class="payment-option" [class.selected]="paymentMethod() === 'card'">
+              <input type="radio" name="payment" value="card"
+                [checked]="paymentMethod() === 'card'"
+                (change)="paymentMethod.set('card')" />
+              <span class="payment-icon">💳</span>
+              <div>
+                <div class="payment-label">Kredi / Banka Kartı</div>
+                <div class="payment-sub">Visa, Mastercard, Troy</div>
+              </div>
+            </label>
+
+            <label class="payment-option" [class.selected]="paymentMethod() === 'transfer'">
+              <input type="radio" name="payment" value="transfer"
+                [checked]="paymentMethod() === 'transfer'"
+                (change)="paymentMethod.set('transfer')" />
+              <span class="payment-icon">🏦</span>
+              <div>
+                <div class="payment-label">Havale / EFT</div>
+                <div class="payment-sub">Banka havalesi</div>
+              </div>
+            </label>
+
+            <label class="payment-option" [class.selected]="paymentMethod() === 'cash'">
+              <input type="radio" name="payment" value="cash"
+                [checked]="paymentMethod() === 'cash'"
+                (change)="paymentMethod.set('cash')" />
+              <span class="payment-icon">💵</span>
+              <div>
+                <div class="payment-label">Kapıda Ödeme</div>
+                <div class="payment-sub">Nakit veya kart</div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Card Details -->
+          @if (paymentMethod() === 'card') {
+            <div class="card-fields">
+              <div class="form-group full">
+                <label class="form-label">Kart Numarası</label>
+                <input type="text" class="form-control card-input" placeholder="0000 0000 0000 0000"
+                  maxlength="19"
+                  [value]="card().number"
+                  (input)="onCardNumber($event)" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Son Kullanma Tarihi</label>
+                <input type="text" class="form-control" placeholder="MM/YY"
+                  maxlength="5"
+                  [value]="card().expiry"
+                  (input)="onExpiry($event)" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">CVV</label>
+                <input type="password" class="form-control" placeholder="•••"
+                  maxlength="4"
+                  [value]="card().cvv"
+                  (input)="card.update(c => ({...c, cvv: $any($event.target).value}))" />
+              </div>
+            </div>
+          }
+
+          @if (paymentMethod() === 'transfer') {
+            <div class="info-box">
+              <p>Sipariş onaylandıktan sonra IBAN bilgilerimiz e-posta ile gönderilecektir.</p>
+            </div>
+          }
+
+          @if (paymentMethod() === 'cash') {
+            <div class="info-box">
+              <p>Ürün tesliminde nakit veya POS cihazıyla ödeme yapabilirsiniz.</p>
+            </div>
+          }
+        </div>
+
+        @if (error()) {
+          <p class="error-msg">⚠️ {{ error() }}</p>
+        }
+      </div>
+
+      <!-- RIGHT: Summary -->
+      <div class="order-summary">
+        <div class="card summary-card">
+          <div class="summary-title">Sipariş Özeti</div>
+
+          <div class="summary-items">
+            @for (item of items(); track item.product.id) {
+              <div class="summary-item">
+                <span class="s-emoji">{{ item.product.emoji || '📦' }}</span>
+                <div class="s-info">
+                  <div class="s-name">{{ item.product.name }}</div>
+                  <div class="s-qty">x{{ item.qty }}</div>
+                </div>
+                <div class="s-price">${{ (item.product.unitPrice * item.qty).toFixed(2) }}</div>
+              </div>
+            }
+          </div>
+
+          <div class="summary-divider"></div>
+
+          <div class="totals">
+            <div class="total-row">
+              <span>Ara Toplam</span>
+              <span>${{ subtotal().toFixed(2) }}</span>
+            </div>
+            <div class="total-row">
+              <span>Kargo</span>
+              <span [class.free]="shipping() === 0">
+                {{ shipping() === 0 ? 'ÜCRETSİZ' : '$' + shipping().toFixed(2) }}
+              </span>
+            </div>
+            <div class="total-row">
+              <span>KDV (10%)</span>
+              <span>${{ tax().toFixed(2) }}</span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="total-row grand">
+              <span>Toplam</span>
+              <span>${{ grandTotal().toFixed(2) }}</span>
+            </div>
+          </div>
+
+          <button class="btn btn-primary place-btn" (click)="placeOrder()" [disabled]="placing()">
+            {{ placing() ? '⏳ İşleniyor...' : '✅ Siparişi Tamamla' }}
+          </button>
+
+          <div class="secure-note">🔒 256-bit SSL şifreleme ile güvende</div>
+        </div>
+      </div>
+
+    </div>
+  }
+</div>

@@ -2,80 +2,151 @@
   <div class="page-header">
     <div>
       <h2 class="page-title">Store Management</h2>
-      <p class="page-subtitle">Manage all stores on the DataPulse platform</p>
+      <p class="page-subtitle">Mağaza hesapları oluşturun ve yönetin</p>
     </div>
-    <button class="btn btn-primary btn-sm">
-      <span>➕</span> Add Store
-    </button>
+    <button class="btn btn-primary btn-sm" (click)="openModal()">➕ Mağaza Ekle</button>
   </div>
 
   <!-- Filters -->
   <div class="filters-row">
-    <div class="search-input-wrapper" style="flex:1; max-width: 360px;">
+    <div class="search-input-wrapper" style="flex:1;max-width:360px">
       <span class="search-icon">🔍</span>
-      <input
-        type="text"
-        class="form-control"
-        placeholder="Search stores..."
-        [value]="searchQuery()"
-        (input)="searchQuery.set($any($event.target).value)"
-      />
+      <input type="text" class="form-control" placeholder="Mağaza veya sahip ara..."
+        [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
     </div>
-    <select class="form-control" style="width: 160px;" [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
-      <option value="all">All Status</option>
-      <option value="open">Open</option>
-      <option value="closed">Closed</option>
+    <select class="form-control" style="width:160px"
+      [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+      <option value="all">Tümü</option>
+      <option value="open">Açık</option>
+      <option value="closed">Kapalı</option>
     </select>
-    <span class="text-muted text-sm">{{ filteredStores().length }} stores</span>
+    <span class="text-muted text-sm">{{ filteredStores().length }} mağaza</span>
   </div>
 
   <!-- Store Grid -->
-  <div class="stores-grid">
-    @for (store of filteredStores(); track store.id) {
-      <div class="store-card card">
-        <div class="store-header">
-          <div class="store-icon-wrapper">
-            <span class="store-emoji">{{ getCategoryEmoji(store.category) }}</span>
-          </div>
-          <div class="store-status-wrapper">
+  @if (loading()) {
+    <p style="color:var(--text-muted);text-align:center;padding:2rem">Yükleniyor...</p>
+  } @else if (filteredStores().length === 0) {
+    <div class="empty-state">
+      <div class="empty-state-icon">🏪</div>
+      <div class="empty-state-title">Henüz mağaza yok</div>
+      <p style="color:var(--text-muted);font-size:.875rem">"Mağaza Ekle" butonuyla ilk mağazayı oluşturun.</p>
+    </div>
+  } @else {
+    <div class="stores-grid">
+      @for (store of filteredStores(); track store.id) {
+        <div class="store-card card">
+          <div class="store-header">
+            <div class="store-icon-wrapper">
+              <span class="store-emoji">{{ getCategoryEmoji(store.category) }}</span>
+            </div>
             <span class="badge" [ngClass]="store.status.toUpperCase() === 'OPEN' ? 'badge-green' : 'badge-red'">
-              {{ store.status }}
+              {{ store.status.toUpperCase() === 'OPEN' ? 'Açık' : 'Kapalı' }}
             </span>
           </div>
+
+          <div class="store-info">
+            <h3 class="store-name">{{ store.name }}</h3>
+            <p class="store-owner">👤 {{ store.ownerName }}</p>
+            <span class="store-category">{{ store.category || '—' }}</span>
+          </div>
+
+          <div class="store-metrics">
+            <div class="metric">
+              <span class="metric-value">⭐ {{ store.rating }}</span>
+              <span class="metric-label">Puan</span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric">
+              <span class="metric-value">{{ store.createdAt | slice:0:10 }}</span>
+              <span class="metric-label">Katılım</span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:.5rem;margin-top:.25rem">
+            <button class="btn btn-sm" style="flex:1"
+              [ngClass]="store.status.toUpperCase() === 'OPEN' ? 'btn-danger' : 'btn-success'"
+              (click)="toggleStatus(store)">
+              {{ store.status.toUpperCase() === 'OPEN' ? '🔒 Kapat' : '🔓 Aç' }}
+            </button>
+            <button class="btn btn-sm btn-danger" (click)="deleteStore(store.id)">🗑️</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Mağaza Ekleme Modal -->
+  @if (showModal()) {
+    <div class="modal-overlay" (click)="showModal.set(false)">
+      <div class="modal" (click)="$event.stopPropagation()">
+
+        <div class="modal-header">
+          <h3>Yeni Mağaza Hesabı Oluştur</h3>
+          <button class="btn btn-ghost btn-icon" (click)="showModal.set(false)">✕</button>
         </div>
 
-        <div class="store-info">
-          <h3 class="store-name">{{ store.name }}</h3>
-          <p class="store-owner">by {{ store.ownerName }}</p>
-          <span class="store-category">{{ store.category }}</span>
+        <div class="modal-body">
+          <p class="modal-desc">
+            Mağaza sahibi bu e-posta ve şifre ile giriş yapabilecek.
+          </p>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Mağaza Adı *</label>
+              <input type="text" class="form-control" placeholder="örn: Tech Store"
+                [value]="newAccount().storeName"
+                (input)="newAccount.update(a => ({...a, storeName: $any($event.target).value}))" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Kategori</label>
+              <select class="form-control"
+                [value]="newAccount().category"
+                (change)="newAccount.update(a => ({...a, category: $any($event.target).value}))">
+                <option value="">Seçiniz</option>
+                @for (cat of categories; track cat) {
+                  <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Sahip Adı *</label>
+            <input type="text" class="form-control" placeholder="Ad Soyad"
+              [value]="newAccount().ownerName"
+              (input)="newAccount.update(a => ({...a, ownerName: $any($event.target).value}))" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">E-posta (Giriş için) *</label>
+            <input type="email" class="form-control" placeholder="magaza@example.com"
+              [value]="newAccount().email"
+              (input)="newAccount.update(a => ({...a, email: $any($event.target).value}))" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Şifre *</label>
+            <input type="password" class="form-control" placeholder="En az 6 karakter"
+              [value]="newAccount().password"
+              (input)="newAccount.update(a => ({...a, password: $any($event.target).value}))" />
+          </div>
+
+          @if (errorMsg()) {
+            <p class="form-error">⚠️ {{ errorMsg() }}</p>
+          }
+          @if (successMsg()) {
+            <p class="form-success">✅ {{ successMsg() }}</p>
+          }
         </div>
 
-        <div class="store-metrics">
-          <div class="metric">
-            <span class="metric-value">⭐ {{ store.rating }}</span>
-            <span class="metric-label">Rating</span>
-          </div>
-          <div class="metric-divider"></div>
-          <div class="metric">
-            <span class="metric-value">{{ store.category ?? '—' }}</span>
-            <span class="metric-label">Category</span>
-          </div>
-          <div class="metric-divider"></div>
-          <div class="metric">
-            <span class="metric-value">{{ store.createdAt | slice:0:10 }}</span>
-            <span class="metric-label">Joined</span>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:.5rem">
-          <button class="btn btn-sm" style="flex:1"
-            [ngClass]="store.status.toUpperCase() === 'OPEN' ? 'btn-danger' : 'btn-success'"
-            (click)="toggleStatus(store)">
-            {{ store.status.toUpperCase() === 'OPEN' ? '🔒 Close' : '🔓 Open' }}
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="showModal.set(false)">İptal</button>
+          <button class="btn btn-primary" (click)="createStore()" [disabled]="saving()">
+            {{ saving() ? 'Oluşturuluyor...' : 'Mağaza Oluştur' }}
           </button>
-          <button class="btn btn-sm btn-danger" (click)="deleteStore(store.id)">🗑️</button>
         </div>
       </div>
-    }
-  </div>
+    </div>
+  }
 </div>
