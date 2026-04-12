@@ -60,6 +60,10 @@ public class ShipmentService {
                 .destination(request.getDestination())
                 .eta(request.getEta())
                 .trackingNumber(trackingNumber)
+                .weightInGms(request.getWeightInGms())
+                .productImportance(request.getProductImportance())
+                .reachedOnTime(request.getReachedOnTime())
+                .priorPurchases(request.getPriorPurchases())
                 .build();
         return ShipmentDto.from(shipmentRepository.save(shipment));
     }

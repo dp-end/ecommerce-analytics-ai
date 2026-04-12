@@ -41,5 +41,11 @@ public class CustomerProfile {
     @Column(name = "satisfaction_level")
     private String satisfactionLevel;
 
+    @Column(name = "days_since_last_purchase")
+    private Integer daysSinceLastPurchase;
+
+    private String state;
+    private String country;
+
     public enum MembershipType { GOLD, SILVER, BRONZE }
 }

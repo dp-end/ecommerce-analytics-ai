@@ -35,6 +35,20 @@ public class Order {
     @Column(name = "payment_method")
     private String paymentMethod;
 
+    @Builder.Default
+    private Double discount = 0.0;
+
+    @Builder.Default
+    private Double tax = 0.0;
+
+    @Column(name = "shipping_cost")
+    @Builder.Default
+    private Double shippingCost = 0.0;
+
+    private String city;
+    private String state;
+    private String country;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -14,29 +14,51 @@ import { UserDto } from '../../../../core/models/api.models';
 export class AdminUsersComponent implements OnInit {
   private api = inject(ApiService);
 
-  searchQuery = signal('');
-  roleFilter = signal('all');
-  users = signal<UserDto[]>([]);
-  loading = signal(false);
+  searchQuery  = signal('');
+  roleFilter   = signal('');
+  users        = signal<UserDto[]>([]);
+  loading      = signal(false);
 
-  filteredUsers = computed(() => {
-    let list = this.users();
-    if (this.roleFilter() !== 'all') {
-      list = list.filter(u => u.roleType.toLowerCase() === this.roleFilter());
-    }
-    if (this.searchQuery()) {
-      const q = this.searchQuery().toLowerCase();
-      list = list.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
-    }
-    return list;
-  });
+  currentPage    = signal(0);
+  totalPages     = signal(0);
+  totalElements  = signal(0);
+  readonly pageSize = 50;
+
+  pages = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i));
+
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit(): void {
+    this.load();
+  }
+
+  load(page = 0): void {
     this.loading.set(true);
-    this.api.getUsers().subscribe({
-      next: users => { this.users.set(users); this.loading.set(false); },
+    this.currentPage.set(page);
+    this.api.getUsers(page, this.pageSize, this.searchQuery(), this.roleFilter()).subscribe({
+      next: res => {
+        this.users.set(res.content);
+        this.totalPages.set(res.totalPages);
+        this.totalElements.set(res.totalElements);
+        this.loading.set(false);
+      },
       error: () => this.loading.set(false),
     });
+  }
+
+  onSearchChange(value: string): void {
+    this.searchQuery.set(value);
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => this.load(0), 350);
+  }
+
+  onRoleChange(value: string): void {
+    this.roleFilter.set(value);
+    this.load(0);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 0 && page < this.totalPages()) this.load(page);
   }
 
   getRoleBadge(role: string): string {
@@ -51,13 +73,17 @@ export class AdminUsersComponent implements OnInit {
   toggleStatus(user: UserDto): void {
     const newStatus = user.status.toUpperCase() === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
     this.api.updateUserStatus(user.id, newStatus).subscribe({
-      next: updated => this.users.update(users => users.map(u => u.id === updated.id ? updated : u)),
+      next: updated => this.users.update(list => list.map(u => u.id === updated.id ? updated : u)),
     });
   }
 
   deleteUser(id: number): void {
+    if (!confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')) return;
     this.api.deleteUser(id).subscribe({
-      next: () => this.users.update(users => users.filter(u => u.id !== id)),
+      next: () => {
+        this.users.update(list => list.filter(u => u.id !== id));
+        this.totalElements.update(n => n - 1);
+      },
     });
   }
 

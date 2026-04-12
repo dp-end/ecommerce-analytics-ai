@@ -16,7 +16,13 @@ public class ReviewDto {
     private Integer starRating;
     private String reviewText;
     private Integer helpful;
+    private Integer helpfulVotes;
+    private Integer totalVotes;
     private String sentiment;
+    private String marketplace;
+    private String reviewHeadline;
+    private Boolean verifiedPurchase;
+    private Boolean vine;
     private LocalDateTime createdAt;
 
     public static ReviewDto from(Review r) {
@@ -29,7 +35,13 @@ public class ReviewDto {
                 .starRating(r.getStarRating())
                 .reviewText(r.getReviewText())
                 .helpful(r.getHelpful())
+                .helpfulVotes(r.getHelpfulVotes())
+                .totalVotes(r.getTotalVotes())
                 .sentiment(r.getSentiment())
+                .marketplace(r.getMarketplace())
+                .reviewHeadline(r.getReviewHeadline())
+                .verifiedPurchase(r.getVerifiedPurchase())
+                .vine(r.getVine())
                 .createdAt(r.getCreatedAt())
                 .build();
     }

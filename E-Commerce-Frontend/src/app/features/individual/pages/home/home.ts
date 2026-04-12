@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../core/services/api.service';
 import { CartService } from '../../../../core/services/cart.service';
-import { ProductDto } from '../../../../core/models/api.models';
+import { CategoryDto, ProductDto } from '../../../../core/models/api.models';
 
 @Component({
   selector: 'app-individual-home',
@@ -17,21 +17,28 @@ export class IndividualHomeComponent implements OnInit {
   cartService = inject(CartService);
 
   products = signal<ProductDto[]>([]);
+  categories = signal<CategoryDto[]>([]);
   searchQuery = signal('');
-  activeCategory = signal('all');
+  activeCategory = signal<number | 'all'>('all');
+  sortBy = signal<'featured' | 'price-asc' | 'price-desc' | 'rating'>('featured');
   loading = signal(false);
-
-  categories = ['all', 'Electronics', 'Furniture', 'Food', 'Sports', 'Fashion', 'Beauty', 'Home'];
 
   filteredProducts = computed(() => {
     let list = this.products();
     if (this.activeCategory() !== 'all') {
-      list = list.filter(p => p.categoryName === this.activeCategory());
+      list = list.filter(p => p.categoryId === this.activeCategory());
     }
     if (this.searchQuery()) {
       const q = this.searchQuery().toLowerCase();
-      list = list.filter(p => p.name.toLowerCase().includes(q) || (p.categoryName ?? '').toLowerCase().includes(q));
+      list = list.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        (p.categoryName ?? '').toLowerCase().includes(q)
+      );
     }
+    const sort = this.sortBy();
+    if (sort === 'price-asc')  list = [...list].sort((a, b) => a.unitPrice - b.unitPrice);
+    if (sort === 'price-desc') list = [...list].sort((a, b) => b.unitPrice - a.unitPrice);
+    if (sort === 'rating')     list = [...list].sort((a, b) => b.rating - a.rating);
     return list;
   });
 
@@ -43,6 +50,13 @@ export class IndividualHomeComponent implements OnInit {
       next: products => { this.products.set(products); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
+    this.api.getCategories().subscribe({
+      next: cats => this.categories.set(cats),
+    });
+  }
+
+  setCategory(cat: number | 'all'): void {
+    this.activeCategory.set(cat);
   }
 
   addToCart(product: ProductDto): void {

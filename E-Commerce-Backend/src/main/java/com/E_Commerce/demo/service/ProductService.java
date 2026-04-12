@@ -73,6 +73,7 @@ public class ProductService {
                 .store(store)
                 .category(category)
                 .sku(request.getSku())
+                .brand(request.getBrand())
                 .unitPrice(request.getUnitPrice())
                 .stock(request.getStock() != null ? request.getStock() : 0)
                 .description(request.getDescription())
@@ -92,6 +93,7 @@ public class ProductService {
         if (request.getDescription() != null) product.setDescription(request.getDescription());
         if (request.getEmoji() != null) product.setEmoji(request.getEmoji());
         if (request.getSku() != null) product.setSku(request.getSku());
+        if (request.getBrand() != null) product.setBrand(request.getBrand());
         if (request.getCategoryId() != null) {
             product.setCategory(categoryRepository.findById(request.getCategoryId()).orElse(null));
         }

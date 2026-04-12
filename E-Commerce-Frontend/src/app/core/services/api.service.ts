@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   AuthResponse,
+  PageResponse,
   UserDto,
   StoreDto,
   ProductDto,
@@ -35,8 +36,10 @@ export class ApiService {
   }
 
   // ─── Users ─────────────────────────────────────────────────────────────────
-  getUsers(): Observable<UserDto[]> {
-    return this.http.get<UserDto[]>(`${this.base}/api/users`);
+  getUsers(page = 0, size = 50, search = '', role = ''): Observable<PageResponse<UserDto>> {
+    return this.http.get<PageResponse<UserDto>>(`${this.base}/api/users`, {
+      params: { page, size, search, role },
+    });
   }
 
   getMe(): Observable<UserDto> {

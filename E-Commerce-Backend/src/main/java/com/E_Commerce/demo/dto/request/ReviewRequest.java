@@ -14,4 +14,8 @@ public class ReviewRequest {
     private Integer starRating;
 
     private String reviewText;
+    private String reviewHeadline;
+    private String marketplace;
+    private Boolean verifiedPurchase;
+    private Boolean vine;
 }

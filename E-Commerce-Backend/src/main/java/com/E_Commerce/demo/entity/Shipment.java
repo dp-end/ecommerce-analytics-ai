@@ -44,6 +44,18 @@ public class Shipment {
     @Column(name = "discount_offered")
     private Double discountOffered;
 
+    @Column(name = "weight_in_gms")
+    private Double weightInGms;
+
+    @Column(name = "product_importance")
+    private String productImportance;
+
+    @Column(name = "reached_on_time")
+    private Boolean reachedOnTime;
+
+    @Column(name = "prior_purchases")
+    private Integer priorPurchases;
+
     public enum ShipmentMode { SHIP, FLIGHT, ROAD }
     public enum ShipmentStatus { PENDING, IN_TRANSIT, DELIVERED, RETURNED }
 }

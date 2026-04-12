@@ -1,12 +1,16 @@
 package com.E_Commerce.demo.service;
 
 import com.E_Commerce.demo.dto.response.CustomerProfileDto;
+import com.E_Commerce.demo.dto.response.PageResponse;
 import com.E_Commerce.demo.dto.response.UserDto;
 import com.E_Commerce.demo.entity.CustomerProfile;
 import com.E_Commerce.demo.entity.User;
 import com.E_Commerce.demo.repository.CustomerProfileRepository;
 import com.E_Commerce.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,8 +24,22 @@ public class UserService {
     private final UserRepository userRepository;
     private final CustomerProfileRepository customerProfileRepository;
 
-    public List<UserDto> getAll() {
-        return userRepository.findAll().stream().map(UserDto::from).toList();
+    public PageResponse<UserDto> getAll(int page, int size, String search, String role) {
+        User.RoleType roleType = (role != null && !role.isBlank() && !role.equalsIgnoreCase("all"))
+                ? User.RoleType.valueOf(role.toUpperCase())
+                : null;
+        Page<User> result = userRepository.searchUsers(
+                search == null ? "" : search,
+                roleType,
+                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"))
+        );
+        return new PageResponse<>(
+                result.getContent().stream().map(UserDto::from).toList(),
+                result.getTotalPages(),
+                result.getTotalElements(),
+                result.getNumber(),
+                result.getSize()
+        );
     }
 
     public UserDto getById(Long id) {

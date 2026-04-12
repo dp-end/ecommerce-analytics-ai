@@ -29,12 +29,13 @@ export class SidebarComponent {
     switch (this.role) {
       case 'admin':
         return [
-          { label: 'Dashboard', icon: '📊', route: '/admin/dashboard' },
-          { label: 'Users', icon: '👥', route: '/admin/users' },
-          { label: 'Stores', icon: '🏪', route: '/admin/stores' },
-          { label: 'Categories', icon: '🗂️', route: '/admin/categories' },
-          { label: 'Analytics', icon: '📈', route: '/admin/analytics' },
-          { label: 'Audit Logs', icon: '📋', route: '/admin/audit-logs' },
+          { label: 'Dashboard',   icon: '📊', route: '/admin/dashboard' },
+          { label: 'Users',       icon: '👥', route: '/admin/users' },
+          { label: 'Stores',      icon: '🏪', route: '/admin/stores' },
+          { label: 'Categories',  icon: '🗂️', route: '/admin/categories' },
+          { label: 'Analytics',   icon: '📈', route: '/admin/analytics' },
+          { label: 'Audit Logs',  icon: '📋', route: '/admin/audit-logs' },
+          { label: 'AI Assistant',icon: '🤖', route: '/admin/chatbot' },
         ];
       case 'corporate':
         return [

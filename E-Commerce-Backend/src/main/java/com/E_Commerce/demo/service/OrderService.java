@@ -62,6 +62,12 @@ public class OrderService {
                 .user(user)
                 .store(store)
                 .paymentMethod(request.getPaymentMethod())
+                .discount(request.getDiscount() != null ? request.getDiscount() : 0.0)
+                .tax(request.getTax() != null ? request.getTax() : 0.0)
+                .shippingCost(request.getShippingCost() != null ? request.getShippingCost() : 0.0)
+                .city(request.getCity())
+                .state(request.getState())
+                .country(request.getCountry())
                 .grandTotal(0.0)
                 .build();
         order = orderRepository.save(order);
@@ -72,18 +78,20 @@ public class OrderService {
         for (OrderRequest.OrderItemRequest itemReq : request.getItems()) {
             Product product = productRepository.findById(itemReq.getProductId())
                     .orElseThrow(() -> new RuntimeException("Product not found: " + itemReq.getProductId()));
-            double itemTotal = product.getUnitPrice() * itemReq.getQuantity();
+            double itemDiscount = itemReq.getDiscount() != null ? itemReq.getDiscount() : 0.0;
+            double itemTotal = product.getUnitPrice() * itemReq.getQuantity() * (1 - itemDiscount);
             total += itemTotal;
             OrderItem item = OrderItem.builder()
                     .order(order)
                     .product(product)
                     .quantity(itemReq.getQuantity())
                     .price(product.getUnitPrice())
+                    .discount(itemDiscount)
                     .build();
             items.add(orderItemRepository.save(item));
         }
 
-        order.setGrandTotal(total);
+        order.setGrandTotal(total + order.getTax() + order.getShippingCost() - order.getDiscount());
         order.setItems(items);
         return OrderDto.from(orderRepository.save(order));
     }

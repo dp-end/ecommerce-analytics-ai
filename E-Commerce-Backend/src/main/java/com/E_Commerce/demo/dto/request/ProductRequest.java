@@ -10,6 +10,7 @@ public class ProductRequest {
     private Long storeId;
     private Long categoryId;
     private String sku;
+    private String brand;
 
     @NotBlank(message = "Ürün adı boş olamaz")
     private String name;

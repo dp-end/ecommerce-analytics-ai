@@ -29,13 +29,20 @@
 
   <!-- Category Tabs -->
   <div class="category-tabs">
-    @for (cat of categories; track cat) {
+    <button
+      class="category-tab"
+      [class.active]="activeCategory() === 'all'"
+      (click)="setCategory('all')"
+    >
+      🛍️ All
+    </button>
+    @for (cat of categories(); track cat.id) {
       <button
         class="category-tab"
-        [class.active]="activeCategory() === cat"
-        (click)="activeCategory.set(cat)"
+        [class.active]="activeCategory() === cat.id"
+        (click)="setCategory(cat.id)"
       >
-        {{ cat === 'all' ? '🛍️ All' : cat }}
+        {{ cat.name }}
       </button>
     }
   </div>
@@ -43,11 +50,13 @@
   <!-- Results count -->
   <div class="results-header">
     <span class="results-count">{{ filteredProducts().length }} products found</span>
-    <select class="form-control" style="width:160px">
-      <option>Sort: Featured</option>
-      <option>Price: Low to High</option>
-      <option>Price: High to Low</option>
-      <option>Best Rated</option>
+    <select class="form-control" style="width:160px"
+      [value]="sortBy()"
+      (change)="sortBy.set($any($event.target).value)">
+      <option value="featured">Sort: Featured</option>
+      <option value="price-asc">Price: Low to High</option>
+      <option value="price-desc">Price: High to Low</option>
+      <option value="rating">Best Rated</option>
     </select>
   </div>
 
@@ -66,8 +75,7 @@
           <p class="product-desc">{{ product.description }}</p>
           <div class="product-rating">
             <span class="stars">{{ getStars(product.rating) }}</span>
-            <span class="rating-num">{{ product.rating }}</span>
-            <span class="review-count">({{ product.rating | number:'1.0-0' }}★)</span>
+            <span class="rating-num">{{ product.rating | number:'1.1-1' }}</span>
           </div>
           <div class="product-stock">
             @if (product.stock > 20) {

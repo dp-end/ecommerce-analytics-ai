@@ -17,6 +17,9 @@ public class CustomerProfileDto {
     private Integer itemsPurchased;
     private Double avgRating;
     private String satisfactionLevel;
+    private Integer daysSinceLastPurchase;
+    private String state;
+    private String country;
 
     public static CustomerProfileDto from(CustomerProfile cp) {
         return CustomerProfileDto.builder()
@@ -31,6 +34,9 @@ public class CustomerProfileDto {
                 .itemsPurchased(cp.getItemsPurchased())
                 .avgRating(cp.getAvgRating())
                 .satisfactionLevel(cp.getSatisfactionLevel())
+                .daysSinceLastPurchase(cp.getDaysSinceLastPurchase())
+                .state(cp.getState())
+                .country(cp.getCountry())
                 .build();
     }
 }

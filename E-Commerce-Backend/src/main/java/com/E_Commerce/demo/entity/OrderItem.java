@@ -25,4 +25,7 @@ public class OrderItem {
 
     @Column(nullable = false)
     private Double price;
+
+    @Builder.Default
+    private Double discount = 0.0;
 }

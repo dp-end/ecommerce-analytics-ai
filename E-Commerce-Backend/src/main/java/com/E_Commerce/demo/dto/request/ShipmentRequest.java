@@ -12,4 +12,8 @@ public class ShipmentRequest {
     private String carrier;
     private String destination;
     private LocalDate eta;
+    private Double weightInGms;
+    private String productImportance;
+    private Boolean reachedOnTime;
+    private Integer priorPurchases;
 }

@@ -18,7 +18,7 @@ export class CorporateProductsComponent implements OnInit {
   myStores   = signal<StoreDto[]>([]);
   categories = signal<CategoryDto[]>([]);
   searchQuery    = signal('');
-  categoryFilter = signal('all');
+  categoryFilter = signal<number | 'all'>('all');
   showAddModal   = signal(false);
   loading        = signal(false);
   storesLoading  = signal(true);
@@ -36,7 +36,7 @@ export class CorporateProductsComponent implements OnInit {
   filteredProducts = computed(() => {
     let list = this.products();
     if (this.categoryFilter() !== 'all')
-      list = list.filter(p => String(p.categoryId) === this.categoryFilter());
+      list = list.filter(p => p.categoryId === this.categoryFilter());
     if (this.searchQuery()) {
       const q = this.searchQuery().toLowerCase();
       list = list.filter(p => p.name.toLowerCase().includes(q));

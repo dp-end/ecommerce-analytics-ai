@@ -1,3 +1,12 @@
+// ─── Pagination ──────────────────────────────────────────────────────────────
+export interface PageResponse<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  currentPage: number;
+  pageSize: number;
+}
+
 // ─── Auth ────────────────────────────────────────────────────────────────────
 export interface AuthResponse {
   token: string;

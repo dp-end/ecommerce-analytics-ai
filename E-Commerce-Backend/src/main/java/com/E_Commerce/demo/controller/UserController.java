@@ -1,6 +1,7 @@
 package com.E_Commerce.demo.controller;
 
 import com.E_Commerce.demo.dto.response.CustomerProfileDto;
+import com.E_Commerce.demo.dto.response.PageResponse;
 import com.E_Commerce.demo.dto.response.UserDto;
 import com.E_Commerce.demo.entity.CustomerProfile;
 import com.E_Commerce.demo.service.UserService;
@@ -11,7 +12,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -23,8 +23,12 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserDto>> getAll() {
-        return ResponseEntity.ok(userService.getAll());
+    public ResponseEntity<PageResponse<UserDto>> getAll(
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(defaultValue = "")   String search,
+            @RequestParam(defaultValue = "")   String role) {
+        return ResponseEntity.ok(userService.getAll(page, size, search, role));
     }
 
     @GetMapping("/me")

@@ -40,6 +40,16 @@ public class Review {
     @Column(name = "total_votes")
     private Integer totalVotes;
 
+    private String marketplace;
+
+    @Column(name = "review_headline", length = 500)
+    private String reviewHeadline;
+
+    @Column(name = "verified_purchase")
+    private Boolean verifiedPurchase;
+
+    private Boolean vine;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

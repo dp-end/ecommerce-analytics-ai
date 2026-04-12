@@ -56,6 +56,10 @@ public class ReviewService {
                 .product(product)
                 .starRating(request.getStarRating())
                 .reviewText(request.getReviewText())
+                .reviewHeadline(request.getReviewHeadline())
+                .marketplace(request.getMarketplace())
+                .verifiedPurchase(request.getVerifiedPurchase())
+                .vine(request.getVine())
                 .build();
         ReviewDto saved = ReviewDto.from(reviewRepository.save(review));
 

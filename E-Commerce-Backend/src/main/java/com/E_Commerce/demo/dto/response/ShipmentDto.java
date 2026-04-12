@@ -18,6 +18,10 @@ public class ShipmentDto {
     private String status;
     private String trackingNumber;
     private LocalDate eta;
+    private Double weightInGms;
+    private String productImportance;
+    private Boolean reachedOnTime;
+    private Integer priorPurchases;
 
     public static ShipmentDto from(Shipment s) {
         return ShipmentDto.builder()
@@ -31,6 +35,10 @@ public class ShipmentDto {
                 .status(s.getStatus().name())
                 .trackingNumber(s.getTrackingNumber())
                 .eta(s.getEta())
+                .weightInGms(s.getWeightInGms())
+                .productImportance(s.getProductImportance())
+                .reachedOnTime(s.getReachedOnTime())
+                .priorPurchases(s.getPriorPurchases())
                 .build();
     }
 }

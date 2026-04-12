@@ -19,16 +19,16 @@
           class="form-control"
           placeholder="Search by name or email..."
           [value]="searchQuery()"
-          (input)="searchQuery.set($any($event.target).value)"
+          (input)="onSearchChange($any($event.target).value)"
         />
       </div>
-      <select class="form-control" style="width:160px;" [value]="roleFilter()" (change)="roleFilter.set($any($event.target).value)">
-        <option value="all">All Roles</option>
+      <select class="form-control" style="width:160px;" [value]="roleFilter()" (change)="onRoleChange($any($event.target).value)">
+        <option value="">All Roles</option>
         <option value="admin">Admin</option>
         <option value="corporate">Corporate</option>
         <option value="individual">Individual</option>
       </select>
-      <span class="result-count">{{ filteredUsers().length }} users found</span>
+      <span class="result-count">{{ totalElements() }} users found</span>
     </div>
   </div>
 
@@ -48,7 +48,10 @@
           </tr>
         </thead>
         <tbody>
-          @for (user of filteredUsers(); track user.id) {
+          @if (loading()) {
+            <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">Loading...</td></tr>
+          }
+          @for (user of users(); track user.id) {
             <tr>
               <td class="text-muted">#{{ user.id }}</td>
               <td>
@@ -96,4 +99,24 @@
       </table>
     </div>
   </div>
+
+  <!-- Pagination -->
+  @if (totalPages() > 1) {
+    <div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-top:1.25rem;flex-wrap:wrap">
+      <button class="btn btn-secondary btn-sm" [disabled]="currentPage() === 0" (click)="goToPage(currentPage() - 1)">← Prev</button>
+      @for (p of pages(); track p) {
+        @if (p === 0 || p === totalPages() - 1 || (p >= currentPage() - 2 && p <= currentPage() + 2)) {
+          <button
+            class="btn btn-sm"
+            [ngClass]="p === currentPage() ? 'btn-primary' : 'btn-secondary'"
+            (click)="goToPage(p)"
+          >{{ p + 1 }}</button>
+        }
+      }
+      <button class="btn btn-secondary btn-sm" [disabled]="currentPage() === totalPages() - 1" (click)="goToPage(currentPage() + 1)">Next →</button>
+      <span style="color:var(--text-muted);font-size:0.8rem;margin-left:0.5rem">
+        Page {{ currentPage() + 1 }} / {{ totalPages() }}
+      </span>
+    </div>
+  }
 </div>

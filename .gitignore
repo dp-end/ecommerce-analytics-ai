@@ -8,6 +8,14 @@
 
 **/.DS_Store
 
+
+# Veri seti dosyalarını GitHub'a gönderme
+scripts/data/
+*.tsv
+*.tsv.gz
+*.csv
+*.parquet
+
 # Node
 /node_modules
 npm-debug.log

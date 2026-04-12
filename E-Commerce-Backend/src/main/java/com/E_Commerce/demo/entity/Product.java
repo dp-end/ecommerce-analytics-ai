@@ -26,6 +26,8 @@ public class Product {
 
     private String sku;
 
+    private String brand;
+
     @Column(nullable = false)
     private String name;
 

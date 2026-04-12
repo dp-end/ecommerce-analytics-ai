@@ -31,6 +31,10 @@ export const adminRoutes: Routes = [
         path: 'audit-logs',
         loadComponent: () => import('./pages/audit-logs/audit-logs').then(m => m.AdminAuditLogsComponent),
       },
+      {
+        path: 'chatbot',
+        loadComponent: () => import('../chatbot/chatbot').then(m => m.ChatbotComponent),
+      },
     ],
   },
 ];

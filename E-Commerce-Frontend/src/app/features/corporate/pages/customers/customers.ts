@@ -34,10 +34,10 @@ export class CorporateCustomersComponent implements OnInit {
 
   ngOnInit(): void {
     this.loading.set(true);
-    this.api.getUsers().subscribe({
-      next: users => {
+    this.api.getUsers(0, 50).subscribe({
+      next: res => {
         // Load profiles for each user
-        const profileRequests = users.map(u => u.id);
+        const profileRequests = res.content.map((u: { id: number }) => u.id);
         this.loadProfiles(profileRequests);
       },
       error: () => this.loading.set(false),

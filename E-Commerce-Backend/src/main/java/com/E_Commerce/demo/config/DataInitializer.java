@@ -49,16 +49,11 @@ public class DataInitializer implements CommandLineRunner {
 
     private void createCategories() {
         List<String[]> cats = List.of(
-            new String[]{"Electronics",  "Phones, computers, gadgets"},
-            new String[]{"Fashion",      "Clothing, shoes, accessories"},
-            new String[]{"Food",         "Groceries and beverages"},
-            new String[]{"Furniture",    "Home and office furniture"},
-            new String[]{"Sports",       "Sports equipment and apparel"},
-            new String[]{"Beauty",       "Cosmetics and personal care"},
-            new String[]{"Home",         "Home appliances and decor"},
-            new String[]{"Books",        "Books, magazines and stationery"},
-            new String[]{"Toys",         "Toys and games"},
-            new String[]{"Automotive",   "Car accessories and parts"}
+            new String[]{"Books",             "Books, magazines and stationery"},
+            new String[]{"Clothing",          "Men's and women's apparel"},
+            new String[]{"Home & Kitchen",    "Kitchen tools and home essentials"},
+            new String[]{"Sports & Outdoors", "Outdoor gear, fitness and camping"},
+            new String[]{"Toys & Games",      "Games and entertainment for all ages"}
         );
         for (String[] cat : cats) {
             if (categoryRepository.findByName(cat[0]).isEmpty()) {

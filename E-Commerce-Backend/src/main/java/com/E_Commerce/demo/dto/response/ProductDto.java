@@ -12,6 +12,7 @@ public class ProductDto {
     private Long categoryId;
     private String categoryName;
     private String sku;
+    private String brand;
     private String name;
     private Double unitPrice;
     private Integer stock;
@@ -28,6 +29,7 @@ public class ProductDto {
                 .categoryId(p.getCategory() != null ? p.getCategory().getId() : null)
                 .categoryName(p.getCategory() != null ? p.getCategory().getName() : null)
                 .sku(p.getSku())
+                .brand(p.getBrand())
                 .name(p.getName())
                 .unitPrice(p.getUnitPrice())
                 .stock(p.getStock())
