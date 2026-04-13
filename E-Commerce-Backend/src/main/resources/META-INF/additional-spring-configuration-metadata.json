@@ -20,6 +20,20 @@
       "type": "java.lang.String",
       "description": "Gemini model name (e.g. gemini-2.0-flash).",
       "defaultValue": "gemini-2.0-flash-lite"
+    },
+    {
+      "name": "ai.service.url",
+      "type": "java.lang.String",
+      "description": "Base URL of the Python LangGraph/FastAPI AI service.",
+      "defaultValue": "http://localhost:8000",
+      "sourceType": "com.E_Commerce.demo.config.AiServiceProperties"
+    },
+    {
+      "name": "ai.service.enabled",
+      "type": "java.lang.Boolean",
+      "description": "When true, ChatbotService tries the Python LangGraph service first and falls back to Gemini on failure.",
+      "defaultValue": true,
+      "sourceType": "com.E_Commerce.demo.config.AiServiceProperties"
     }
   ]
 }

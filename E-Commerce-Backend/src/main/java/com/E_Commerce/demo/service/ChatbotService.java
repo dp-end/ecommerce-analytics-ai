@@ -1,26 +1,39 @@
 package com.E_Commerce.demo.service;
 
+import com.E_Commerce.demo.config.AiServiceProperties;
 import com.E_Commerce.demo.config.GeminiProperties;
 import com.E_Commerce.demo.entity.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Chatbot orchestration service.
+ *
+ * Request flow:
+ *  1. If ai.service.enabled=true → try Python LangGraph service (localhost:8000)
+ *  2. On any failure or if disabled → fall back to Google Gemini REST API
+ */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatbotService {
 
     private final GeminiProperties gemini;
+    private final AiServiceProperties aiService;
 
     private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com";
 
-    // Fallback sırası — ilk çalışan kullanılır
     private static final List<String> FALLBACK_MODELS = List.of(
             "gemini-2.0-flash-lite",
             "gemini-2.0-flash",
@@ -37,7 +50,74 @@ public class ChatbotService {
             "Tables (internal, do not mention): users, stores, products, orders, order_items, shipments, reviews, customer_profiles, audit_logs. " +
             "Be concise and friendly. Respond in the same language the user writes in.";
 
+    // ── Public entry point ────────────────────────────────────────────────────
+
     public Map<String, Object> ask(String question, User currentUser) {
+        // 1. Try Python LangGraph service
+        if (aiService.isEnabled()) {
+            Map<String, Object> pyResult = tryPythonService(question, currentUser);
+            if (pyResult != null) {
+                return pyResult;
+            }
+            log.warn("Python AI service unavailable — falling back to Gemini");
+        }
+
+        // 2. Fall back to Gemini
+        return askGemini(question, currentUser);
+    }
+
+    // ── Python LangGraph service ──────────────────────────────────────────────
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> tryPythonService(String question, User currentUser) {
+        try {
+            Map<String, Object> body = new HashMap<>();
+            body.put("question", question);
+
+            if (currentUser != null) {
+                body.put("user_context", Map.of(
+                        "id",    currentUser.getId(),
+                        "name",  currentUser.getName(),
+                        "email", currentUser.getEmail(),
+                        "role",  currentUser.getRoleType().name()
+                ));
+            }
+
+            RestClient client = RestClient.builder()
+                    .baseUrl(aiService.getUrl())
+                    .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .build();
+
+            Map<String, Object> response = client.post()
+                    .uri("/chat/ask")
+                    .body(body)
+                    .retrieve()
+                    .body(Map.class);
+
+            if (response == null) return null;
+
+            return Map.of(
+                    "question",           question,
+                    "answer",             response.getOrDefault("answer", ""),
+                    "sql",                response.getOrDefault("sql_query", ""),
+                    "agent",              "langgraph",
+                    "visualizationData",  response.getOrDefault("visualization_data", Map.of()),
+                    "agentTrace",         response.getOrDefault("agent_trace", List.of())
+            );
+
+        } catch (ResourceAccessException e) {
+            // Service not running — expected when Python service is down
+            log.debug("Python AI service not reachable: {}", e.getMessage());
+            return null;
+        } catch (Exception e) {
+            log.warn("Python AI service error: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    // ── Gemini fallback ───────────────────────────────────────────────────────
+
+    private Map<String, Object> askGemini(String question, User currentUser) {
         if (gemini.getApiKey() == null || gemini.getApiKey().isBlank()) {
             return Map.of(
                     "question", question,
@@ -47,7 +127,6 @@ public class ChatbotService {
             );
         }
 
-        // Kullanıcı bağlamını soruya ekle
         String contextualQuestion = question;
         if (currentUser != null) {
             contextualQuestion = "[Current user: id=" + currentUser.getId()
@@ -57,15 +136,14 @@ public class ChatbotService {
                     + "] User question: " + question;
         }
 
-        // Önce ayarlanan modeli dene, 404/429 alırsa fallback listesini dene
         String configuredModel = (gemini.getModel() != null && !gemini.getModel().isBlank())
                 ? gemini.getModel()
                 : FALLBACK_MODELS.get(0);
 
         List<String> modelsToTry = Stream.concat(
-                java.util.stream.Stream.of(configuredModel),
+                Stream.of(configuredModel),
                 FALLBACK_MODELS.stream().filter(m -> !m.equals(configuredModel))
-        ).collect(java.util.stream.Collectors.toList());
+        ).collect(Collectors.toList());
 
         RestClient client = RestClient.builder()
                 .baseUrl(GEMINI_BASE_URL)
@@ -94,12 +172,12 @@ public class ChatbotService {
 
                 return Map.of(
                         "question", question,
-                        "answer", extractText(response),
-                        "agent", "gemini/" + model
+                        "answer",   extractText(response),
+                        "agent",    "gemini/" + model
                 );
 
             } catch (HttpClientErrorException.NotFound | HttpClientErrorException.TooManyRequests e) {
-                // Model bulunamadı veya kota aşıldı — sıradakini dene
+                // Model not found or quota exceeded — try next
             } catch (HttpClientErrorException.BadRequest e) {
                 String body = e.getResponseBodyAsString();
                 String msg = body.contains("API_KEY_INVALID") || body.contains("key expired")
@@ -121,6 +199,8 @@ public class ChatbotService {
                 "answer", "Tüm modeller kota limitine ulaştı veya bulunamadı. Birkaç dakika bekleyip tekrar deneyin ya da yeni bir API anahtarı edinin: https://aistudio.google.com/apikey",
                 "sql", "", "agent", "gemini");
     }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     @SuppressWarnings("unchecked")
     private String extractText(Map<String, Object> response) {
