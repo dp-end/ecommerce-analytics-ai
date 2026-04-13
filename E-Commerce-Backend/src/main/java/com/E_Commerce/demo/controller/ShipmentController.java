@@ -4,6 +4,7 @@ import com.E_Commerce.demo.dto.request.ShipmentRequest;
 import com.E_Commerce.demo.dto.response.ShipmentDto;
 import com.E_Commerce.demo.service.ShipmentService;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,14 +40,14 @@ public class ShipmentController {
     }
 
     @PostMapping
-    public ResponseEntity<ShipmentDto> create(@RequestBody ShipmentRequest request) {
+    public ResponseEntity<ShipmentDto> create(@Valid @RequestBody ShipmentRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(shipmentService.create(request));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ShipmentDto> update(
             @PathVariable Long id,
-            @RequestBody ShipmentRequest request) {
+            @Valid @RequestBody ShipmentRequest request) {
         return ResponseEntity.ok(shipmentService.update(id, request));
     }
 

@@ -29,18 +29,8 @@ public class AnalyticsService {
         stats.put("totalUsers", userRepository.count());
         stats.put("totalStores", storeRepository.count());
         stats.put("totalReviews", reviewRepository.count());
-
-        double totalRevenue = orderRepository.findAll().stream()
-                .mapToDouble(o -> o.getGrandTotal() != null ? o.getGrandTotal() : 0.0)
-                .sum();
-        stats.put("totalRevenue", totalRevenue);
-
-        Map<String, Long> ordersByStatus = new HashMap<>();
-        for (Order.OrderStatus status : Order.OrderStatus.values()) {
-            ordersByStatus.put(status.name(), (long) orderRepository.findByStatus(status).size());
-        }
-        stats.put("ordersByStatus", ordersByStatus);
-
+        stats.put("totalRevenue", orderRepository.sumTotalRevenue());
+        stats.put("ordersByStatus", getOrdersByStatus());
         return stats;
     }
 
@@ -74,43 +64,35 @@ public class AnalyticsService {
     }
 
     public Map<String, Object> getOrderAnalytics() {
+        long totalOrders = orderRepository.count();
+        double totalRevenue = orderRepository.sumTotalRevenue();
+
         Map<String, Object> data = new HashMap<>();
-        data.put("totalOrders", orderRepository.count());
-
-        double totalRevenue = orderRepository.findAll().stream()
-                .mapToDouble(o -> o.getGrandTotal() != null ? o.getGrandTotal() : 0.0)
-                .sum();
+        data.put("totalOrders", totalOrders);
         data.put("totalRevenue", totalRevenue);
-
-        double avgOrderValue = orderRepository.count() > 0 ? totalRevenue / orderRepository.count() : 0.0;
-        data.put("avgOrderValue", avgOrderValue);
-
-        Map<String, Long> byStatus = new HashMap<>();
-        for (Order.OrderStatus status : Order.OrderStatus.values()) {
-            byStatus.put(status.name(), (long) orderRepository.findByStatus(status).size());
-        }
-        data.put("byStatus", byStatus);
-
+        data.put("avgOrderValue", totalOrders > 0 ? totalRevenue / totalOrders : 0.0);
+        data.put("byStatus", getOrdersByStatus());
         return data;
     }
 
     public Map<String, Object> getCustomerAnalytics() {
+        Map<String, Long> byMembership = new HashMap<>();
+        for (com.E_Commerce.demo.entity.CustomerProfile.MembershipType type :
+                com.E_Commerce.demo.entity.CustomerProfile.MembershipType.values()) {
+            byMembership.put(type.name(), (long) customerProfileRepository.findByMembershipType(type).size());
+        }
+
         Map<String, Object> data = new HashMap<>();
         data.put("totalCustomers", userRepository.count());
-
-        long goldCount = customerProfileRepository.findByMembershipType(
-                com.E_Commerce.demo.entity.CustomerProfile.MembershipType.GOLD).size();
-        long silverCount = customerProfileRepository.findByMembershipType(
-                com.E_Commerce.demo.entity.CustomerProfile.MembershipType.SILVER).size();
-        long bronzeCount = customerProfileRepository.findByMembershipType(
-                com.E_Commerce.demo.entity.CustomerProfile.MembershipType.BRONZE).size();
-
-        Map<String, Long> byMembership = new HashMap<>();
-        byMembership.put("GOLD", goldCount);
-        byMembership.put("SILVER", silverCount);
-        byMembership.put("BRONZE", bronzeCount);
         data.put("byMembership", byMembership);
-
         return data;
+    }
+
+    private Map<String, Long> getOrdersByStatus() {
+        Map<String, Long> byStatus = new HashMap<>();
+        for (Order.OrderStatus status : Order.OrderStatus.values()) {
+            byStatus.put(status.name(), orderRepository.countByStatus(status));
+        }
+        return byStatus;
     }
 }

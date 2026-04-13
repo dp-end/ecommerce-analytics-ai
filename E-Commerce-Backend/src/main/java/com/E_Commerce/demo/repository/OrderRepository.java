@@ -14,12 +14,16 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByUserId(Long userId);
     List<Order> findByStoreId(Long storeId);
     List<Order> findByStatus(Order.OrderStatus status);
+    long countByStatus(Order.OrderStatus status);
     List<Order> findByUserIdAndStatus(Long userId, Order.OrderStatus status);
 
     @Query("SELECT o FROM Order o WHERE o.store.id = :storeId AND o.createdAt BETWEEN :start AND :end")
     List<Order> findByStoreIdAndDateRange(@Param("storeId") Long storeId,
                                           @Param("start") LocalDateTime start,
                                           @Param("end") LocalDateTime end);
+
+    @Query("SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o")
+    Double sumTotalRevenue();
 
     @Query("SELECT SUM(o.grandTotal) FROM Order o WHERE o.store.id = :storeId")
     Double sumRevenueByStore(@Param("storeId") Long storeId);
