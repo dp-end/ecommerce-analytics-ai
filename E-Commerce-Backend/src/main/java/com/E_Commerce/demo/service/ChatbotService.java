@@ -160,12 +160,17 @@ public class ChatbotService {
                 )
         );
 
+        final String apiKey = gemini.getApiKey();
+
         for (String model : modelsToTry) {
-            String uri = "/v1beta/models/" + model + ":generateContent?key=" + gemini.getApiKey();
+            final String modelPath = "/v1beta/models/" + model + ":generateContent";
             try {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> response = client.post()
-                        .uri(uri)
+                        .uri(uriBuilder -> uriBuilder
+                                .path(modelPath)
+                                .queryParam("key", apiKey)
+                                .build())
                         .body(requestBody)
                         .retrieve()
                         .body(Map.class);
