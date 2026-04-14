@@ -2,5 +2,7 @@
     "java.configuration.updateBuildConfiguration": "interactive",
     "java.compile.nullAnalysis.mode": "automatic",
     "python-envs.defaultEnvManager": "ms-python.python:system",
-    "python-envs.defaultPackageManager": "ms-python.python:pip"
+    "python-envs.defaultPackageManager": "ms-python.python:pip",
+    "python.defaultInterpreterPath": "${workspaceFolder}/ai-service/venv/bin/python3",
+    "python.analysis.extraPaths": ["${workspaceFolder}/ai-service"]
 }

@@ -13,15 +13,13 @@ so the pipeline is not blocked by transient API issues.
 
 import json
 import logging
-import os
 
 import google.generativeai as genai
 
+from agents.gemini_client import get_model
 from agents.state import AgentState
 
 logger = logging.getLogger(__name__)
-
-genai.configure(api_key=os.getenv("GEMINI_API_KEY", ""))
 
 _CLASSIFICATION_PROMPT = """\
 You are a content-safety classifier for an e-commerce analytics platform.
@@ -55,7 +53,7 @@ def guardrails_node(state: AgentState) -> AgentState:
     trace.append("guardrails_agent: classifying question")
 
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash-lite")
+        model = get_model()
         response = model.generate_content(
             _CLASSIFICATION_PROMPT.format(question=question),
             generation_config=genai.GenerationConfig(
@@ -76,8 +74,10 @@ def guardrails_node(state: AgentState) -> AgentState:
             return {
                 **state,
                 "is_safe": False,
+                "is_in_scope": False,
                 "rejection_reason": reason,
                 "answer": rejection,
+                "final_answer": rejection,
                 "agent_trace": trace,
             }
 
@@ -85,5 +85,5 @@ def guardrails_node(state: AgentState) -> AgentState:
         # On any failure, let the question through (fail-open for safety checks)
         logger.warning("Guardrails classification failed: %s — defaulting to safe", exc)
 
-    trace.append("guardrails_agent: question is safe")
-    return {**state, "is_safe": True, "agent_trace": trace}
+    trace.append("guardrails_agent: question is safe / in-scope")
+    return {**state, "is_safe": True, "is_in_scope": True, "agent_trace": trace}

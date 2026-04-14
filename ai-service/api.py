@@ -57,6 +57,9 @@ class ChatResponse(BaseModel):
     sql_query: Optional[str] = None
     visualization_data: Optional[dict[str, Any]] = None
     is_safe: bool = True
+    is_in_scope: bool = True
+    needs_visualization: Optional[bool] = None
+    iteration_count: int = 0
     agent_trace: list[str] = []
 
 
@@ -88,5 +91,8 @@ async def ask(request: ChatRequest) -> ChatResponse:
         sql_query=result.get("sql_query"),
         visualization_data=result.get("visualization_data"),
         is_safe=result.get("is_safe", True),
+        is_in_scope=result.get("is_in_scope", True),
+        needs_visualization=result.get("needs_visualization"),
+        iteration_count=result.get("iteration_count", 0),
         agent_trace=result.get("agent_trace", []),
     )

@@ -1,17 +1,33 @@
-import { Component, signal, computed, ViewChild, ElementRef, AfterViewChecked, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  signal,
+  ViewChild,
+  ElementRef,
+  AfterViewChecked,
+  OnInit,
+  inject,
+  NgZone,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Chart, registerables } from 'chart.js';
 import { ApiService } from '../../core/services/api.service';
+import { AuthService } from '../../core/services/auth.service';
+import { PlotlyFigure } from '../../core/models/api.models';
 
-Chart.register(...registerables);
+// Plotly is loaded via CDN in index.html
+declare const Plotly: {
+  newPlot(el: HTMLElement, data: unknown[], layout: unknown, config?: unknown): Promise<void>;
+  purge(el: HTMLElement): void;
+};
 
 interface ChatMessage {
   id: number;
   role: 'user' | 'assistant';
   content: string;
-  hasChart?: boolean;
-  chartId?: string;
+  sqlQuery?: string;
+  plotlyFigure?: PlotlyFigure;
+  agentTrace?: string[];
+  iterationCount?: number;
   timestamp: Date;
 }
 
@@ -31,35 +47,43 @@ export class ChatbotComponent implements AfterViewChecked, OnInit {
   @ViewChild('messagesContainer') messagesContainer!: ElementRef<HTMLDivElement>;
 
   private api = inject(ApiService);
+  private auth = inject(AuthService);
+  private ngZone = inject(NgZone);
 
   inputText = signal('');
   isTyping = signal(false);
   messages = signal<ChatMessage[]>([]);
-  private chartInstances = new Map<string, Chart>();
-  private pendingCharts: string[] = [];
+
+  /** chart div IDs waiting for Plotly to render */
+  private pendingPlots: { id: number; figure: PlotlyFigure }[] = [];
+  private renderedPlotIds = new Set<number>();
   private nextId = 1;
 
   suggestions: SuggestionChip[] = [
     { label: 'Show weekly revenue trend', icon: '📈' },
-    { label: 'Top 5 products performance', icon: '🏆' },
+    { label: 'Top 5 products by sales', icon: '🏆' },
     { label: 'Show order status breakdown', icon: '📦' },
-    { label: 'Show rating distribution', icon: '⭐' },
-    { label: 'Customer growth this year', icon: '👥' },
+    { label: 'Customer rating distribution', icon: '⭐' },
     { label: 'Revenue by category', icon: '🗂️' },
+    { label: 'How many orders were shipped by air?', icon: '✈️' },
   ];
 
   ngOnInit(): void {
-    this.messages.set([{
-      id: this.nextId++,
-      role: 'assistant',
-      content: 'Hello! I\'m your AI Text2SQL Assistant. Ask me anything about your store data — I\'ll generate SQL queries and provide insights. What would you like to explore today?',
-      timestamp: new Date(),
-    }]);
+    const user = this.auth.currentUser();
+    const name = user?.name ? user.name.split(' ')[0] : 'there';
+    this.messages.set([
+      {
+        id: this.nextId++,
+        role: 'assistant',
+        content: `Hello ${name}! I'm your AI Text2SQL Assistant powered by a multi-agent pipeline.\n\nAsk me anything about your store data — I'll generate SQL queries, analyse the results, and create charts when useful.\n\nWhat would you like to explore today?`,
+        timestamp: new Date(),
+      },
+    ]);
   }
 
   ngAfterViewChecked(): void {
     this.scrollToBottom();
-    this.renderPendingCharts();
+    this.renderPendingPlots();
   }
 
   private scrollToBottom(): void {
@@ -69,78 +93,54 @@ export class ChatbotComponent implements AfterViewChecked, OnInit {
     } catch {}
   }
 
-  private renderPendingCharts(): void {
-    if (this.pendingCharts.length === 0) return;
-    const toProcess = [...this.pendingCharts];
-    this.pendingCharts = [];
-    for (const chartId of toProcess) {
-      if (this.chartInstances.has(chartId)) continue;
-      const canvas = document.getElementById(chartId) as HTMLCanvasElement | null;
-      if (!canvas) { this.pendingCharts.push(chartId); continue; }
-      this.createChart(chartId, canvas);
-    }
-  }
+  /** Render any Plotly charts that were queued after the DOM updated. */
+  private renderPendingPlots(): void {
+    if (this.pendingPlots.length === 0) return;
+    if (typeof Plotly === 'undefined') return;
 
-  private createChart(chartId: string, canvas: HTMLCanvasElement): void {
-    let chart: Chart | null = null;
+    const remaining: typeof this.pendingPlots = [];
 
-    if (chartId.includes('weekly')) {
-      chart = new Chart(canvas, {
-        type: 'line',
-        data: {
-          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-          datasets: [{ label: 'Revenue ($)', data: [8200, 9400, 7800, 11200, 13400, 15600, 12100], borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,0.1)', fill: true, tension: 0.4, pointBackgroundColor: '#7c3aed', pointRadius: 4 }],
+    for (const pending of this.pendingPlots) {
+      if (this.renderedPlotIds.has(pending.id)) continue;
+
+      const el = document.getElementById(`plotly-chart-${pending.id}`);
+      if (!el) {
+        remaining.push(pending);
+        continue;
+      }
+
+      const darkLayout = {
+        ...pending.figure.layout,
+        paper_bgcolor: 'transparent',
+        plot_bgcolor: 'transparent',
+        font: { color: '#c9d1d9' },
+        xaxis: {
+          ...((pending.figure.layout as Record<string, unknown>)['xaxis'] as object ?? {}),
+          gridcolor: 'rgba(48,54,61,0.6)',
+          tickfont: { color: '#8b949e' },
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8b949e' } }, tooltip: { backgroundColor: '#161b22', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e' } }, scales: { x: { ticks: { color: '#8b949e' }, grid: { color: 'rgba(48,54,61,0.4)' } }, y: { ticks: { color: '#8b949e', callback: v => '$' + Number(v)/1000 + 'K' }, grid: { color: 'rgba(48,54,61,0.4)' } } } },
-      });
-    } else if (chartId.includes('products')) {
-      chart = new Chart(canvas, {
-        type: 'bar',
-        data: {
-          labels: ['Headphones', 'Smart Watch', 'Running Shoes', 'Speaker', 'Keyboard'],
-          datasets: [{ label: 'Units Sold', data: [234, 178, 312, 189, 67], backgroundColor: ['rgba(124,58,237,0.7)','rgba(37,99,235,0.7)','rgba(16,185,129,0.7)','rgba(6,182,212,0.7)','rgba(245,158,11,0.7)'], borderRadius: 4 }],
+        yaxis: {
+          ...((pending.figure.layout as Record<string, unknown>)['yaxis'] as object ?? {}),
+          gridcolor: 'rgba(48,54,61,0.6)',
+          tickfont: { color: '#8b949e' },
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#161b22', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e' } }, scales: { x: { ticks: { color: '#8b949e' }, grid: { color: 'rgba(48,54,61,0.4)' } }, y: { ticks: { color: '#8b949e' }, grid: { color: 'rgba(48,54,61,0.4)' } } } },
-      });
-    } else if (chartId.includes('orders')) {
-      chart = new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-          labels: ['Completed', 'Shipped', 'Processing', 'Pending', 'Cancelled'],
-          datasets: [{ data: [42, 28, 15, 10, 5], backgroundColor: ['#10b981','#06b6d4','#2563eb','#f59e0b','#ef4444'], borderColor: '#161b22', borderWidth: 3 }],
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#8b949e', font: { size: 11 }, padding: 10, usePointStyle: true } }, tooltip: { backgroundColor: '#161b22', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e' } }, cutout: '60%' },
-      });
-    } else if (chartId.includes('ratings')) {
-      chart = new Chart(canvas, {
-        type: 'bar',
-        data: {
-          labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
-          datasets: [{ label: 'Reviews', data: [2, 5, 12, 28, 53], backgroundColor: ['rgba(239,68,68,0.7)','rgba(249,115,22,0.7)','rgba(245,158,11,0.7)','rgba(37,99,235,0.7)','rgba(16,185,129,0.7)'], borderRadius: 4 }],
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#161b22', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e' } }, scales: { x: { ticks: { color: '#8b949e' }, grid: { color: 'rgba(48,54,61,0.4)' } }, y: { ticks: { color: '#8b949e' }, grid: { color: 'rgba(48,54,61,0.4)' } } } },
-      });
-    } else if (chartId.includes('customers')) {
-      chart = new Chart(canvas, {
-        type: 'line',
-        data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-          datasets: [{ label: 'New Customers', data: [120, 180, 160, 240, 220, 310, 340, 290, 380, 420, 360, 510], borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.08)', fill: true, tension: 0.4, pointBackgroundColor: '#10b981', pointRadius: 4 }],
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#161b22', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e' } }, scales: { x: { ticks: { color: '#8b949e' }, grid: { color: 'rgba(48,54,61,0.4)' } }, y: { ticks: { color: '#8b949e' }, grid: { color: 'rgba(48,54,61,0.4)' } } } },
-      });
-    } else if (chartId.includes('category')) {
-      chart = new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-          labels: ['Electronics', 'Fashion', 'Food', 'Sports', 'Beauty', 'Home'],
-          datasets: [{ data: [35, 22, 15, 12, 10, 6], backgroundColor: ['#7c3aed','#2563eb','#10b981','#06b6d4','#f59e0b','#f97316'], borderColor: '#161b22', borderWidth: 3 }],
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#8b949e', font: { size: 11 }, padding: 10, usePointStyle: true } }, tooltip: { backgroundColor: '#161b22', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e' } }, cutout: '60%' },
-      });
+        legend: { font: { color: '#8b949e' } },
+        margin: { l: 50, r: 20, t: 50, b: 60 },
+      };
+
+      const config = {
+        responsive: true,
+        displayModeBar: false,
+        scrollZoom: false,
+      };
+
+      this.renderedPlotIds.add(pending.id);
+      Plotly.newPlot(el, pending.figure.data as unknown[], darkLayout, config).catch(
+        (err: unknown) => console.warn('Plotly render error:', err),
+      );
     }
 
-    if (chart) this.chartInstances.set(chartId, chart);
+    this.pendingPlots = remaining;
   }
 
   async sendMessage(text?: string): Promise<void> {
@@ -155,43 +155,53 @@ export class ChatbotComponent implements AfterViewChecked, OnInit {
       content: messageText,
       timestamp: new Date(),
     };
-    this.messages.update(msgs => [...msgs, userMsg]);
+    this.messages.update((msgs) => [...msgs, userMsg]);
     this.isTyping.set(true);
 
     this.api.askChatbot(messageText).subscribe({
-      next: res => {
-        const lower = res.answer.toLowerCase();
-        const id = Date.now().toString();
-        let chartId: string | undefined;
-
-        if (lower.includes('weekly') || lower.includes('revenue trend')) chartId = `weekly-${id}`;
-        else if (lower.includes('product') || lower.includes('top 5')) chartId = `products-${id}`;
-        else if (lower.includes('order') || lower.includes('status')) chartId = `orders-${id}`;
-        else if (lower.includes('rating') || lower.includes('review')) chartId = `ratings-${id}`;
-        else if (lower.includes('customer') || lower.includes('growth')) chartId = `customers-${id}`;
-        else if (lower.includes('category') || lower.includes('breakdown')) chartId = `category-${id}`;
+      next: (res) => {
+        // Normalise field names (Spring Boot uses camelCase, Python uses snake_case)
+        const plotlyFigure: PlotlyFigure | undefined =
+          res.visualizationData ?? res.visualization_data ?? undefined;
+        const sqlQuery: string | undefined =
+          res.sql_query ?? res.sql ?? undefined;
+        const agentTrace: string[] | undefined =
+          res.agentTrace ?? res.agent_trace ?? undefined;
+        const iterationCount: number | undefined =
+          res.iterationCount ?? res.iteration_count ?? undefined;
 
         const botMsg: ChatMessage = {
           id: this.nextId++,
           role: 'assistant',
-          content: res.answer,
-          hasChart: !!chartId,
-          chartId,
+          content: res.answer || 'Yanıt alınamadı.',
+          sqlQuery,
+          plotlyFigure,
+          agentTrace,
+          iterationCount,
           timestamp: new Date(),
         };
-        this.messages.update(msgs => [...msgs, botMsg]);
-        this.isTyping.set(false);
-        if (chartId) this.pendingCharts.push(chartId);
+
+        this.ngZone.run(() => {
+          this.messages.update((msgs) => [...msgs, botMsg]);
+          this.isTyping.set(false);
+
+          if (plotlyFigure?.data?.length) {
+            this.pendingPlots.push({ id: botMsg.id, figure: plotlyFigure });
+          }
+        });
       },
       error: () => {
         const botMsg: ChatMessage = {
           id: this.nextId++,
           role: 'assistant',
-          content: 'Sorry, I could not connect to the AI service. Please ensure the backend is running and the ANTHROPIC_API_KEY is configured.',
+          content:
+            'AI servisine bağlanılamadı. Backend ve Python AI servisinin çalıştığından emin olun.',
           timestamp: new Date(),
         };
-        this.messages.update(msgs => [...msgs, botMsg]);
-        this.isTyping.set(false);
+        this.ngZone.run(() => {
+          this.messages.update((msgs) => [...msgs, botMsg]);
+          this.isTyping.set(false);
+        });
       },
     });
   }
@@ -204,9 +214,15 @@ export class ChatbotComponent implements AfterViewChecked, OnInit {
   }
 
   clearChat(): void {
-    this.chartInstances.forEach(c => c.destroy());
-    this.chartInstances.clear();
-    this.pendingCharts = [];
+    // Purge all Plotly charts
+    this.messages().forEach((msg) => {
+      if (msg.plotlyFigure) {
+        const el = document.getElementById(`plotly-chart-${msg.id}`);
+        if (el && typeof Plotly !== 'undefined') Plotly.purge(el);
+      }
+    });
+    this.pendingPlots = [];
+    this.renderedPlotIds.clear();
     this.ngOnInit();
   }
 }

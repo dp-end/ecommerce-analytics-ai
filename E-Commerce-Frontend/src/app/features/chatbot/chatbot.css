@@ -331,3 +331,66 @@
     display: none;
   }
 }
+
+/* ── SQL accordion ─────────────────────────────────────────────────────────── */
+.sql-details {
+  margin-top: 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.sql-details summary {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+  background: var(--bg-hover);
+}
+
+.sql-details summary:hover {
+  color: var(--accent-primary);
+}
+
+.sql-code {
+  margin: 0;
+  padding: 0.75rem;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: #79c0ff;
+  background: #0d1117;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-x: auto;
+  border-top: 1px solid var(--border-color);
+}
+
+/* ── Retry badge ───────────────────────────────────────────────────────────── */
+.retry-badge {
+  display: inline-block;
+  margin-top: 0.4rem;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.68rem;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 20px;
+}
+
+/* ── Plotly chart container ────────────────────────────────────────────────── */
+.chart-container {
+  margin-top: 0.75rem;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+}
+
+/* ── Typing indicator agent label ─────────────────────────────────────────── */
+.agent-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-right: 0.5rem;
+  font-style: italic;
+}

@@ -1,61 +1,60 @@
 """
-Error Agent — handles failures produced by the SQL Agent.
+Error Agent — handles SQL execution failures produced by the SQL Agent.
 
 Responsibilities:
-  1. Classify the error (SQL syntax, connection, permission, quota, unknown)
-  2. Attempt automatic SQL repair for syntax / schema errors
-  3. Return a user-friendly Turkish/multilingual answer when recovery is impossible
+  1. Classify the error type (syntax / connection / permission / quota / unknown)
+  2. If fixable (syntax / schema error): attempt automatic SQL repair and log
+     the corrected SQL back into state so the graph can retry via sql_node
+  3. If retries are exhausted OR error is not fixable: set a user-friendly answer
+     and leave state["error"] set so the graph routes to END
+
+The retry loop is controlled by the graph (graph.py):
+  _route_error: if state["error"] is still set AND iteration_count < MAX_RETRIES
+                → route back to sql_node
+                else → END
+
+This node's job is NOT to re-execute the SQL itself — it prepares the state
+(primarily clears state["error"] on repair success so the graph re-enters sql_node)
+and provides diagnostic context that sql_node's next attempt can use via prev_error.
 """
 
-import json
 import logging
-import os
 
-import google.generativeai as genai
-from sqlalchemy import create_engine, text
-from sqlalchemy.exc import SQLAlchemyError
-
+from agents.gemini_client import get_model
 from agents.state import AgentState
 
 logger = logging.getLogger(__name__)
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY", ""))
+MAX_RETRIES = 3  # must match graph.py
 
-_DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "mysql+pymysql://root:1234@localhost:3306/ecommerce_db",
-)
+_DIAGNOSE_PROMPT = """\
+A MySQL SELECT query failed. Diagnose the error and explain briefly what is wrong.
+Do NOT output a fixed query — just a 1-2 sentence diagnosis in plain language.
 
-_REPAIR_PROMPT = """\
-A MySQL SELECT query failed. Rewrite it to fix the error, then return ONLY the corrected SQL — no explanation, no markdown.
-
-Original query:
+Failed query:
 {sql}
 
 Error message:
 {error}
 
-Original question the query was meant to answer:
+Original question:
 {question}
 """
 
-_ANSWER_PROMPT = """\
-A database query returned the following rows. Answer the original question briefly and in plain language.
-Do NOT show SQL code.
-
-Question: {question}
-Row count: {count}
-Sample rows: {sample}
-"""
-
 # ── Error-type classifier ─────────────────────────────────────────────────────
+
 def _classify_error(error: str) -> str:
     err_lower = error.lower()
-    if any(k in err_lower for k in ("syntax", "column", "table", "unknown column", "doesn't exist")):
+    if any(k in err_lower for k in (
+        "syntax", "column", "table", "unknown column",
+        "doesn't exist", "no such", "ambiguous",
+    )):
         return "sql_syntax"
-    if any(k in err_lower for k in ("access denied", "permission")):
+    if any(k in err_lower for k in ("access denied", "permission", "forbidden")):
         return "permission"
-    if any(k in err_lower for k in ("connection", "connect", "host", "refused")):
+    if any(k in err_lower for k in (
+        "connection", "connect", "host", "refused", "timed out",
+    )):
         return "connection"
     if any(k in err_lower for k in ("quota", "rate", "429", "resource_exhausted")):
         return "quota"
@@ -63,10 +62,22 @@ def _classify_error(error: str) -> str:
 
 
 _FRIENDLY: dict[str, str] = {
-    "permission": "Veritabanına erişim izniniz bulunmuyor. Lütfen yönetici ile iletişime geçin.",
-    "connection": "Veritabanı bağlantısı kurulamadı. Lütfen daha sonra tekrar deneyin.",
-    "quota":      "AI servisinin istek kotası aşıldı. Birkaç dakika bekleyip tekrar deneyin.",
-    "unknown":    "Sorunuzu işlerken beklenmedik bir hata oluştu. Lütfen soruyu farklı şekilde ifade ederek tekrar deneyin.",
+    "permission": (
+        "Veritabanına erişim izniniz bulunmuyor. "
+        "Lütfen yönetici ile iletişime geçin."
+    ),
+    "connection": (
+        "Veritabanı bağlantısı kurulamadı. "
+        "Lütfen daha sonra tekrar deneyin."
+    ),
+    "quota": (
+        "AI servisinin istek kotası aşıldı. "
+        "Birkaç dakika bekleyip tekrar deneyin."
+    ),
+    "unknown": (
+        "Sorunuzu işlerken beklenmedik bir hata oluştu. "
+        "Lütfen soruyu farklı şekilde ifade ederek tekrar deneyin."
+    ),
 }
 
 
@@ -74,51 +85,53 @@ def error_node(state: AgentState) -> AgentState:
     error: str = state.get("error") or "Bilinmeyen hata"
     sql_query: str = state.get("sql_query") or ""
     question: str = state["question"]
+    iteration: int = state.get("iteration_count", 0)
     trace: list[str] = list(state.get("agent_trace") or [])
-    trace.append(f"error_agent: handling error type={_classify_error(error)}")
 
     error_type = _classify_error(error)
+    trace.append(
+        f"error_agent: type={error_type}, iteration={iteration}/{MAX_RETRIES}"
+    )
 
-    # ── Attempt SQL repair for fixable errors ─────────────────────────────────
-    if error_type == "sql_syntax" and sql_query:
+    # ── If retries remain and error is fixable, let graph retry sql_node ─────
+    if error_type == "sql_syntax" and iteration < MAX_RETRIES:
+        # Get a brief diagnosis to give sql_node better context next attempt
+        diagnosis = error  # fallback = raw error
         try:
-            model = genai.GenerativeModel("gemini-2.0-flash-lite")
-            repair_response = model.generate_content(
-                _REPAIR_PROMPT.format(sql=sql_query, error=error, question=question)
-            )
-            fixed_sql = repair_response.text.strip()
-            if fixed_sql.startswith("```"):
-                parts = fixed_sql.split("```")
-                fixed_sql = parts[1][3:] if parts[1].lower().startswith("sql") else parts[1]
-            fixed_sql = fixed_sql.strip()
-
-            engine = create_engine(_DATABASE_URL, pool_pre_ping=True)
-            with engine.connect() as conn:
-                result = conn.execute(text(fixed_sql))
-                rows = [dict(row._mapping) for row in result.fetchall()]
-
-            # Generate friendly answer
-            sample_json = json.dumps(rows[:10], default=str, ensure_ascii=False)
-            ans = model.generate_content(
-                _ANSWER_PROMPT.format(
-                    question=question, count=len(rows), sample=sample_json
+            model = get_model()
+            resp = model.generate_content(
+                _DIAGNOSE_PROMPT.format(
+                    sql=sql_query, error=error, question=question
                 )
             )
+            diagnosis = resp.text.strip()
+        except Exception as exc:
+            logger.warning("Error-agent diagnosis LLM failed: %s", exc)
 
-            trace.append("error_agent: SQL repair succeeded")
-            return {
-                **state,
-                "sql_query": fixed_sql,
-                "query_result": rows,
-                "answer": ans.text.strip(),
-                "error": None,
-                "agent_trace": trace,
-            }
+        trace.append(
+            f"error_agent: fixable SQL error — passing diagnosis to sql_node for retry"
+        )
+        # Keep state["error"] set so graph routes back to sql_node.
+        # sql_node reads state["error"] as prev_error for its next attempt.
+        return {
+            **state,
+            "error": diagnosis,          # enriched error message for sql_node
+            "agent_trace": trace,
+        }
 
-        except (SQLAlchemyError, Exception) as exc:
-            trace.append(f"error_agent: repair attempt failed — {exc}")
-
-    # ── Return friendly message ───────────────────────────────────────────────
+    # ── Retries exhausted or non-fixable error — return friendly message ──────
     friendly = _FRIENDLY.get(error_type, _FRIENDLY["unknown"])
-    trace.append("error_agent: returning friendly error message")
-    return {**state, "answer": friendly, "agent_trace": trace}
+    if iteration >= MAX_RETRIES:
+        friendly = (
+            f"{MAX_RETRIES} deneme sonrasında sorgunuzu çalıştıramadım. "
+            "Lütfen soruyu farklı bir şekilde ifade ederek tekrar deneyin."
+        )
+
+    trace.append("error_agent: returning friendly error message (no more retries)")
+    return {
+        **state,
+        "answer": friendly,
+        "final_answer": friendly,
+        "error": None,          # clear so graph routes to END cleanly
+        "agent_trace": trace,
+    }

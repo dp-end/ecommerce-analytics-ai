@@ -20,10 +20,10 @@ public class ChatbotController {
 
     @PostMapping("/ask")
     public ResponseEntity<Map<String, Object>> ask(
-            @RequestBody Map<String, String> body,
+            @RequestBody Map<String, Object> body,
             Authentication authentication) {
 
-        String question = body.get("question");
+        String question = body.get("question") instanceof String s ? s : null;
         if (question == null || question.isBlank()) {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", "Question field is required"));

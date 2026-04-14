@@ -10,7 +10,7 @@
         <h2 class="chat-title">AI Data Assistant</h2>
         <div class="chat-status">
           <span class="status-dot"></span>
-          <span>Online &mdash; Ready to analyze your data</span>
+          <span>Online &mdash; Multi-Agent Text2SQL Pipeline</span>
         </div>
       </div>
     </div>
@@ -30,14 +30,35 @@
             <div class="msg-avatar bot-av">🤖</div>
           }
 
-          <div class="message-bubble" [class.user-bubble]="msg.role === 'user'" [class.bot-bubble]="msg.role === 'assistant'">
-            <p class="msg-text">{{ msg.content }}</p>
-            @if (msg.hasChart && msg.chartId) {
+          <div
+            class="message-bubble"
+            [class.user-bubble]="msg.role === 'user'"
+            [class.bot-bubble]="msg.role === 'assistant'"
+          >
+            <!-- Message text -->
+            <p class="msg-text" style="white-space: pre-line">{{ msg.content }}</p>
+
+            <!-- Plotly chart (rendered by LangGraph Visualization Agent) -->
+            @if (msg.plotlyFigure) {
               <div class="chart-container">
-                <canvas [id]="msg.chartId" style="height:220px"></canvas>
+                <div [id]="'plotly-chart-' + msg.id" style="width:100%;height:260px"></div>
               </div>
             }
-            <div class="msg-time">{{ msg.timestamp | date:'HH:mm' }}</div>
+
+            <!-- SQL query accordion -->
+            @if (msg.sqlQuery) {
+              <details class="sql-details">
+                <summary>🔍 View SQL Query</summary>
+                <pre class="sql-code">{{ msg.sqlQuery }}</pre>
+              </details>
+            }
+
+            <!-- Agent trace (iterations info) -->
+            @if (msg.iterationCount && msg.iterationCount > 1) {
+              <div class="retry-badge">🔄 Retried {{ msg.iterationCount - 1 }} time(s)</div>
+            }
+
+            <div class="msg-time">{{ msg.timestamp | date: 'HH:mm' }}</div>
           </div>
 
           <!-- User avatar (right side) -->
@@ -53,6 +74,7 @@
           <div class="msg-avatar bot-av">🤖</div>
           <div class="message-bubble bot-bubble typing-bubble">
             <div class="typing-dots">
+              <span class="agent-label">Agents running…</span>
               <span></span><span></span><span></span>
             </div>
           </div>
@@ -75,14 +97,13 @@
       </div>
 
       <div class="card capabilities-card">
-        <div class="sidebar-title">🔧 Capabilities</div>
+        <div class="sidebar-title">🔧 Agent Pipeline</div>
         <ul class="capabilities-list">
-          <li>📊 Generate charts & graphs</li>
-          <li>📈 Revenue trend analysis</li>
-          <li>🛒 Order insights</li>
-          <li>👥 Customer analytics</li>
-          <li>⭐ Review sentiment</li>
-          <li>📦 Inventory alerts</li>
+          <li>🛡️ Guardrails Agent</li>
+          <li>🔤 SQL Generation Agent</li>
+          <li>🔧 Error Recovery Agent</li>
+          <li>📊 Analysis Agent</li>
+          <li>📈 Visualization Agent</li>
         </ul>
       </div>
     </div>
@@ -105,11 +126,25 @@
         [disabled]="!inputText().trim() || isTyping()"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M22 2L15 22 11 13 2 9l20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path
+            d="M22 2L11 13"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M22 2L15 22 11 13 2 9l20-7z"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
       </button>
     </div>
-    <div class="input-hint">Press <kbd>Enter</kbd> to send &middot; <kbd>Shift+Enter</kbd> for new line</div>
+    <div class="input-hint">
+      Press <kbd>Enter</kbd> to send &middot; <kbd>Shift+Enter</kbd> for new line
+    </div>
   </div>
 </div>

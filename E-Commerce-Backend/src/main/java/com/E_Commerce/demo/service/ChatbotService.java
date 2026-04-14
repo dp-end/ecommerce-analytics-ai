@@ -96,14 +96,18 @@ public class ChatbotService {
 
             if (response == null) return null;
 
-            return Map.of(
-                    "question",           question,
-                    "answer",             response.getOrDefault("answer", ""),
-                    "sql",                response.getOrDefault("sql_query", ""),
-                    "agent",              "langgraph",
-                    "visualizationData",  response.getOrDefault("visualization_data", Map.of()),
-                    "agentTrace",         response.getOrDefault("agent_trace", List.of())
-            );
+            Map<String, Object> result = new HashMap<>();
+            result.put("question",           question);
+            result.put("answer",             response.getOrDefault("answer", ""));
+            result.put("sql_query",          response.getOrDefault("sql_query", ""));
+            result.put("agent",              "langgraph");
+            result.put("visualizationData",  response.getOrDefault("visualization_data", null));
+            result.put("visualization_data", response.getOrDefault("visualization_data", null));
+            result.put("agentTrace",         response.getOrDefault("agent_trace", List.of()));
+            result.put("agent_trace",        response.getOrDefault("agent_trace", List.of()));
+            result.put("iterationCount",     response.getOrDefault("iteration_count", 0));
+            result.put("is_in_scope",        response.getOrDefault("is_in_scope", true));
+            return result;
 
         } catch (ResourceAccessException e) {
             // Service not running — expected when Python service is down

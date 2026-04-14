@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
 import {
   AuthResponse,
   PageResponse,
@@ -24,6 +25,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private http = inject(HttpClient);
+  private auth = inject(AuthService);
   private base = environment.apiUrl;
 
   // ─── Auth ──────────────────────────────────────────────────────────────────
@@ -206,6 +208,18 @@ export class ApiService {
 
   // ─── Chatbot ───────────────────────────────────────────────────────────────
   askChatbot(question: string): Observable<ChatResponse> {
-    return this.http.post<ChatResponse>(`${this.base}/api/chat/ask`, { question });
+    const user = this.auth.currentUser();
+    const body: Record<string, unknown> = { question };
+
+    if (user) {
+      body['user_context'] = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role.toUpperCase(),
+      };
+    }
+
+    return this.http.post<ChatResponse>(`${this.base}/api/chat/ask`, body);
   }
 }

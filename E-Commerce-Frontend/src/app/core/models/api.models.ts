@@ -176,8 +176,36 @@ export interface CustomerAnalytics {
 
 // ─── Chatbot ─────────────────────────────────────────────────────────────────
 export interface ChatResponse {
-  question: string;
+  question?: string;
   answer: string;
   sql?: string;
-  agent: string;
+  sql_query?: string;
+  agent?: string;
+  // LangGraph multi-agent fields
+  visualizationData?: PlotlyFigure | null;
+  visualization_data?: PlotlyFigure | null;
+  agentTrace?: string[];
+  agent_trace?: string[];
+  isSafe?: boolean;
+  is_safe?: boolean;
+  isInScope?: boolean;
+  is_in_scope?: boolean;
+  iterationCount?: number;
+  iteration_count?: number;
+  needsVisualization?: boolean;
+  needs_visualization?: boolean;
+}
+
+export interface PlotlyFigure {
+  data: PlotlyTrace[];
+  layout: Record<string, unknown>;
+}
+
+export interface PlotlyTrace {
+  type: string;
+  x?: unknown[];
+  y?: unknown[];
+  labels?: unknown[];
+  values?: unknown[];
+  [key: string]: unknown;
 }
