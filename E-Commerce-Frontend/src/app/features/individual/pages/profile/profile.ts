@@ -23,9 +23,18 @@ export class IndividualProfileComponent implements OnInit {
 
   editMode = signal(false);
   saveSuccess = signal(false);
+  saveError = signal('');
 
   editName = signal('');
   editEmail = signal('');
+
+  // Password change
+  showPasswordModal = signal(false);
+  currentPassword = signal('');
+  newPassword = signal('');
+  confirmPassword = signal('');
+  passwordError = signal('');
+  passwordSuccess = signal(false);
 
   notifications = signal({
     orderUpdates: true,
@@ -77,9 +86,56 @@ export class IndividualProfileComponent implements OnInit {
   }
 
   saveProfile(): void {
-    this.editMode.set(false);
-    this.saveSuccess.set(true);
-    setTimeout(() => this.saveSuccess.set(false), 3000);
+    const u = this.user();
+    if (!u) return;
+    this.api.updateUser(u.id, { name: this.editName(), email: this.editEmail() }).subscribe({
+      next: updated => {
+        this.authService.updateCurrentUser({ name: updated.name, email: updated.email });
+        this.editMode.set(false);
+        this.saveSuccess.set(true);
+        this.saveError.set('');
+        setTimeout(() => this.saveSuccess.set(false), 3000);
+      },
+      error: (err) => {
+        this.saveError.set(err?.error?.message ?? 'Profil güncellenemedi.');
+      },
+    });
+  }
+
+  openPasswordModal(): void {
+    this.currentPassword.set('');
+    this.newPassword.set('');
+    this.confirmPassword.set('');
+    this.passwordError.set('');
+    this.passwordSuccess.set(false);
+    this.showPasswordModal.set(true);
+  }
+
+  closePasswordModal(): void {
+    this.showPasswordModal.set(false);
+  }
+
+  submitPasswordChange(): void {
+    if (this.newPassword() !== this.confirmPassword()) {
+      this.passwordError.set('Yeni şifreler eşleşmiyor.');
+      return;
+    }
+    if (this.newPassword().length < 6) {
+      this.passwordError.set('Şifre en az 6 karakter olmalıdır.');
+      return;
+    }
+    const u = this.user();
+    if (!u) return;
+    this.api.changePassword(u.id, this.currentPassword(), this.newPassword()).subscribe({
+      next: () => {
+        this.passwordSuccess.set(true);
+        this.passwordError.set('');
+        setTimeout(() => this.showPasswordModal.set(false), 1500);
+      },
+      error: (err) => {
+        this.passwordError.set(err?.error?.message ?? 'Şifre değiştirilemedi.');
+      },
+    });
   }
 
   toggleNotification(key: keyof ReturnType<typeof this.notifications>): void {

@@ -54,6 +54,9 @@
               <input type="email" class="form-control"
                 [ngModel]="editEmail()" (ngModelChange)="editEmail.set($event)" />
             </div>
+            @if (saveError()) {
+              <div style="color:var(--danger);font-size:0.8rem;margin-bottom:0.5rem">{{ saveError() }}</div>
+            }
             <div class="edit-actions">
               <button class="btn btn-primary btn-sm" (click)="saveProfile()">Save</button>
               <button class="btn btn-ghost btn-sm" (click)="cancelEdit()">Cancel</button>
@@ -170,7 +173,7 @@
               <span class="security-title">🔑 Password</span>
               <span class="security-desc">Last changed 3 months ago</span>
             </div>
-            <button class="btn btn-ghost btn-sm">Change</button>
+            <button class="btn btn-ghost btn-sm" (click)="openPasswordModal()">Change</button>
           </div>
           <div class="security-row">
             <div class="security-info">
@@ -191,3 +194,42 @@
     </div>
   </div>
 </div>
+
+@if (showPasswordModal()) {
+  <div class="modal-backdrop" (click)="closePasswordModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <span style="font-weight:700;font-size:1rem">Change Password</span>
+        <button class="btn btn-ghost btn-sm" (click)="closePasswordModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (passwordSuccess()) {
+          <div class="alert-success">✓ Password changed successfully!</div>
+        } @else {
+          <div class="form-group">
+            <label>Current Password</label>
+            <input type="password" class="form-control"
+              [ngModel]="currentPassword()" (ngModelChange)="currentPassword.set($event)" />
+          </div>
+          <div class="form-group">
+            <label>New Password</label>
+            <input type="password" class="form-control"
+              [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)" />
+          </div>
+          <div class="form-group">
+            <label>Confirm New Password</label>
+            <input type="password" class="form-control"
+              [ngModel]="confirmPassword()" (ngModelChange)="confirmPassword.set($event)" />
+          </div>
+          @if (passwordError()) {
+            <div style="color:var(--danger);font-size:0.8rem;margin-top:0.25rem">{{ passwordError() }}</div>
+          }
+          <div class="modal-footer">
+            <button class="btn btn-primary btn-sm" (click)="submitPasswordChange()">Update Password</button>
+            <button class="btn btn-ghost btn-sm" (click)="closePasswordModal()">Cancel</button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

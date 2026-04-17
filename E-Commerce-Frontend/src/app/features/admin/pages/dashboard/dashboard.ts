@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { Chart, registerables } from 'chart.js';
 import { StatCardComponent } from '../../../../shared/stat-card/stat-card';
 import { ApiService } from '../../../../core/services/api.service';
@@ -10,7 +11,7 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, StatCardComponent],
+  imports: [CommonModule, StatCardComponent, RouterLink],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -20,13 +21,20 @@ export class AdminDashboardComponent implements OnInit {
   private api = inject(ApiService);
 
   activityLog = signal<AuditLogDto[]>([]);
+  allActivityLog: AuditLogDto[] = [];
   topStores = signal<StoreRevenueItem[]>([]);
   stats = signal<DashboardStats | null>(null);
+  isLast30Days = signal(false);
 
   private chart: Chart | null = null;
 
   ngOnInit(): void {
-    this.api.getAuditLogs().subscribe({ next: logs => this.activityLog.set(logs.slice(0, 8)) });
+    this.api.getAuditLogs().subscribe({
+      next: logs => {
+        this.allActivityLog = logs;
+        this.activityLog.set(logs.slice(0, 8));
+      },
+    });
     this.api.getDashboardStats().subscribe({ next: s => this.stats.set(s) });
     this.api.getRevenueByStore().subscribe({
       next: stores => {
@@ -35,6 +43,16 @@ export class AdminDashboardComponent implements OnInit {
         this.initChart(top);
       },
     });
+  }
+
+  toggleLast30Days(): void {
+    this.isLast30Days.update(v => !v);
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+    const filtered = this.isLast30Days()
+      ? this.allActivityLog.filter(l => new Date(l.createdAt) >= cutoff)
+      : this.allActivityLog;
+    this.activityLog.set(filtered.slice(0, 8));
   }
 
   private initChart(stores: StoreRevenueItem[]): void {
@@ -93,6 +111,30 @@ export class AdminDashboardComponent implements OnInit {
     if (v >= 1_000_000) return '$' + (v / 1_000_000).toFixed(2) + 'M';
     if (v >= 1_000)     return '$' + (v / 1_000).toFixed(1) + 'K';
     return '$' + v.toFixed(2);
+  }
+
+  exportReport(): void {
+    const s = this.stats();
+    const stores = this.topStores();
+    const rows: string[][] = [
+      ['Dashboard Report', new Date().toLocaleDateString('tr-TR')],
+      [],
+      ['Metric', 'Value'],
+      ['Total Revenue', '$' + (s?.totalRevenue ?? 0).toLocaleString()],
+      ['Total Orders', String(s?.totalOrders ?? 0)],
+      ['Total Users', String(s?.totalUsers ?? 0)],
+      ['Total Stores', String(s?.totalStores ?? 0)],
+      [],
+      ['Store', 'Revenue', 'Orders', 'Rating'],
+      ...stores.map(r => [r.storeName, '$' + r.revenue.toFixed(2), String(r.orderCount), String(r.rating)]),
+    ];
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `dashboard-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
   }
 
   formatTime(dateStr: string): string {

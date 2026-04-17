@@ -6,10 +6,10 @@
       <p class="page-subtitle">Welcome back! Here's what's happening across all stores.</p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-secondary btn-sm">
-        <span>📅</span> Last 30 Days
+      <button class="btn btn-sm" [ngClass]="isLast30Days() ? 'btn-primary' : 'btn-secondary'" (click)="toggleLast30Days()">
+        <span>📅</span> {{ isLast30Days() ? 'All Time' : 'Last 30 Days' }}
       </button>
-      <button class="btn btn-primary btn-sm">
+      <button class="btn btn-primary btn-sm" (click)="exportReport()">
         <span>📥</span> Export Report
       </button>
     </div>
@@ -67,7 +67,7 @@
     <div class="card activity-card">
       <div class="card-header">
         <div class="card-title">Recent Activity</div>
-        <button class="btn btn-ghost btn-sm">View All</button>
+        <a routerLink="/admin/audit-logs" class="btn btn-ghost btn-sm">View All</a>
       </div>
       <div class="activity-list">
         @for (item of activityLog(); track item.id) {
@@ -87,7 +87,7 @@
   <div class="card">
     <div class="card-header">
       <div class="card-title">Top Stores</div>
-      <button class="btn btn-secondary btn-sm">View All Stores</button>
+      <a routerLink="/admin/stores" class="btn btn-secondary btn-sm">View All Stores</a>
     </div>
     <div class="table-container" style="border: none; border-radius: 0;">
       <table>

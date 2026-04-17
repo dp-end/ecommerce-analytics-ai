@@ -4,6 +4,7 @@ import com.E_Commerce.demo.dto.request.CategoryRequest;
 import com.E_Commerce.demo.dto.response.CategoryDto;
 import com.E_Commerce.demo.entity.Category;
 import com.E_Commerce.demo.repository.CategoryRepository;
+import com.E_Commerce.demo.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import java.util.List;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;
 
     public List<CategoryDto> getAll() {
         return categoryRepository.findAll().stream().map(CategoryDto::from).toList();
@@ -61,6 +63,7 @@ public class CategoryService {
 
     @Transactional
     public void delete(Long id) {
+        productRepository.nullifyCategoryId(id);
         categoryRepository.deleteById(id);
     }
 }

@@ -15,7 +15,9 @@
         type="text"
         class="search-input"
         placeholder="Search anything..."
-        [(ngModel)]="searchQuery"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+        (keyup.enter)="submitSearch()"
       />
       <kbd class="search-kbd">⌘K</kbd>
     </div>
@@ -42,8 +44,8 @@
             <button class="notif-mark-read" (click)="markAllRead()">Mark all read</button>
           </div>
           <div class="notif-list">
-            @for (notif of notifications; track notif.id) {
-              <div class="notif-item" [class.unread]="!notif.read">
+            @for (notif of notifications(); track notif.id) {
+              <div class="notif-item" [class.unread]="!notif.read" (click)="markNotificationRead(notif.id)">
                 <div class="notif-dot" [class.visible]="!notif.read"></div>
                 <div class="notif-content">
                   <div class="notif-text">{{ notif.text }}</div>

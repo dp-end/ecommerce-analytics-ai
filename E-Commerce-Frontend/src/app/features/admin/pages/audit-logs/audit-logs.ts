@@ -15,7 +15,7 @@ import { AuditLogDto } from '../../../../core/models/api.models';
           <h2 style="font-size:1.375rem;font-weight:700;margin-bottom:0.25rem">Audit Logs</h2>
           <p style="color:var(--text-secondary);font-size:0.875rem">Track all system activity and user actions</p>
         </div>
-        <button class="btn btn-secondary btn-sm">📥 Export Logs</button>
+        <button class="btn btn-danger btn-sm" (click)="exportLogs()">📥 Export Logs</button>
       </div>
 
       <div class="card" style="padding:1rem 1.25rem;margin-bottom:1.5rem">
@@ -91,6 +91,22 @@ export class AdminAuditLogsComponent implements OnInit {
       next: logs => { this.logs.set(logs); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
+  }
+
+  exportLogs(): void {
+    const rows: string[][] = [
+      ['ID', 'Type', 'Action', 'User', 'Time'],
+      ...this.filteredLogs().map(l => [
+        String(l.id), l.type, l.action, l.userName, this.formatTime(l.createdAt),
+      ]),
+    ];
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `audit-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
   }
 
   getBadge(type: string): string {

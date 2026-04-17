@@ -2,10 +2,12 @@ package com.E_Commerce.demo.config;
 
 import com.E_Commerce.demo.entity.Category;
 import com.E_Commerce.demo.entity.CustomerProfile;
+import com.E_Commerce.demo.entity.Product;
 import com.E_Commerce.demo.entity.Store;
 import com.E_Commerce.demo.entity.User;
 import com.E_Commerce.demo.repository.CategoryRepository;
 import com.E_Commerce.demo.repository.CustomerProfileRepository;
+import com.E_Commerce.demo.repository.ProductRepository;
 import com.E_Commerce.demo.repository.StoreRepository;
 import com.E_Commerce.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ public class DataInitializer implements CommandLineRunner {
     private final CustomerProfileRepository customerProfileRepository;
     private final CategoryRepository categoryRepository;
     private final StoreRepository storeRepository;
+    private final ProductRepository productRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -35,9 +38,12 @@ public class DataInitializer implements CommandLineRunner {
 
         createCategories();
 
-        // Mevcut ya da yeni oluşturulan corporate kullanıcıya mağaza ekle
-        userRepository.findByEmail("corporate@datapulse.com")
-                .ifPresent(this::createDefaultStore);
+        // Mevcut ya da yeni oluşturulan corporate kullanıcıya mağaza ve ürün ekle
+        userRepository.findByEmail("corporate@datapulse.com").ifPresent(corp -> {
+            createDefaultStore(corp);
+            storeRepository.findByOwnerId(corp.getId()).stream().findFirst()
+                    .ifPresent(this::seedDemoProducts);
+        });
 
         log.info("─────────────────────────────────────────────────");
         log.info("  Test kullanıcıları:");
@@ -70,6 +76,27 @@ public class DataInitializer implements CommandLineRunner {
                 .owner(owner)
                 .category("Electronics")
                 .build());
+    }
+
+    private void seedDemoProducts(Store store) {
+        if (!productRepository.findByStoreId(store.getId()).isEmpty()) return;
+        List<Object[]> items = List.of(
+            new Object[]{"Wireless Headphones",  89.99,  "🎧", 120},
+            new Object[]{"Smart Watch",          199.99, "⌚", 45},
+            new Object[]{"USB-C Hub",            34.99,  "🔌", 200},
+            new Object[]{"Mechanical Keyboard",  129.99, "⌨️", 60},
+            new Object[]{"Laptop Stand",         49.99,  "💻", 80},
+            new Object[]{"Webcam HD",            79.99,  "📷", 55}
+        );
+        for (Object[] item : items) {
+            productRepository.save(Product.builder()
+                    .name((String) item[0])
+                    .unitPrice((Double) item[1])
+                    .emoji((String) item[2])
+                    .stock((Integer) item[3])
+                    .store(store)
+                    .build());
+        }
     }
 
     /** Returns existing or newly created user */

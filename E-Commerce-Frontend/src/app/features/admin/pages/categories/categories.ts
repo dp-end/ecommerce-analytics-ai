@@ -105,8 +105,13 @@ export class AdminCategoriesComponent implements OnInit {
   }
 
   deleteCategory(id: number): void {
+    if (!confirm('Bu kategoriyi silmek istediğinize emin misiniz?')) return;
     this.api.deleteCategory(id).subscribe({
       next: () => this.categories.update(cats => cats.filter(c => c.id !== id)),
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Kategori silinemedi. Bu kategoriye ait ürünler bulunuyor olabilir.';
+        alert(msg);
+      },
     });
   }
 

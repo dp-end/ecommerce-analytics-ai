@@ -5,10 +5,10 @@ import com.E_Commerce.demo.dto.response.ProductDto;
 import com.E_Commerce.demo.entity.Category;
 import com.E_Commerce.demo.entity.Product;
 import com.E_Commerce.demo.entity.Store;
-import com.E_Commerce.demo.entity.User;
 import com.E_Commerce.demo.repository.CategoryRepository;
 import com.E_Commerce.demo.repository.ProductRepository;
 import com.E_Commerce.demo.repository.StoreRepository;
+import com.E_Commerce.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +23,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final StoreRepository storeRepository;
     private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
 
     public List<ProductDto> getAll() {
         return productRepository.findAll().stream().map(ProductDto::from).toList();
@@ -45,8 +46,10 @@ public class ProductService {
         return productRepository.searchByName(keyword).stream().map(ProductDto::from).toList();
     }
 
-    public List<ProductDto> getMyProducts(User currentUser) {
-        List<Long> storeIds = storeRepository.findByOwnerId(currentUser.getId())
+    public List<ProductDto> getMyProducts(String email) {
+        var owner = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+        List<Long> storeIds = storeRepository.findByOwnerId(owner.getId())
                 .stream().map(Store::getId).toList();
         if (storeIds.isEmpty()) return List.of();
         return productRepository.findByStoreIdIn(storeIds).stream().map(ProductDto::from).toList();

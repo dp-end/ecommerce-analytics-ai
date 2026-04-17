@@ -52,6 +52,14 @@ export class ApiService {
     return this.http.get<UserDto>(`${this.base}/api/users/${id}`);
   }
 
+  updateUser(id: number, data: { name?: string; email?: string; gender?: string; avatar?: string }): Observable<UserDto> {
+    return this.http.patch<UserDto>(`${this.base}/api/users/${id}`, data);
+  }
+
+  changePassword(id: number, currentPassword: string, newPassword: string): Observable<void> {
+    return this.http.patch<void>(`${this.base}/api/users/${id}/password`, { currentPassword, newPassword });
+  }
+
   updateUserStatus(id: number, status: string): Observable<UserDto> {
     return this.http.patch<UserDto>(`${this.base}/api/users/${id}/status`, { status });
   }

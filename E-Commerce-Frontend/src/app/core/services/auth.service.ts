@@ -68,4 +68,12 @@ export class AuthService {
   getCurrentRole(): UserRole | null {
     return this.currentUser()?.role ?? null;
   }
+
+  updateCurrentUser(partial: Partial<User>): void {
+    const current = this.currentUser();
+    if (!current) return;
+    const updated = { ...current, ...partial };
+    localStorage.setItem('datapulse_user', JSON.stringify(updated));
+    this.currentUser.set(updated);
+  }
 }

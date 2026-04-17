@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../../../core/services/api.service';
 import { CartService } from '../../../../core/services/cart.service';
 import { CategoryDto, ProductDto } from '../../../../core/models/api.models';
@@ -14,6 +15,7 @@ import { CategoryDto, ProductDto } from '../../../../core/models/api.models';
 })
 export class IndividualHomeComponent implements OnInit {
   private api = inject(ApiService);
+  private route = inject(ActivatedRoute);
   cartService = inject(CartService);
 
   products = signal<ProductDto[]>([]);
@@ -45,6 +47,9 @@ export class IndividualHomeComponent implements OnInit {
   cartCount = computed(() => this.cartService.count());
 
   ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      if (params['search']) this.searchQuery.set(params['search']);
+    });
     this.loading.set(true);
     this.api.getProducts().subscribe({
       next: products => { this.products.set(products); this.loading.set(false); },

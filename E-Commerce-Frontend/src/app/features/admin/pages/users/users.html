@@ -66,7 +66,7 @@
               </td>
               <td class="text-secondary">{{ user.createdAt | slice:0:10 }}</td>
               <td>
-                <span class="badge" [ngClass]="user.status === 'active' ? 'badge-green' : 'badge-red'">
+                <span class="badge" [ngClass]="user.status.toUpperCase() === 'ACTIVE' ? 'badge-green' : 'badge-red'">
                   {{ user.status }}
                 </span>
               </td>
@@ -74,10 +74,10 @@
                 <div class="action-btns">
                   <button
                     class="btn btn-sm"
-                    [ngClass]="user.status === 'active' ? 'btn-danger' : 'btn-success'"
+                    [ngClass]="user.status.toUpperCase() === 'ACTIVE' ? 'btn-danger' : 'btn-success'"
                     (click)="toggleStatus(user)"
                   >
-                    {{ user.status === 'active' ? 'Suspend' : 'Activate' }}
+                    {{ user.status.toUpperCase() === 'ACTIVE' ? 'Suspend' : 'Activate' }}
                   </button>
                   <button class="btn btn-sm btn-danger" (click)="deleteUser(user.id)">
                     Delete

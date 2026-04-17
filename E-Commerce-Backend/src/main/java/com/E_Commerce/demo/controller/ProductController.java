@@ -2,13 +2,13 @@ package com.E_Commerce.demo.controller;
 
 import com.E_Commerce.demo.dto.request.ProductRequest;
 import com.E_Commerce.demo.dto.response.ProductDto;
-import com.E_Commerce.demo.entity.User;
 import com.E_Commerce.demo.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -53,9 +53,8 @@ public class ProductController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<ProductDto>> getMyProducts(Authentication authentication) {
-        User currentUser = (User) authentication.getPrincipal();
-        return ResponseEntity.ok(productService.getMyProducts(currentUser));
+    public ResponseEntity<List<ProductDto>> getMyProducts(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(productService.getMyProducts(userDetails.getUsername()));
     }
 
     @GetMapping("/low-stock")

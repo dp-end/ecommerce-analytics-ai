@@ -46,7 +46,15 @@ public class UserController {
             @PathVariable Long id,
             @RequestBody Map<String, String> updates) {
         return ResponseEntity.ok(userService.updateUser(id,
-                updates.get("name"), updates.get("avatar"), updates.get("gender")));
+                updates.get("name"), updates.get("email"), updates.get("avatar"), updates.get("gender")));
+    }
+
+    @PatchMapping("/{id}/password")
+    public ResponseEntity<Void> changePassword(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {
+        userService.changePassword(id, body.get("currentPassword"), body.get("newPassword"));
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/status")

@@ -53,7 +53,7 @@ export class AdminUsersComponent implements OnInit {
   }
 
   onRoleChange(value: string): void {
-    this.roleFilter.set(value);
+    this.roleFilter.set(value.toUpperCase());
     this.load(0);
   }
 
@@ -83,6 +83,10 @@ export class AdminUsersComponent implements OnInit {
       next: () => {
         this.users.update(list => list.filter(u => u.id !== id));
         this.totalElements.update(n => n - 1);
+      },
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Kullanıcı silinemedi. İlişkili siparişleri veya verileri olabilir.';
+        alert(msg);
       },
     });
   }

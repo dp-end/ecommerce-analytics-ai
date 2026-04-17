@@ -18,7 +18,7 @@ Chart.register(...registerables);
           <h2 style="font-size:1.375rem;font-weight:700;margin-bottom:0.25rem">Platform Analytics</h2>
           <p style="color:var(--text-secondary);font-size:0.875rem">Comprehensive platform-wide performance metrics</p>
         </div>
-        <button class="btn btn-primary btn-sm">📥 Export Report</button>
+        <button class="btn btn-primary btn-sm" (click)="exportReport()">📥 Export Report</button>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem">
@@ -56,11 +56,41 @@ export class AdminAnalyticsComponent implements OnInit {
 
   private api = inject(ApiService);
   stats = signal<DashboardStats | null>(null);
+  private revenueStores: { storeName: string; revenue: number; orderCount: number }[] = [];
 
   ngOnInit(): void {
     this.api.getDashboardStats().subscribe({ next: s => this.stats.set(s) });
-    this.api.getRevenueByStore().subscribe({ next: stores => this.initBarChart(stores.slice(0, 6)) });
+    this.api.getRevenueByStore().subscribe({
+      next: stores => {
+        this.revenueStores = stores;
+        this.initBarChart(stores.slice(0, 6));
+      },
+    });
     this.api.getDashboardStats().subscribe({ next: s => this.initDonutChart(s.ordersByStatus) });
+  }
+
+  exportReport(): void {
+    const s = this.stats();
+    const rows: string[][] = [
+      ['Platform Analytics Report', new Date().toLocaleDateString('tr-TR')],
+      [],
+      ['Metric', 'Value'],
+      ['Total Revenue', '$' + (s?.totalRevenue ?? 0).toLocaleString()],
+      ['Total Orders', String(s?.totalOrders ?? 0)],
+      ['Total Users', String(s?.totalUsers ?? 0)],
+      ['Total Stores', String(s?.totalStores ?? 0)],
+      ['Total Reviews', String(s?.totalReviews ?? 0)],
+      [],
+      ['Store', 'Revenue', 'Orders'],
+      ...this.revenueStores.map(r => [r.storeName, '$' + r.revenue.toFixed(2), String(r.orderCount)]),
+    ];
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `analytics-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
   }
 
   private initBarChart(stores: { storeName: string; revenue: number }[]): void {
