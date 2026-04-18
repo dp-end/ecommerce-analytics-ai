@@ -25,6 +25,16 @@
 
   <!-- Right: Notifications & User -->
   <div class="navbar-right">
+    <!-- Favorites (individual only) -->
+    @if (isIndividual()) {
+      <button class="icon-btn" (click)="goToFavorites()" title="Favorilerim">
+        <span style="font-size:18px;line-height:1">❤️</span>
+        @if (favCount() > 0) {
+          <span class="notif-badge">{{ favCount() }}</span>
+        }
+      </button>
+    }
+
     <!-- Notifications -->
     <div class="notif-container">
       <button class="icon-btn" (click)="toggleNotifications()" title="Notifications">

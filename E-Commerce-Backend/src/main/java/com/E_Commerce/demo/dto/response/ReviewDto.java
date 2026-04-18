@@ -23,6 +23,7 @@ public class ReviewDto {
     private String reviewHeadline;
     private Boolean verifiedPurchase;
     private Boolean vine;
+    private Boolean ownerLiked;
     private LocalDateTime createdAt;
 
     public static ReviewDto from(Review r) {
@@ -42,6 +43,7 @@ public class ReviewDto {
                 .reviewHeadline(r.getReviewHeadline())
                 .verifiedPurchase(r.getVerifiedPurchase())
                 .vine(r.getVine())
+                .ownerLiked(r.getOwnerLiked() != null ? r.getOwnerLiked() : false)
                 .createdAt(r.getCreatedAt())
                 .build();
     }

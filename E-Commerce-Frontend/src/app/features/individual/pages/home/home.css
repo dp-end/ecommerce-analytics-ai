@@ -169,11 +169,26 @@
   position: absolute;
   top: 1rem;
   right: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
 }
 
 .product-category-badge {
   font-size: 0.6rem;
 }
+
+.fav-heart-btn {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: transform var(--transition-fast);
+}
+.fav-heart-btn:hover { transform: scale(1.3); }
 
 .product-image {
   width: 100%;

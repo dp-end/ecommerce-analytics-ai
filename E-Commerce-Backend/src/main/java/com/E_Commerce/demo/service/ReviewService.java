@@ -9,8 +9,10 @@ import com.E_Commerce.demo.repository.ProductRepository;
 import com.E_Commerce.demo.repository.ReviewRepository;
 import com.E_Commerce.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -29,10 +31,13 @@ public class ReviewService {
 
     public ReviewDto getById(Long id) {
         return ReviewDto.from(reviewRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Review not found: " + id)));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found: " + id)));
     }
 
     public List<ReviewDto> getByProduct(Long productId) {
+        if (!productRepository.existsById(productId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: " + productId);
+        }
         return reviewRepository.findByProductId(productId).stream().map(ReviewDto::from).toList();
     }
 
@@ -47,9 +52,9 @@ public class ReviewService {
     @Transactional
     public ReviewDto create(ReviewRequest request, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found: " + userEmail));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found: " + request.getProductId()));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: " + request.getProductId()));
 
         Review review = Review.builder()
                 .user(user)
@@ -60,6 +65,7 @@ public class ReviewService {
                 .marketplace(request.getMarketplace())
                 .verifiedPurchase(request.getVerifiedPurchase())
                 .vine(request.getVine())
+                .ownerLiked(false)
                 .build();
         ReviewDto saved = ReviewDto.from(reviewRepository.save(review));
 
@@ -70,8 +76,55 @@ public class ReviewService {
         return saved;
     }
 
+    /** Admin-only hard delete */
     @Transactional
     public void delete(Long id) {
         reviewRepository.deleteById(id);
+    }
+
+    /**
+     * Delete a review as the store owner of the product.
+     * Also allowed by admins (checked separately via @PreAuthorize).
+     */
+    @Transactional
+    public void deleteByOwner(Long reviewId, String callerEmail) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found: " + reviewId));
+
+        User caller = userRepository.findByEmail(callerEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        boolean isAdmin = caller.getRoleType() == User.RoleType.ADMIN;
+        boolean isOwner = review.getProduct().getStore() != null
+                && review.getProduct().getStore().getOwner().getId().equals(caller.getId());
+
+        if (!isAdmin && !isOwner) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only the store owner or an admin can delete this review");
+        }
+
+        reviewRepository.deleteById(reviewId);
+    }
+
+    /**
+     * Toggle owner endorsement on a review.
+     * Only the store owner of the product may call this.
+     */
+    @Transactional
+    public ReviewDto toggleOwnerLike(Long reviewId, String callerEmail) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found: " + reviewId));
+
+        User caller = userRepository.findByEmail(callerEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (review.getProduct().getStore() == null
+                || !review.getProduct().getStore().getOwner().getId().equals(caller.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only the store owner can endorse this review");
+        }
+
+        review.setOwnerLiked(!Boolean.TRUE.equals(review.getOwnerLiked()));
+        return ReviewDto.from(reviewRepository.save(review));
     }
 }

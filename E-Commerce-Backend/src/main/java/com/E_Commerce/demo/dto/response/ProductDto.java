@@ -9,6 +9,7 @@ public class ProductDto {
     private Long id;
     private Long storeId;
     private String storeName;
+    private Long storeOwnerId;
     private Long categoryId;
     private String categoryName;
     private String sku;
@@ -26,6 +27,7 @@ public class ProductDto {
                 .id(p.getId())
                 .storeId(p.getStore() != null ? p.getStore().getId() : null)
                 .storeName(p.getStore() != null ? p.getStore().getName() : null)
+                .storeOwnerId(p.getStore() != null ? p.getStore().getOwner().getId() : null)
                 .categoryId(p.getCategory() != null ? p.getCategory().getId() : null)
                 .categoryName(p.getCategory() != null ? p.getCategory().getName() : null)
                 .sku(p.getSku())

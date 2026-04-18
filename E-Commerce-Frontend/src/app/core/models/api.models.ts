@@ -47,9 +47,11 @@ export interface ProductDto {
   id: number;
   storeId?: number;
   storeName?: string;
+  storeOwnerId?: number;
   categoryId?: number;
   categoryName?: string;
   sku?: string;
+  brand?: string;
   name: string;
   unitPrice: number;
   stock: number;
@@ -57,6 +59,21 @@ export interface ProductDto {
   emoji?: string;
   imageUrl?: string;
   rating: number;
+}
+
+// ─── Favorite ────────────────────────────────────────────────────────────────
+export interface FavoriteDto {
+  id: number;
+  productId: number;
+  productName: string;
+  productEmoji?: string;
+  productImageUrl?: string;
+  productPrice: number;
+  productRating: number;
+  productStock: number;
+  categoryName?: string;
+  storeName?: string;
+  createdAt: string;
 }
 
 // ─── Order ───────────────────────────────────────────────────────────────────
@@ -104,9 +121,18 @@ export interface ReviewDto {
   productName: string;
   starRating: number;
   reviewText?: string;
+  reviewHeadline?: string;
   helpful: number;
   sentiment?: string;
+  ownerLiked: boolean;
   createdAt: string;
+}
+
+export interface ReviewRequest {
+  productId: number;
+  starRating: number;
+  reviewText: string;
+  reviewHeadline?: string;
 }
 
 // ─── Category ────────────────────────────────────────────────────────────────

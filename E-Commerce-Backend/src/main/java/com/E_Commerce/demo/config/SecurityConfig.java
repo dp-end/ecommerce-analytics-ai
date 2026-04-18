@@ -52,6 +52,7 @@ public class SecurityConfig {
                 // Product browsing is public (read), management requires auth
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )

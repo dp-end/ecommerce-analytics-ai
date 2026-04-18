@@ -1,9 +1,10 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../../../core/services/api.service';
 import { CartService } from '../../../../core/services/cart.service';
+import { FavoritesService } from '../../../../core/services/favorites.service';
 import { CategoryDto, ProductDto } from '../../../../core/models/api.models';
 
 @Component({
@@ -16,7 +17,9 @@ import { CategoryDto, ProductDto } from '../../../../core/models/api.models';
 export class IndividualHomeComponent implements OnInit {
   private api = inject(ApiService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   cartService = inject(CartService);
+  favoritesService = inject(FavoritesService);
 
   products = signal<ProductDto[]>([]);
   categories = signal<CategoryDto[]>([]);
@@ -75,5 +78,18 @@ export class IndividualHomeComponent implements OnInit {
   getStars(rating: number): string {
     const full = Math.floor(rating);
     return '★'.repeat(full) + '☆'.repeat(5 - full);
+  }
+
+  navigateToProduct(id: number): void {
+    this.router.navigate(['/individual/product', id]);
+  }
+
+  toggleFavorite(product: ProductDto, event: Event): void {
+    event.stopPropagation();
+    this.favoritesService.toggle(product.id);
+  }
+
+  isFavorite(productId: number): boolean {
+    return this.favoritesService.isFavorite(productId);
   }
 }

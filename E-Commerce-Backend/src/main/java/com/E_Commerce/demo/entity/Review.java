@@ -50,6 +50,10 @@ public class Review {
 
     private Boolean vine;
 
+    @Builder.Default
+    @Column(name = "owner_liked", nullable = false)
+    private Boolean ownerLiked = false;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

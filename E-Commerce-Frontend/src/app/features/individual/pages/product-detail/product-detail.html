@@ -1,0 +1,245 @@
+<div class="page fade-in">
+
+  <!-- Back button -->
+  <a routerLink="/individual/home" class="back-link">← Ürünlere Geri Dön</a>
+
+  @if (loading()) {
+    <div class="state-box">
+      <div class="spinner"></div>
+      <p>Ürün yükleniyor...</p>
+    </div>
+  } @else if (error()) {
+    <div class="state-box error-state">
+      <div class="state-icon">⚠️</div>
+      <h3>{{ error() }}</h3>
+      <a routerLink="/individual/home" class="btn btn-primary btn-sm">Ana Sayfaya Dön</a>
+    </div>
+  } @else if (product()) {
+    <div class="detail-layout">
+
+      <!-- Left: Image -->
+      <div class="image-panel card">
+        @if (product()!.imageUrl) {
+          <img [src]="product()!.imageUrl" [alt]="product()!.name" class="product-img" />
+        } @else {
+          <div class="product-emoji-lg">{{ product()!.emoji || '📦' }}</div>
+        }
+        <div class="image-badges">
+          @if (product()!.categoryName) {
+            <span class="badge badge-purple">{{ product()!.categoryName }}</span>
+          }
+          <span class="badge" [ngClass]="stockBadge()">{{ stockLabel() }}</span>
+        </div>
+      </div>
+
+      <!-- Right: Info -->
+      <div class="info-panel">
+
+        <!-- Header -->
+        <div class="info-header">
+          <div class="info-title-area">
+            @if (product()!.storeName) {
+              <div class="store-name">🏪 {{ product()!.storeName }}</div>
+            }
+            <h1 class="product-title">{{ product()!.name }}</h1>
+          </div>
+          <button class="fav-btn" [class.favorited]="isFavorite()" (click)="toggleFavorite()" title="Favorilere Ekle">
+            {{ isFavorite() ? '❤️' : '🤍' }}
+          </button>
+        </div>
+
+        <!-- Rating -->
+        <div class="rating-row">
+          <span class="stars">{{ getStars(avgRating()) }}</span>
+          <span class="rating-num">{{ avgRating() | number:'1.1-1' }}</span>
+          <span class="review-count">({{ reviews().length }} yorum)</span>
+        </div>
+
+        <!-- Price -->
+        <div class="price-section">
+          <span class="price">${{ product()!.unitPrice.toFixed(2) }}</span>
+        </div>
+
+        <!-- Meta info -->
+        <div class="meta-grid">
+          @if (product()!.brand) {
+            <div class="meta-item">
+              <span class="meta-label">Marka</span>
+              <span class="meta-value">{{ product()!.brand }}</span>
+            </div>
+          }
+          @if (product()!.sku) {
+            <div class="meta-item">
+              <span class="meta-label">SKU</span>
+              <span class="meta-value">{{ product()!.sku }}</span>
+            </div>
+          }
+          <div class="meta-item">
+            <span class="meta-label">Stok</span>
+            <span class="meta-value">{{ product()!.stock }} adet</span>
+          </div>
+        </div>
+
+        <!-- Description -->
+        @if (product()!.description) {
+          <div class="description-section">
+            <h3 class="section-label">Ürün Açıklaması</h3>
+            <p class="description-text">{{ product()!.description }}</p>
+          </div>
+        }
+
+        <!-- Actions -->
+        <div class="action-row">
+          <button
+            class="btn btn-primary action-btn"
+            [disabled]="product()!.stock === 0"
+            (click)="addToCart()"
+          >
+            {{ isInCart() ? '✅ Sepette' : '🛒 Sepete Ekle' }}
+          </button>
+          <button class="btn btn-ghost action-btn" (click)="toggleFavorite()">
+            {{ isFavorite() ? '❤️ Favorilerden Çıkar' : '🤍 Favorilere Ekle' }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Comments / Reviews ─────────────────────────────────────── -->
+    <div class="card reviews-section">
+
+      <div class="reviews-header">
+        <h2 class="section-label">Müşteri Yorumları ({{ reviews().length }})</h2>
+        @if (isStoreOwner()) {
+          <span class="owner-badge">🏪 Mağaza Sahibisiniz</span>
+        }
+      </div>
+
+      <!-- Add comment form (authenticated users only) -->
+      @if (authService.isAuthenticated()) {
+        <div class="comment-form">
+          <h3 class="form-title">Yorum Yaz</h3>
+
+          <div class="star-picker">
+            @for (s of [1,2,3,4,5]; track s) {
+              <button
+                class="star-pick-btn"
+                [class.selected]="s <= newRating()"
+                (click)="setRating(s)"
+                [title]="s + ' yıldız'"
+              >★</button>
+            }
+            <span class="star-pick-label">{{ newRating() }} / 5</span>
+          </div>
+
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Başlık (isteğe bağlı)"
+            [ngModel]="newHeadline()"
+            (ngModelChange)="newHeadline.set($event)"
+            maxlength="200"
+          />
+
+          <textarea
+            class="form-control comment-textarea"
+            placeholder="Ürün hakkında düşüncelerinizi paylaşın..."
+            rows="4"
+            [ngModel]="newText()"
+            (ngModelChange)="newText.set($event)"
+            maxlength="2000"
+          ></textarea>
+
+          <div class="form-footer">
+            <span class="char-count">{{ newText().length }} / 2000</span>
+            <button
+              class="btn btn-primary btn-sm"
+              [disabled]="submitting() || !newText().trim()"
+              (click)="submitComment()"
+            >
+              {{ submitting() ? 'Gönderiliyor...' : '💬 Gönder' }}
+            </button>
+          </div>
+
+          @if (submitError()) {
+            <div class="form-msg error-msg">⚠️ {{ submitError() }}</div>
+          }
+          @if (submitSuccess()) {
+            <div class="form-msg success-msg">✅ Yorumunuz gönderildi!</div>
+          }
+        </div>
+      } @else {
+        <div class="login-prompt">
+          <a routerLink="/login" class="btn btn-ghost btn-sm">💬 Yorum yazmak için giriş yapın</a>
+        </div>
+      }
+
+      <!-- Review list -->
+      @if (reviews().length === 0) {
+        <div class="empty-reviews">
+          <span class="empty-icon">💬</span>
+          <p>Henüz yorum yapılmamış. İlk yorumu siz yapın!</p>
+        </div>
+      } @else {
+        <div class="reviews-list">
+          @for (review of reviews(); track review.id) {
+            <div class="review-item" [class.owner-liked]="review.ownerLiked">
+              <div class="review-header">
+                <span class="reviewer-name">{{ review.customerName }}</span>
+                <span class="review-stars">{{ getStars(review.starRating) }}</span>
+                <span class="review-date">{{ review.createdAt | date:'dd.MM.yyyy' }}</span>
+                @if (review.sentiment) {
+                  <span class="badge" [ngClass]="{
+                    'badge-green':  review.sentiment === 'POSITIVE',
+                    'badge-red':    review.sentiment === 'NEGATIVE',
+                    'badge-yellow': review.sentiment === 'NEUTRAL'
+                  }">{{ review.sentiment }}</span>
+                }
+                @if (review.ownerLiked) {
+                  <span class="endorsed-badge">⭐ Onaylandı</span>
+                }
+
+                <!-- Store-owner privileged actions -->
+                @if (isStoreOwner()) {
+                  <div class="owner-actions">
+                    <button
+                      class="owner-btn like-btn"
+                      [class.liked]="review.ownerLiked"
+                      [disabled]="likingId() === review.id"
+                      (click)="likeReview(review.id)"
+                      [title]="review.ownerLiked ? 'Onayı Kaldır' : 'Onayla'"
+                    >{{ likingId() === review.id ? '…' : (review.ownerLiked ? '⭐' : '☆') }}</button>
+                    <button
+                      class="owner-btn delete-btn"
+                      [disabled]="deletingId() === review.id"
+                      (click)="deleteReview(review.id)"
+                      title="Yorumu Sil"
+                    >{{ deletingId() === review.id ? '…' : '🗑️' }}</button>
+                  </div>
+                } @else if (canDeleteReview()) {
+                  <!-- Admin delete only -->
+                  <div class="owner-actions">
+                    <button
+                      class="owner-btn delete-btn"
+                      [disabled]="deletingId() === review.id"
+                      (click)="deleteReview(review.id)"
+                      title="Yorumu Sil (Admin)"
+                    >{{ deletingId() === review.id ? '…' : '🗑️' }}</button>
+                  </div>
+                }
+              </div>
+
+              @if (review.reviewHeadline) {
+                <p class="review-headline">{{ review.reviewHeadline }}</p>
+              }
+              @if (review.reviewText) {
+                <p class="review-text">{{ review.reviewText }}</p>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+  }
+</div>

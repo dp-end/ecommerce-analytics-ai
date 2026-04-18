@@ -29,6 +29,7 @@ public class UserService {
     private final ReviewRepository reviewRepository;
     private final StoreRepository storeRepository;
     private final ProductRepository productRepository;
+    private final FavoriteRepository favoriteRepository;
     private final PasswordEncoder passwordEncoder;
 
     public PageResponse<UserDto> getAll(int page, int size, String search, String role) {
@@ -95,7 +96,10 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long id) {
-        // 1. Reviews written by this user
+        // 1. Favorites by this user
+        favoriteRepository.deleteAll(favoriteRepository.findByUserId(id));
+
+        // 2. Reviews written by this user
         reviewRepository.deleteAll(reviewRepository.findByUserId(id));
 
         // 2. Orders by this user → order_items + shipments first
@@ -106,13 +110,14 @@ public class UserService {
         }
         orderRepository.deleteAll(userOrders);
 
-        // 3. Stores owned by this user → products → order_items + reviews for those products
+        // 3. Stores owned by this user → products → order_items + reviews + favorites for those products
         var stores = storeRepository.findByOwnerId(id);
         for (var store : stores) {
             var products = productRepository.findByStoreId(store.getId());
             for (var product : products) {
                 orderItemRepository.deleteAll(orderItemRepository.findByProductId(product.getId()));
                 reviewRepository.deleteAll(reviewRepository.findByProductId(product.getId()));
+                favoriteRepository.deleteAll(favoriteRepository.findByProductId(product.getId()));
             }
             productRepository.deleteAll(products);
         }

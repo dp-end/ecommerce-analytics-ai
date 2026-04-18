@@ -31,6 +31,14 @@ export const individualRoutes: Routes = [
         path: 'chatbot',
         loadComponent: () => import('../chatbot/chatbot').then(m => m.ChatbotComponent),
       },
+      {
+        path: 'product/:id',
+        loadComponent: () => import('./pages/product-detail/product-detail').then(m => m.ProductDetailComponent),
+      },
+      {
+        path: 'favorites',
+        loadComponent: () => import('./pages/favorites/favorites').then(m => m.FavoritesPageComponent),
+      },
     ],
   },
 ];

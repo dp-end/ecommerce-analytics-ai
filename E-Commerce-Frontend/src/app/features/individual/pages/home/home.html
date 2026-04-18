@@ -63,9 +63,15 @@
   <!-- Products Grid -->
   <div class="products-grid">
     @for (product of filteredProducts(); track product.id) {
-      <div class="product-card card">
+      <div class="product-card card" (click)="navigateToProduct(product.id)" style="cursor:pointer">
         <div class="product-badge-wrapper">
           <span class="badge badge-purple product-category-badge">{{ product.categoryName }}</span>
+          <button
+            class="fav-heart-btn"
+            [class.favorited]="isFavorite(product.id)"
+            (click)="toggleFavorite(product, $event)"
+            title="Favorilere Ekle"
+          >{{ isFavorite(product.id) ? '❤️' : '🤍' }}</button>
         </div>
         <div class="product-image">
           <span class="product-emoji">{{ product.emoji }}</span>
@@ -93,7 +99,7 @@
             class="btn btn-sm"
             [ngClass]="isInCart(product) ? 'btn-success' : 'btn-primary'"
             [disabled]="product.stock === 0"
-            (click)="addToCart(product)"
+            (click)="addToCart(product); $event.stopPropagation()"
           >
             {{ isInCart(product) ? '✅ Added' : '🛒 Add to Cart' }}
           </button>

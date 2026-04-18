@@ -6,7 +6,9 @@ import com.E_Commerce.demo.entity.Category;
 import com.E_Commerce.demo.entity.Product;
 import com.E_Commerce.demo.entity.Store;
 import com.E_Commerce.demo.repository.CategoryRepository;
+import com.E_Commerce.demo.repository.FavoriteRepository;
 import com.E_Commerce.demo.repository.ProductRepository;
+import com.E_Commerce.demo.repository.ReviewRepository;
 import com.E_Commerce.demo.repository.StoreRepository;
 import com.E_Commerce.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,8 @@ public class ProductService {
     private final StoreRepository storeRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final FavoriteRepository favoriteRepository;
+    private final ReviewRepository reviewRepository;
 
     public List<ProductDto> getAll() {
         return productRepository.findAll().stream().map(ProductDto::from).toList();
@@ -105,6 +109,8 @@ public class ProductService {
 
     @Transactional
     public void delete(Long id) {
+        favoriteRepository.deleteAll(favoriteRepository.findByProductId(id));
+        reviewRepository.deleteAll(reviewRepository.findByProductId(id));
         productRepository.deleteById(id);
     }
 }

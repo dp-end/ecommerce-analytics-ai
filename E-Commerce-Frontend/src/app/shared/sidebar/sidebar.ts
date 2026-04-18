@@ -53,6 +53,7 @@ export class SidebarComponent {
           { label: 'Home', icon: '🏠', route: '/individual/home' },
           { label: 'AI Assistant', icon: '🤖', route: '/individual/chatbot' },
           { label: 'My Orders', icon: '📦', route: '/individual/orders' },
+          { label: 'Favorites', icon: '❤️', route: '/individual/favorites' },
           { label: 'Cart', icon: '🛒', route: '/individual/cart' },
           { label: 'Profile', icon: '👤', route: '/individual/profile' },
         ];

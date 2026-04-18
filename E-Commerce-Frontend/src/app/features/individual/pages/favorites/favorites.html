@@ -1,0 +1,57 @@
+<div class="page fade-in">
+  <div class="page-header">
+    <h1 class="page-heading">❤️ Favorilerim</h1>
+    <span class="fav-count">{{ favorites().length }} ürün</span>
+  </div>
+
+  @if (favorites().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">🤍</div>
+      <h3>Henüz favori ürününüz yok</h3>
+      <p>Beğendiğiniz ürünleri favorilere ekleyerek buradan hızlıca ulaşabilirsiniz.</p>
+      <a routerLink="/individual/home" class="btn btn-primary">Ürünlere Gözat</a>
+    </div>
+  } @else {
+    <div class="favorites-grid">
+      @for (fav of favorites(); track fav.productId) {
+        <div class="fav-card card" (click)="navigateToProduct(fav.productId)">
+          <button class="remove-btn" (click)="removeFavorite(fav.productId, $event)" title="Favorilerden Çıkar">❤️</button>
+
+          <div class="fav-image">
+            @if (fav.productImageUrl) {
+              <img [src]="fav.productImageUrl" [alt]="fav.productName" class="fav-img" />
+            } @else {
+              <span class="fav-emoji">{{ fav.productEmoji || '📦' }}</span>
+            }
+          </div>
+
+          <div class="fav-body">
+            @if (fav.storeName) {
+              <div class="fav-store">🏪 {{ fav.storeName }}</div>
+            }
+            <h3 class="fav-name">{{ fav.productName }}</h3>
+            @if (fav.categoryName) {
+              <span class="badge badge-purple fav-category">{{ fav.categoryName }}</span>
+            }
+            <div class="fav-rating">
+              <span class="stars">{{ getStars(fav.productRating) }}</span>
+              <span class="rating-num">{{ fav.productRating | number:'1.1-1' }}</span>
+            </div>
+          </div>
+
+          <div class="fav-footer">
+            <span class="fav-price">${{ fav.productPrice.toFixed(2) }}</span>
+            <button
+              class="btn btn-sm"
+              [ngClass]="isInCart(fav.productId) ? 'btn-success' : 'btn-primary'"
+              [disabled]="fav.productStock === 0"
+              (click)="addToCart(fav, $event)"
+            >
+              {{ isInCart(fav.productId) ? '✅' : '🛒' }}
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

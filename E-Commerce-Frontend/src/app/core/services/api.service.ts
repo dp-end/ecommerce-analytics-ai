@@ -12,6 +12,7 @@ import {
   OrderDto,
   ShipmentDto,
   ReviewDto,
+  ReviewRequest,
   CategoryDto,
   AuditLogDto,
   CustomerProfileDto,
@@ -20,6 +21,7 @@ import {
   OrderAnalytics,
   CustomerAnalytics,
   ChatResponse,
+  FavoriteDto,
 } from '../models/api.models';
 
 @Injectable({ providedIn: 'root' })
@@ -175,10 +177,6 @@ export class ApiService {
     return this.http.get<ReviewDto[]>(`${this.base}/api/reviews/store/${storeId}`);
   }
 
-  deleteReview(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}/api/reviews/${id}`);
-  }
-
   // ─── Categories ────────────────────────────────────────────────────────────
   getCategories(): Observable<CategoryDto[]> {
     return this.http.get<CategoryDto[]>(`${this.base}/api/categories`);
@@ -212,6 +210,40 @@ export class ApiService {
 
   getCustomerAnalytics(): Observable<CustomerAnalytics> {
     return this.http.get<CustomerAnalytics>(`${this.base}/api/analytics/customers`);
+  }
+
+  // ─── Reviews (by product) ──────────────────────────────────────────────────
+  getReviewsByProduct(productId: number): Observable<ReviewDto[]> {
+    return this.http.get<ReviewDto[]>(`${this.base}/api/reviews/product/${productId}`);
+  }
+
+  createReview(request: ReviewRequest): Observable<ReviewDto> {
+    return this.http.post<ReviewDto>(`${this.base}/api/reviews`, request);
+  }
+
+  deleteReview(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/reviews/${id}`);
+  }
+
+  likeReview(id: number): Observable<ReviewDto> {
+    return this.http.post<ReviewDto>(`${this.base}/api/reviews/${id}/like`, {});
+  }
+
+  // ─── Favorites ─────────────────────────────────────────────────────────────
+  getFavorites(): Observable<FavoriteDto[]> {
+    return this.http.get<FavoriteDto[]>(`${this.base}/api/favorites`);
+  }
+
+  getFavoriteIds(): Observable<number[]> {
+    return this.http.get<number[]>(`${this.base}/api/favorites/ids`);
+  }
+
+  addFavorite(productId: number): Observable<FavoriteDto> {
+    return this.http.post<FavoriteDto>(`${this.base}/api/favorites/${productId}`, {});
+  }
+
+  removeFavorite(productId: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/favorites/${productId}`);
   }
 
   // ─── Chatbot ───────────────────────────────────────────────────────────────

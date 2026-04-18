@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { FavoritesService } from '../../core/services/favorites.service';
 
 @Component({
   selector: 'app-navbar',
@@ -16,8 +17,11 @@ export class NavbarComponent {
 
   private authService = inject(AuthService);
   private router = inject(Router);
+  favoritesService = inject(FavoritesService);
 
   user = computed(() => this.authService.currentUser());
+  isIndividual = computed(() => this.user()?.role === 'individual');
+  favCount = computed(() => this.favoritesService.count());
   searchQuery = signal('');
   showNotifications = signal(false);
 
@@ -70,6 +74,10 @@ export class NavbarComponent {
       this.router.navigate(['/corporate/products'], { queryParams: { search: q } });
     }
     this.searchQuery.set('');
+  }
+
+  goToFavorites(): void {
+    this.router.navigate(['/individual/favorites']);
   }
 
   toggleNotifications(): void {

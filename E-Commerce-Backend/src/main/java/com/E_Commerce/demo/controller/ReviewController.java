@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -54,10 +53,27 @@ public class ReviewController {
                 .body(reviewService.create(request, userDetails.getUsername()));
     }
 
+    /**
+     * Delete a review — permitted for:
+     *   - the store owner of the product this review belongs to
+     *   - admins (resolved inside service via role check)
+     */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        reviewService.delete(id);
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        reviewService.deleteByOwner(id, userDetails.getUsername());
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Toggle store-owner endorsement on a review.
+     * 403 if caller is not the store owner of the product.
+     */
+    @PostMapping("/{id}/like")
+    public ResponseEntity<ReviewDto> toggleOwnerLike(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(reviewService.toggleOwnerLike(id, userDetails.getUsername()));
     }
 }
