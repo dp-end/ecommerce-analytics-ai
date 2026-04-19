@@ -1,0 +1,229 @@
+<div class="page fade-in">
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Mağaza yükleniyor...</p>
+    </div>
+  }
+
+  @if (!loading() && store()) {
+    <!-- Store Hero -->
+    <div class="store-hero card">
+      <div class="store-hero-left">
+        <div class="store-icon-xl">🏪</div>
+        <div class="store-info">
+          <h1 class="store-name">{{ store()!.name }}</h1>
+          <p class="store-owner">👤 {{ store()!.ownerName }}</p>
+          @if (store()!.category) {
+            <span class="badge badge-purple">{{ store()!.category }}</span>
+          }
+        </div>
+      </div>
+      <div class="store-hero-right">
+        <div class="store-stat">
+          <div class="stat-val">{{ getStars(avgRating()) }}</div>
+          <div class="stat-lbl">{{ avgRating() | number:'1.1-1' }} / 5</div>
+        </div>
+        <div class="store-stat">
+          <div class="stat-val">{{ reviews().length }}</div>
+          <div class="stat-lbl">Yorum</div>
+        </div>
+        <div class="store-stat">
+          <div class="stat-val">{{ products().length }}</div>
+          <div class="stat-lbl">Ürün</div>
+        </div>
+        <span class="badge" [ngClass]="store()!.status.toUpperCase() === 'OPEN' ? 'badge-green' : 'badge-red'">
+          {{ store()!.status.toUpperCase() === 'OPEN' ? 'Açık' : 'Kapalı' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn" [class.active]="activeTab() === 'products'" (click)="setTab('products')">
+        🛍️ Ürünler ({{ products().length }})
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'reviews'" (click)="setTab('reviews')">
+        ⭐ Yorumlar ({{ reviews().length }})
+      </button>
+    </div>
+
+    <!-- Products Tab -->
+    @if (activeTab() === 'products') {
+      @if (products().length === 0) {
+        <div class="empty-state">
+          <div class="empty-state-icon">📦</div>
+          <div class="empty-state-title">Bu mağazada henüz ürün yok</div>
+        </div>
+      } @else {
+        <div class="products-grid">
+          @for (product of products(); track product.id) {
+            <div class="product-card card" (click)="navigateToProduct(product.id)" style="cursor:pointer">
+              <div class="product-image">
+                <span class="product-emoji">{{ product.emoji || '📦' }}</span>
+              </div>
+              <div class="product-body">
+                <span class="badge badge-purple product-cat">{{ product.categoryName }}</span>
+                <h3 class="product-name">{{ product.name }}</h3>
+                <p class="product-desc">{{ product.description }}</p>
+                <div class="product-rating">
+                  <span class="stars">{{ getStars(product.rating) }}</span>
+                  <span class="rating-num">{{ product.rating | number:'1.1-1' }}</span>
+                </div>
+              </div>
+              <div class="product-footer">
+                <span class="product-price">${{ product.unitPrice.toFixed(2) }}</span>
+                <button
+                  class="btn btn-primary btn-sm"
+                  [disabled]="product.stock === 0"
+                  (click)="addToCart(product, $event)"
+                >🛒 Ekle</button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+
+    <!-- Reviews Tab -->
+    @if (activeTab() === 'reviews') {
+      <div class="reviews-layout">
+
+        <!-- Review Form -->
+        @if (authService.isAuthenticated()) {
+          <div class="card review-form-card">
+            <h2 class="form-section-title">Mağazayı Değerlendir</h2>
+
+            <form [formGroup]="reviewForm" (ngSubmit)="submitReview()" class="review-form">
+
+              <!-- Star Rating -->
+              <div class="form-group">
+                <label class="form-label">Puanınız *</label>
+                <div class="star-picker">
+                  @for (s of [1, 2, 3, 4, 5]; track s) {
+                    <button
+                      type="button"
+                      class="star-btn"
+                      [class.active]="s <= getDisplayRating()"
+                      (click)="setRating(s)"
+                      (mouseenter)="hoveredStar.set(s)"
+                      (mouseleave)="hoveredStar.set(0)"
+                      [title]="s + ' yıldız'"
+                    >★</button>
+                  }
+                  <span class="star-label">{{ getDisplayRating() }} / 5</span>
+                </div>
+                @if (reviewForm.get('starRating')?.invalid && reviewForm.get('starRating')?.touched) {
+                  <span class="field-error">Puan seçmek zorunludur.</span>
+                }
+              </div>
+
+              <!-- Headline -->
+              <div class="form-group">
+                <label class="form-label">Başlık <span class="optional">(isteğe bağlı)</span></label>
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="reviewHeadline"
+                  placeholder="Kısa bir başlık girin"
+                  maxlength="200"
+                />
+              </div>
+
+              <!-- Review Text -->
+              <div class="form-group">
+                <label class="form-label">Yorumunuz *</label>
+                <textarea
+                  class="form-control review-textarea"
+                  formControlName="reviewText"
+                  placeholder="Bu mağaza hakkındaki deneyimlerinizi paylaşın..."
+                  rows="4"
+                  maxlength="2000"
+                ></textarea>
+                <div class="textarea-footer">
+                  <span class="char-count">{{ reviewForm.value.reviewText?.length || 0 }} / 2000</span>
+                  @if (reviewForm.get('reviewText')?.invalid && reviewForm.get('reviewText')?.touched) {
+                    <span class="field-error">En az 10 karakter giriniz.</span>
+                  }
+                </div>
+              </div>
+
+              @if (reviewError()) {
+                <div class="alert alert-error">⚠️ {{ reviewError() }}</div>
+              }
+              @if (reviewSuccess()) {
+                <div class="alert alert-success">✅ Yorumunuz başarıyla gönderildi!</div>
+              }
+
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="reviewForm.invalid || reviewSubmitting()"
+              >
+                @if (reviewSubmitting()) {
+                  <span class="btn-spinner"></span> Gönderiliyor...
+                } @else {
+                  💬 Yorum Gönder
+                }
+              </button>
+            </form>
+          </div>
+        } @else {
+          <div class="card login-prompt-card">
+            <p>Yorum yazmak için giriş yapmanız gerekmektedir.</p>
+            <a routerLink="/login" class="btn btn-primary btn-sm">Giriş Yap</a>
+          </div>
+        }
+
+        <!-- Reviews List -->
+        <div class="reviews-list-section">
+          @if (reviews().length === 0) {
+            <div class="empty-state">
+              <div class="empty-state-icon">💬</div>
+              <div class="empty-state-title">Henüz yorum yok</div>
+              <p style="color:var(--text-muted);font-size:.875rem">İlk yorumu siz yapın!</p>
+            </div>
+          } @else {
+            <div class="reviews-list">
+              @for (review of reviews(); track review.id) {
+                <div class="review-card card">
+                  <div class="review-header">
+                    <div class="reviewer-info">
+                      <div class="reviewer-avatar avatar avatar-sm avatar-purple">
+                        {{ review.customerName.charAt(0).toUpperCase() }}
+                      </div>
+                      <div>
+                        <div class="reviewer-name">{{ review.customerName }}</div>
+                        <div class="review-date">{{ review.createdAt | date:'dd.MM.yyyy' }}</div>
+                      </div>
+                    </div>
+                    <div class="review-meta">
+                      <span class="review-stars">{{ getStars(review.starRating) }}</span>
+                      @if (review.sentiment) {
+                        <span class="badge" [ngClass]="getSentimentClass(review.sentiment)">
+                          {{ review.sentiment }}
+                        </span>
+                      }
+                      @if (review.ownerLiked) {
+                        <span class="endorsed">⭐ Onaylandı</span>
+                      }
+                    </div>
+                  </div>
+                  @if (review.reviewHeadline) {
+                    <p class="review-headline">{{ review.reviewHeadline }}</p>
+                  }
+                  @if (review.reviewText) {
+                    <p class="review-text">{{ review.reviewText }}</p>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+      </div>
+    }
+
+  }
+</div>

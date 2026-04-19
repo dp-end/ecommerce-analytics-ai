@@ -135,6 +135,13 @@ export interface ReviewRequest {
   reviewHeadline?: string;
 }
 
+export interface StoreReviewRequest {
+  storeId: number;
+  starRating: number;
+  reviewText: string;
+  reviewHeadline?: string;
+}
+
 // ─── Category ────────────────────────────────────────────────────────────────
 export interface CategoryDto {
   id: number;

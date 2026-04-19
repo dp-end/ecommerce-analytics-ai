@@ -62,79 +62,26 @@
             Ödeme Yöntemi
           </div>
 
-          <div class="payment-options">
-            <label class="payment-option" [class.selected]="paymentMethod() === 'card'">
-              <input type="radio" name="payment" value="card"
-                [checked]="paymentMethod() === 'card'"
-                (change)="paymentMethod.set('card')" />
-              <span class="payment-icon">💳</span>
-              <div>
-                <div class="payment-label">Kredi / Banka Kartı</div>
-                <div class="payment-sub">Visa, Mastercard, Troy</div>
+          <!-- Stripe Payment -->
+          <div class="stripe-payment-block">
+            <div class="stripe-info">
+              <div class="stripe-logos">
+                <span class="stripe-icon">💳</span>
+                <div class="stripe-text">
+                  <div class="stripe-title">Stripe ile Güvenli Ödeme</div>
+                  <div class="stripe-sub">Visa, Mastercard, American Express, Apple Pay, Google Pay</div>
+                </div>
               </div>
-            </label>
-
-            <label class="payment-option" [class.selected]="paymentMethod() === 'transfer'">
-              <input type="radio" name="payment" value="transfer"
-                [checked]="paymentMethod() === 'transfer'"
-                (change)="paymentMethod.set('transfer')" />
-              <span class="payment-icon">🏦</span>
-              <div>
-                <div class="payment-label">Havale / EFT</div>
-                <div class="payment-sub">Banka havalesi</div>
+              <div class="stripe-badges">
+                <span class="security-badge">🔒 256-bit SSL</span>
+                <span class="security-badge">✓ PCI DSS Uyumlu</span>
               </div>
-            </label>
-
-            <label class="payment-option" [class.selected]="paymentMethod() === 'cash'">
-              <input type="radio" name="payment" value="cash"
-                [checked]="paymentMethod() === 'cash'"
-                (change)="paymentMethod.set('cash')" />
-              <span class="payment-icon">💵</span>
-              <div>
-                <div class="payment-label">Kapıda Ödeme</div>
-                <div class="payment-sub">Nakit veya kart</div>
-              </div>
-            </label>
+            </div>
+            <div class="stripe-note">
+              Ödeme butonuna tıkladığınızda Stripe'ın güvenli ödeme sayfasına yönlendirileceksiniz.
+              Kart bilgileriniz hiçbir zaman sistemimizde saklanmaz.
+            </div>
           </div>
-
-          <!-- Card Details -->
-          @if (paymentMethod() === 'card') {
-            <div class="card-fields">
-              <div class="form-group full">
-                <label class="form-label">Kart Numarası</label>
-                <input type="text" class="form-control card-input" placeholder="0000 0000 0000 0000"
-                  maxlength="19"
-                  [value]="card().number"
-                  (input)="onCardNumber($event)" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Son Kullanma Tarihi</label>
-                <input type="text" class="form-control" placeholder="MM/YY"
-                  maxlength="5"
-                  [value]="card().expiry"
-                  (input)="onExpiry($event)" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">CVV</label>
-                <input type="password" class="form-control" placeholder="•••"
-                  maxlength="4"
-                  [value]="card().cvv"
-                  (input)="card.update(c => ({...c, cvv: $any($event.target).value}))" />
-              </div>
-            </div>
-          }
-
-          @if (paymentMethod() === 'transfer') {
-            <div class="info-box">
-              <p>Sipariş onaylandıktan sonra IBAN bilgilerimiz e-posta ile gönderilecektir.</p>
-            </div>
-          }
-
-          @if (paymentMethod() === 'cash') {
-            <div class="info-box">
-              <p>Ürün tesliminde nakit veya POS cihazıyla ödeme yapabilirsiniz.</p>
-            </div>
-          }
         </div>
 
         @if (error()) {
@@ -184,11 +131,18 @@
             </div>
           </div>
 
-          <button class="btn btn-primary place-btn" (click)="placeOrder()" [disabled]="placing()">
-            {{ placing() ? '⏳ İşleniyor...' : '✅ Siparişi Tamamla' }}
+          <button class="btn stripe-pay-btn" (click)="payWithStripe()" [disabled]="placing()">
+            @if (placing()) {
+              <span class="btn-spinner-dark"></span> Yönlendiriliyor...
+            } @else {
+              <svg width="20" height="20" viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Stripe">
+                <path d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32c-1.14.62-2.73 1-4.81 1-4.44 0-7.38-2.96-7.38-7.33 0-4.14 2.71-7.36 6.81-7.36 4.11 0 6.19 3.17 6.19 7.17v1.6zm-5.92-3.38c-1.3 0-2.32.78-2.55 2.44h5.08c-.24-1.61-1.23-2.44-2.53-2.44zM38.53 21.2c-1.38 0-2.62-.58-3.41-1.58l-.16 1.32H31V0l4.53.96V6.8c.8-.88 2.01-1.43 3.37-1.43 3.59 0 6.32 3.02 6.32 7.33 0 4.36-2.76 8.5-6.69 8.5zm-.67-11.46c-1.5 0-2.56 1.12-2.56 3.41 0 2.33 1.06 3.43 2.56 3.43 1.54 0 2.57-1.12 2.57-3.43 0-2.27-1.03-3.41-2.57-3.41zM24.34 5.6c1.54 0 2.47.64 3.14 1.38V5.84h4.53v15.1h-4.53v-1.17c-.68.78-1.64 1.44-3.14 1.44-3.66 0-6.5-3.22-6.5-7.8 0-4.58 2.87-7.81 6.5-7.81zm.64 3.82c-1.54 0-2.57 1.1-2.57 3.97 0 2.9 1.03 3.97 2.57 3.97 1.5 0 2.53-1.12 2.53-3.97 0-2.85-1.03-3.97-2.53-3.97zM18.36.96v20h-4.72V.96h4.72zM10.13 5.84v15.1H5.6V5.84h4.53zm-2.27-5.6c1.5 0 2.53 1.06 2.53 2.53 0 1.47-1.03 2.53-2.53 2.53-1.5 0-2.53-1.06-2.53-2.53 0-1.47 1.03-2.53 2.53-2.53z" fill="white"/>
+              </svg>
+              Stripe ile Güvenli Öde — ${{ grandTotal().toFixed(2) }}
+            }
           </button>
 
-          <div class="secure-note">🔒 256-bit SSL şifreleme ile güvende</div>
+          <div class="secure-note">🔒 Ödemeniz Stripe tarafından güvenle işlenmektedir</div>
         </div>
       </div>
 

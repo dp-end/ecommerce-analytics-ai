@@ -13,6 +13,7 @@ import {
   ShipmentDto,
   ReviewDto,
   ReviewRequest,
+  StoreReviewRequest,
   CategoryDto,
   AuditLogDto,
   CustomerProfileDto,
@@ -221,6 +222,10 @@ export class ApiService {
     return this.http.post<ReviewDto>(`${this.base}/api/reviews`, request);
   }
 
+  createStoreReview(request: StoreReviewRequest): Observable<ReviewDto> {
+    return this.http.post<ReviewDto>(`${this.base}/api/reviews/store`, request);
+  }
+
   deleteReview(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/api/reviews/${id}`);
   }
@@ -244,6 +249,18 @@ export class ApiService {
 
   removeFavorite(productId: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/api/favorites/${productId}`);
+  }
+
+  // ─── Stripe ────────────────────────────────────────────────────────────────
+  createStripeSession(data: {
+    items: { productId: number; quantity: number }[];
+    successUrl?: string;
+    cancelUrl?: string;
+  }): Observable<{ sessionId: string; checkoutUrl: string }> {
+    return this.http.post<{ sessionId: string; checkoutUrl: string }>(
+      `${this.base}/api/payments/stripe/create-session`,
+      data
+    );
   }
 
   // ─── Chatbot ───────────────────────────────────────────────────────────────

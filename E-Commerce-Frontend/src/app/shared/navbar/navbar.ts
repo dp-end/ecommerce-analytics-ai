@@ -1,9 +1,11 @@
-import { Component, Input, computed, inject, signal } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { FavoritesService } from '../../core/services/favorites.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-navbar',
@@ -12,12 +14,14 @@ import { FavoritesService } from '../../core/services/favorites.service';
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit, OnDestroy {
   @Input() pageTitle = 'Dashboard';
 
   private authService = inject(AuthService);
   private router = inject(Router);
   favoritesService = inject(FavoritesService);
+  private notificationService = inject(NotificationService);
+  private notifSub?: Subscription;
 
   user = computed(() => this.authService.currentUser());
   isIndividual = computed(() => this.user()?.role === 'individual');
@@ -33,6 +37,19 @@ export class NavbarComponent {
   ]);
 
   unreadCount = computed(() => this.notifications().filter(n => !n.read).length);
+
+  ngOnInit(): void {
+    this.notifSub = this.notificationService.notifications$.subscribe(msg => {
+      this.notifications.update(list => [
+        { id: msg.id, text: msg.text, time: 'Şimdi', read: false },
+        ...list,
+      ]);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.notifSub?.unsubscribe();
+  }
 
   getInitials(): string {
     const name = this.user()?.name ?? 'U';

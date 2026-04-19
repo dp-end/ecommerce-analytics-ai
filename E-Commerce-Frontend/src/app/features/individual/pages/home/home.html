@@ -47,25 +47,94 @@
     }
   </div>
 
+  <!-- Filter Offcanvas Overlay -->
+  @if (showFilters()) {
+    <div class="filter-overlay" (click)="showFilters.set(false)"></div>
+    <aside class="filter-panel">
+      <div class="filter-header">
+        <h3 class="filter-title">Filtreler</h3>
+        <button class="btn btn-ghost btn-icon" (click)="showFilters.set(false)">✕</button>
+      </div>
+
+      <div class="filter-body">
+        <!-- Price Range -->
+        <div class="filter-section">
+          <div class="filter-section-title">💰 Fiyat Aralığı</div>
+          <div class="price-inputs">
+            <input
+              type="number"
+              class="form-control"
+              placeholder="Min $"
+              min="0"
+              [value]="minPrice() ?? ''"
+              (input)="onMinPrice($event)"
+            />
+            <span class="price-sep">—</span>
+            <input
+              type="number"
+              class="form-control"
+              placeholder="Max $"
+              min="0"
+              [value]="maxPrice() ?? ''"
+              (input)="onMaxPrice($event)"
+            />
+          </div>
+        </div>
+
+        <!-- Min Rating -->
+        <div class="filter-section">
+          <div class="filter-section-title">⭐ Minimum Puan</div>
+          <div class="rating-options">
+            @for (r of [0, 1, 2, 3, 4, 5]; track r) {
+              <button
+                class="rating-option-btn"
+                [class.active]="minRating() === r"
+                (click)="minRating.set(r)"
+              >
+                {{ r === 0 ? 'Tümü' : ('★'.repeat(r) + ' & üzeri') }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-footer">
+        <button class="btn btn-secondary btn-sm" (click)="clearFilters()">Temizle</button>
+        <button class="btn btn-primary btn-sm" (click)="showFilters.set(false)">Uygula</button>
+      </div>
+    </aside>
+  }
+
   <!-- Results count -->
   <div class="results-header">
-    <span class="results-count">{{ filteredProducts().length }} products found</span>
+    <span class="results-count">{{ filteredProducts().length }} ürün bulundu ({{ displayedProducts().length }} gösteriliyor)</span>
+    <div class="results-actions">
+      <button class="btn btn-secondary btn-sm filter-toggle-btn" (click)="showFilters.set(true)">
+        🎛️ Filtreler
+        @if (activeFilterCount() > 0) {
+          <span class="filter-badge">{{ activeFilterCount() }}</span>
+        }
+      </button>
     <select class="form-control" style="width:160px"
       [value]="sortBy()"
       (change)="sortBy.set($any($event.target).value)">
-      <option value="featured">Sort: Featured</option>
-      <option value="price-asc">Price: Low to High</option>
-      <option value="price-desc">Price: High to Low</option>
-      <option value="rating">Best Rated</option>
+      <option value="featured">Sırala: Öne Çıkan</option>
+      <option value="price-asc">Fiyat: Düşükten Yükseğe</option>
+      <option value="price-desc">Fiyat: Yüksekten Düşüğe</option>
+      <option value="rating">En Yüksek Puan</option>
     </select>
+    </div>
   </div>
 
   <!-- Products Grid -->
   <div class="products-grid">
-    @for (product of filteredProducts(); track product.id) {
+    @for (product of displayedProducts(); track product.id) {
       <div class="product-card card" (click)="navigateToProduct(product.id)" style="cursor:pointer">
         <div class="product-badge-wrapper">
           <span class="badge badge-purple product-category-badge">{{ product.categoryName }}</span>
+          @if (product.storeId) {
+            <a class="store-link-badge" [routerLink]="['/individual/store', product.storeId]" (click)="$event.stopPropagation()">🏪 {{ product.storeName }}</a>
+          }
           <button
             class="fav-heart-btn"
             [class.favorited]="isFavorite(product.id)"
@@ -105,6 +174,19 @@
           </button>
         </div>
       </div>
+    }
+  </div>
+
+  <!-- Infinite Scroll Sentinel -->
+  <div #scrollSentinel class="scroll-sentinel">
+    @if (isLoadingMore()) {
+      <div class="loading-more">
+        <div class="loading-spinner"></div>
+        <span>Daha fazla yükleniyor...</span>
+      </div>
+    }
+    @if (!hasMore() && filteredProducts().length > 0) {
+      <div class="all-loaded">Tüm ürünler yüklendi ({{ filteredProducts().length }} ürün)</div>
     }
   </div>
 </div>
