@@ -4,6 +4,7 @@ import com.E_Commerce.demo.dto.request.LoginRequest;
 import com.E_Commerce.demo.dto.request.RegisterRequest;
 import com.E_Commerce.demo.dto.response.AuthResponse;
 import com.E_Commerce.demo.entity.CustomerProfile;
+import com.E_Commerce.demo.entity.RefreshToken;
 import com.E_Commerce.demo.entity.User;
 import com.E_Commerce.demo.repository.CustomerProfileRepository;
 import com.E_Commerce.demo.repository.UserRepository;
@@ -27,6 +28,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsServiceImpl userDetailsService;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -34,7 +36,6 @@ public class AuthService {
             throw new RuntimeException("Email already registered: " + request.getEmail());
         }
 
-        // Herkese açık kayıt sadece bireysel kullanıcı olabilir
         User user = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
@@ -49,9 +50,11 @@ public class AuthService {
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtUtil.generateToken(userDetails);
+        RefreshToken refreshToken = refreshTokenService.createToken(user);
 
         return AuthResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken.getToken())
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
@@ -70,9 +73,32 @@ public class AuthService {
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtUtil.generateToken(userDetails);
+        RefreshToken refreshToken = refreshTokenService.createToken(user);
 
         return AuthResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken.getToken())
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .role(user.getRoleType().name())
+                .avatar(user.getAvatar())
+                .build();
+    }
+
+    public AuthResponse refreshAccessToken(String refreshTokenStr) {
+        RefreshToken refreshToken = refreshTokenService.findByToken(refreshTokenStr)
+                .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
+
+        refreshTokenService.verifyExpiration(refreshToken);
+
+        User user = refreshToken.getUser();
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+        String newAccessToken = jwtUtil.generateToken(userDetails);
+
+        return AuthResponse.builder()
+                .token(newAccessToken)
+                .refreshToken(refreshToken.getToken())
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())

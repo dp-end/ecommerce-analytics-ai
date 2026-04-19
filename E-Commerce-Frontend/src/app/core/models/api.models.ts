@@ -10,6 +10,7 @@ export interface PageResponse<T> {
 // ─── Auth ────────────────────────────────────────────────────────────────────
 export interface AuthResponse {
   token: string;
+  refreshToken?: string;
   tokenType: string;
   id: number;
   name: string;

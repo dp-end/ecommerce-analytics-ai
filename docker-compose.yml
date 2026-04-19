@@ -1,0 +1,86 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: eco_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ecommerce}
+      MYSQL_USER: ${MYSQL_USER:-eco}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-ecopass}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eco_net
+
+  backend:
+    build:
+      context: ./E-Commerce-Backend
+      dockerfile: Dockerfile
+    container_name: eco_backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_TYPE: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-ecommerce}
+      DB_USERNAME: ${MYSQL_USER:-eco}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-ecopass}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-604800000}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      AI_SERVICE_URL: http://ai-service:8000
+      AI_SERVICE_ENABLED: ${AI_SERVICE_ENABLED:-true}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-}
+      STRIPE_API_KEY: ${STRIPE_API_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+    ports:
+      - "8080:8080"
+    networks:
+      - eco_net
+
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: eco_ai
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+pymysql://${MYSQL_USER:-eco}:${MYSQL_PASSWORD:-ecopass}@mysql:3306/${MYSQL_DATABASE:-ecommerce}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      ALLOWED_ORIGINS: http://localhost:4200,http://frontend:80
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-}
+    ports:
+      - "8000:8000"
+    networks:
+      - eco_net
+
+  frontend:
+    build:
+      context: ./E-Commerce-Frontend
+      dockerfile: Dockerfile
+    container_name: eco_frontend
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+    networks:
+      - eco_net
+
+volumes:
+  mysql_data:
+
+networks:
+  eco_net:
+    driver: bridge

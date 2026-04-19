@@ -8,7 +8,14 @@
     {
       "name": "jwt.expiration",
       "type": "java.lang.Long",
-      "description": "JWT token expiration time in milliseconds."
+      "description": "JWT access token expiration time in milliseconds.",
+      "defaultValue": 3600000
+    },
+    {
+      "name": "jwt.refresh-expiration",
+      "type": "java.lang.Long",
+      "description": "Refresh token expiration time in milliseconds (default 7 days).",
+      "defaultValue": 604800000
     },
     {
       "name": "ai.gemini.api-key",
