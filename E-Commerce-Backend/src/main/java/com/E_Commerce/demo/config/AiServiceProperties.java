@@ -26,4 +26,7 @@ public class AiServiceProperties {
      * falls back to Gemini on failure or timeout.
      */
     private boolean enabled = true;
+
+    /** Shared secret sent as X-Internal-Token header to the Python service. */
+    private String internalSecret = "";
 }

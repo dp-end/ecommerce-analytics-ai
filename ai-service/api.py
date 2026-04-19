@@ -9,17 +9,29 @@ Run with:
     uvicorn api:app --host 0.0.0.0 --port 8000 --reload
 """
 
+import logging
 import os
+import secrets
 from typing import Any, Optional
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from graph import build_graph, initial_state
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
+
+_ALLOWED_ORIGINS = [
+    o.strip()
+    for o in os.getenv("ALLOWED_ORIGINS", "http://localhost:8080").split(",")
+    if o.strip()
+]
+
+_INTERNAL_SECRET = os.getenv("INTERNAL_SERVICE_SECRET", "")
 
 app = FastAPI(
     title="DataPulse AI Service",
@@ -29,9 +41,9 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],       # restrict in production
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_ALLOWED_ORIGINS,
+    allow_methods=["POST", "GET"],
+    allow_headers=["Authorization", "Content-Type", "X-Internal-Token"],
 )
 
 # Compile once at startup — graph is stateless between calls
@@ -71,14 +83,29 @@ async def health():
     return {"status": "ok", "service": "DataPulse AI Service"}
 
 
+def _verify_internal_token(raw_request: Request) -> None:
+    """Reject requests that do not carry the shared internal service secret."""
+    if not _INTERNAL_SECRET:
+        return
+    token = raw_request.headers.get("X-Internal-Token", "")
+    if not secrets.compare_digest(token, _INTERNAL_SECRET):
+        logger.warning("Rejected /chat/ask call: missing or invalid X-Internal-Token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized: invalid internal token",
+        )
+
+
 @app.post("/chat/ask", response_model=ChatResponse)
-async def ask(request: ChatRequest) -> ChatResponse:
+async def ask(request: ChatRequest, raw_request: Request) -> ChatResponse:
     """
     Run the multi-agent pipeline for a single question.
 
     Spring Boot calls this endpoint and falls back to Gemini if it returns
     a non-2xx status or times out.
     """
+    _verify_internal_token(raw_request)
+
     ctx_dict: Optional[dict] = (
         request.user_context.model_dump() if request.user_context else None
     )

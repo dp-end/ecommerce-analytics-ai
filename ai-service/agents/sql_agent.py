@@ -32,10 +32,12 @@ from agents.state import AgentState
 
 logger = logging.getLogger(__name__)
 
-_DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "mysql+pymysql://root:1234@localhost:3306/ecommerce_db",
-)
+_DATABASE_URL = os.getenv("DATABASE_URL")
+if not _DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL ortam değişkeni ayarlanmamış. "
+        "ai-service/.env dosyasına DATABASE_URL=mysql+pymysql://... satırını ekle."
+    )
 
 # ── Schema context fed to the model ─────────────────────────────────────────
 _SCHEMA = """\
@@ -128,6 +130,59 @@ _ALLOWED_TABLES = {
 }
 
 
+_SAFE_VALUE_RE = re.compile(r"[^a-zA-Z0-9 _\-@\.]")
+
+
+def _sanitize_ctx_value(value: object) -> str:
+    """Strip special characters from user context values before including in LLM prompt."""
+    return _SAFE_VALUE_RE.sub("", str(value))[:100]
+
+
+def _inject_user_scope(sql: str, role: str, user_id: object) -> str:
+    """
+    If the generated SQL is missing the required tenant scope, inject it automatically.
+    This is a defence-in-depth measure on top of _has_role_scope validation.
+    """
+    if role == "ADMIN":
+        return sql
+
+    if user_id in (None, "", "unknown"):
+        return sql
+
+    uid = str(user_id)
+    compact = re.sub(r"\s+", " ", sql).lower()
+
+    if role == "INDIVIDUAL":
+        if re.search(rf"\buser_id\s*=\s*{re.escape(uid)}\b", compact):
+            return sql
+        # Inject before LIMIT/ORDER BY/GROUP BY or at end
+        return _append_where(sql, f"user_id = {uid}")
+
+    if role == "CORPORATE":
+        if re.search(
+            rf"\b(?:user_id|owner_id)\s*=\s*{re.escape(uid)}\b|\bstore_id\s+in\s*\([^)]*\buser_id\s*=\s*{re.escape(uid)}\b",
+            compact,
+        ):
+            return sql
+        return _append_where(
+            sql, f"store_id IN (SELECT id FROM stores WHERE user_id = {uid})"
+        )
+
+    return sql
+
+
+def _append_where(sql: str, condition: str) -> str:
+    """Append a WHERE/AND clause before LIMIT/ORDER BY/GROUP BY, or at end."""
+    upper = sql.upper()
+    for keyword in ("LIMIT", "ORDER BY", "GROUP BY", "HAVING"):
+        idx = upper.rfind(keyword)
+        if idx != -1:
+            return f"{sql[:idx].rstrip()} AND {condition} {sql[idx:]}"
+    if re.search(r"\bWHERE\b", sql, re.IGNORECASE):
+        return f"{sql} AND {condition}"
+    return f"{sql} WHERE {condition}"
+
+
 def _strip_markdown(sql: str) -> str:
     """Remove ```sql ... ``` fences if the model adds them despite instructions."""
     sql = sql.strip()
@@ -204,14 +259,17 @@ def sql_node(state: AgentState) -> AgentState:
 
     trace.append(f"sql_agent: attempt {iteration + 1} — generating SQL")
 
-    # ── 1. Build user-context string ─────────────────────────────────────────
+    # ── 1. Build user-context string (sanitised to prevent prompt injection) ────
     user_id = user_context.get("id", "unknown")
     role = user_context.get("role", "INDIVIDUAL")
+    safe_name = _sanitize_ctx_value(user_context.get("name", ""))
+    safe_email = _sanitize_ctx_value(user_context.get("email", ""))
+    safe_role = _sanitize_ctx_value(role)
     user_ctx_str = (
         f"user_id={user_id}, "
-        f"name={user_context.get('name', '')}, "
-        f"email={user_context.get('email', '')}, "
-        f"role={role}"
+        f"name={safe_name}, "
+        f"email={safe_email}, "
+        f"role={safe_role}"
     )
 
     # ── 2. Generate SQL ───────────────────────────────────────────────────────
@@ -236,7 +294,10 @@ def sql_node(state: AgentState) -> AgentState:
             "agent_trace": trace,
         }
 
-    # ── 3. Safety check — validate before execution ──────────────────────────
+    # ── 3. Auto-inject tenant scope (defence-in-depth before validation) ────────
+    sql_query = _inject_user_scope(sql_query, str(role).upper(), user_id)
+
+    # ── 4. Safety check — validate after scope injection ────────────────────────
     ok, sql_query, validation_error = _validate_and_normalize_sql(sql_query, str(role), user_id)
     if not ok:
         trace.append(f"sql_agent: BLOCKED — {validation_error}")

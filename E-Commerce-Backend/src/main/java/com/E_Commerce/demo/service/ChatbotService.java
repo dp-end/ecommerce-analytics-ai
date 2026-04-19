@@ -83,10 +83,14 @@ public class ChatbotService {
                 ));
             }
 
-            RestClient client = RestClient.builder()
+            String secret = aiService.getInternalSecret();
+            RestClient.Builder clientBuilder = RestClient.builder()
                     .baseUrl(aiService.getUrl())
-                    .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .build();
+                    .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+            if (secret != null && !secret.isBlank()) {
+                clientBuilder.defaultHeader("X-Internal-Token", secret);
+            }
+            RestClient client = clientBuilder.build();
 
             Map<String, Object> response = client.post()
                     .uri("/chat/ask")
