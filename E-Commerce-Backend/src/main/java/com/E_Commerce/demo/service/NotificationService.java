@@ -19,12 +19,16 @@ public class NotificationService {
                 "type", "order_update",
                 "text", "Order #" + orderId + " status changed to " + status
         );
-        messagingTemplate.convertAndSendToUser(userEmail, "/queue/notifications", payload);
-        messagingTemplate.convertAndSend("/topic/admin/notifications", payload);
+
+        // IDE'nin belirsizlik yaşamasını önlemek için (Object) cast'i eklendi
+        messagingTemplate.convertAndSendToUser(userEmail, "/queue/notifications", (Object) payload);
+        messagingTemplate.convertAndSend("/topic/admin/notifications", (Object) payload);
     }
 
     public void sendAdminNotification(String text, String type) {
         Map<String, Object> payload = Map.of("text", text, "type", type);
-        messagingTemplate.convertAndSend("/topic/admin/notifications", payload);
+
+        // IDE'nin belirsizlik yaşamasını önlemek için (Object) cast'i eklendi
+        messagingTemplate.convertAndSend("/topic/admin/notifications", (Object) payload);
     }
 }
