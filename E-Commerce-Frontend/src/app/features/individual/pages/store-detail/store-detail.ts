@@ -95,18 +95,7 @@ export class StoreDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.loadProducts(id, true);
 
-    this.reviewsLoading.set(true);
-    this.reviewsError.set('');
-    this.api.getReviewsByStore(id).subscribe({
-      next: r => {
-        this.reviews.set(r);
-        this.reviewsLoading.set(false);
-      },
-      error: () => {
-        this.reviewsError.set('Yorumlar yüklenemedi.');
-        this.reviewsLoading.set(false);
-      },
-    });
+    this.loadReviews(id);
   }
 
   ngAfterViewInit(): void {
@@ -162,6 +151,21 @@ export class StoreDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  private loadReviews(storeId: number): void {
+    this.reviewsLoading.set(true);
+    this.reviewsError.set('');
+    this.api.getReviewsByStore(storeId).subscribe({
+      next: r => {
+        this.reviews.set(r);
+        this.reviewsLoading.set(false);
+      },
+      error: () => {
+        this.reviewsError.set('Yorumlar yüklenemedi.');
+        this.reviewsLoading.set(false);
+      },
+    });
+  }
+
   private observeProductSentinel(): void {
     if (!this.intersectionObserver || !this.productScrollSentinelRef?.nativeElement) return;
     this.intersectionObserver.disconnect();
@@ -199,18 +203,19 @@ export class StoreDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     this.reviewSuccess.set(false);
 
     const { starRating, reviewText, reviewHeadline } = this.reviewForm.value;
+    const storeId = this.store()!.id;
 
     this.api.createStoreReview({
-      storeId: this.store()!.id,
+      storeId,
       starRating,
-      reviewText,
+      reviewText: reviewText.trim(),
       reviewHeadline: reviewHeadline?.trim() || undefined,
     }).subscribe({
-      next: r => {
-        this.reviews.update(list => [r, ...list]);
+      next: () => {
         this.reviewForm.reset({ starRating: 5, reviewHeadline: '', reviewText: '' });
         this.reviewSubmitting.set(false);
         this.reviewSuccess.set(true);
+        this.loadReviews(storeId);
         setTimeout(() => this.reviewSuccess.set(false), 3000);
       },
       error: err => {

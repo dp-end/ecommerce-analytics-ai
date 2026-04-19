@@ -72,6 +72,10 @@ export class ApiService {
     return this.http.delete<void>(`${this.base}/api/users/${id}`);
   }
 
+  deleteCurrentUser(): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/users/me`);
+  }
+
   getUserProfile(userId: number): Observable<CustomerProfileDto> {
     return this.http.get<CustomerProfileDto>(`${this.base}/api/users/${userId}/profile`);
   }

@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CartService } from '../../../../core/services/cart.service';
 import { ApiService } from '../../../../core/services/api.service';
@@ -18,6 +18,7 @@ export class IndividualProfileComponent implements OnInit {
   authService = inject(AuthService);
   cartService = inject(CartService);
   private api = inject(ApiService);
+  private router = inject(Router);
 
   user = this.authService.currentUser;
 
@@ -35,6 +36,11 @@ export class IndividualProfileComponent implements OnInit {
   confirmPassword = signal('');
   passwordError = signal('');
   passwordSuccess = signal(false);
+
+  showDeleteModal = signal(false);
+  deleteConfirmation = signal('');
+  deleteError = signal('');
+  deletingAccount = signal(false);
 
   notifications = signal({
     orderUpdates: true,
@@ -113,6 +119,38 @@ export class IndividualProfileComponent implements OnInit {
 
   closePasswordModal(): void {
     this.showPasswordModal.set(false);
+  }
+
+  openDeleteModal(): void {
+    this.deleteConfirmation.set('');
+    this.deleteError.set('');
+    this.deletingAccount.set(false);
+    this.showDeleteModal.set(true);
+  }
+
+  closeDeleteModal(): void {
+    if (this.deletingAccount()) return;
+    this.showDeleteModal.set(false);
+  }
+
+  confirmAccountDeletion(): void {
+    if (this.deleteConfirmation().trim() !== 'DELETE') {
+      this.deleteError.set('Please type DELETE to confirm account deletion.');
+      return;
+    }
+
+    this.deletingAccount.set(true);
+    this.deleteError.set('');
+    this.api.deleteCurrentUser().subscribe({
+      next: () => {
+        this.authService.logout();
+        this.router.navigate(['/login']);
+      },
+      error: err => {
+        this.deleteError.set(err?.error?.message ?? 'Account could not be deleted.');
+        this.deletingAccount.set(false);
+      },
+    });
   }
 
   submitPasswordChange(): void {

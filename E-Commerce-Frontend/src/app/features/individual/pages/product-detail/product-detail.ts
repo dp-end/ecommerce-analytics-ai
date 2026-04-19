@@ -107,13 +107,13 @@ export class ProductDetailComponent implements OnInit {
       reviewText: text,
       reviewHeadline: this.newHeadline().trim() || undefined,
     }).subscribe({
-      next: r => {
-        this.reviews.update(list => [r, ...list]);
+      next: () => {
         this.newText.set('');
         this.newHeadline.set('');
         this.newRating.set(5);
         this.submitting.set(false);
         this.submitSuccess.set(true);
+        this.loadReviews(p.id);
         setTimeout(() => this.submitSuccess.set(false), 3000);
       },
       error: (err) => {

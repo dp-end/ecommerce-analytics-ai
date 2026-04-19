@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -56,6 +57,7 @@ public class ReviewController {
     }
 
     @PostMapping("/store")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReviewDto> createStoreReview(
             @Valid @RequestBody StoreReviewRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -64,6 +66,7 @@ public class ReviewController {
     }
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReviewDto> create(
             @Valid @RequestBody ReviewRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -77,6 +80,7 @@ public class ReviewController {
      *   - admins (resolved inside service via role check)
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -89,6 +93,7 @@ public class ReviewController {
      * 403 if caller is not the store owner of the product.
      */
     @PostMapping("/{id}/like")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReviewDto> toggleOwnerLike(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {

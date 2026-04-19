@@ -71,6 +71,13 @@ public class UserController {
         return ResponseEntity.ok(userService.updateStatus(id, body.get("status")));
     }
 
+    @DeleteMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+        userService.deleteCurrentUser(userDetails.getUsername());
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {

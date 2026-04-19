@@ -39,6 +39,7 @@ export class SidebarComponent {
           { label: 'Dashboard',   icon: '📊', route: '/admin/dashboard' },
           { label: 'Users',       icon: '👥', route: '/admin/users' },
           { label: 'Stores',      icon: '🏪', route: '/admin/stores' },
+          { label: 'Reviews',     icon: '⭐', route: '/admin/reviews' },
           { label: 'Categories',  icon: '🗂️', route: '/admin/categories' },
           { label: 'Analytics',   icon: '📈', route: '/admin/analytics' },
           { label: 'Audit Logs',  icon: '📋', route: '/admin/audit-logs' },

@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .requestMatchers("/ws/**").permitAll()
                 // Admin only
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/users/me").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("ADMIN")
                 // Corporate + Admin
                 .requestMatchers(HttpMethod.GET, "/api/stores/**").hasAnyRole("ADMIN", "CORPORATE", "INDIVIDUAL")

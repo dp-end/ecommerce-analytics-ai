@@ -20,6 +20,10 @@ export const adminRoutes: Routes = [
         loadComponent: () => import('./pages/stores/stores').then(m => m.AdminStoresComponent),
       },
       {
+        path: 'reviews',
+        loadComponent: () => import('./pages/reviews/reviews').then(m => m.AdminReviewsComponent),
+      },
+      {
         path: 'stores/:id',
         loadComponent: () => import('../individual/pages/store-detail/store-detail').then(m => m.StoreDetailComponent),
       },

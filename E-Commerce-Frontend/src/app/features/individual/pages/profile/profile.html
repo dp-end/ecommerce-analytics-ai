@@ -191,6 +191,16 @@
           </div>
         </div>
       </div>
+
+      <div class="card danger-zone">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Delete Account</div>
+            <p class="danger-desc">Permanently delete your profile, saved reviews, favorites, cart data, and account access.</p>
+          </div>
+          <button class="btn btn-danger btn-sm" (click)="openDeleteModal()">Delete Account</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -229,6 +239,41 @@
             <button class="btn btn-ghost btn-sm" (click)="closePasswordModal()">Cancel</button>
           </div>
         }
+      </div>
+    </div>
+  </div>
+}
+
+@if (showDeleteModal()) {
+  <div class="modal-backdrop" (click)="closeDeleteModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <span style="font-weight:700;font-size:1rem">Delete Account</span>
+        <button class="btn btn-ghost btn-sm" (click)="closeDeleteModal()" [disabled]="deletingAccount()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="danger-warning">
+          This action is permanent. Your session will end immediately after deletion.
+        </div>
+        <div class="form-group">
+          <label>Type DELETE to confirm</label>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="deleteConfirmation()"
+            (ngModelChange)="deleteConfirmation.set($event)"
+            [disabled]="deletingAccount()"
+          />
+        </div>
+        @if (deleteError()) {
+          <div style="color:var(--danger);font-size:0.8rem;margin-top:0.25rem">{{ deleteError() }}</div>
+        }
+        <div class="modal-footer">
+          <button class="btn btn-danger btn-sm" (click)="confirmAccountDeletion()" [disabled]="deletingAccount()">
+            {{ deletingAccount() ? 'Deleting...' : 'Delete My Account' }}
+          </button>
+          <button class="btn btn-ghost btn-sm" (click)="closeDeleteModal()" [disabled]="deletingAccount()">Cancel</button>
+        </div>
       </div>
     </div>
   </div>

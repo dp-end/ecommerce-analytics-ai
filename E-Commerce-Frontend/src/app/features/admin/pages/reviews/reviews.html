@@ -1,0 +1,76 @@
+<div class="page fade-in">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Review Management</h2>
+      <p class="page-subtitle">Read product and store feedback from customers</p>
+    </div>
+    <button class="btn btn-secondary btn-sm" (click)="loadReviews()" [disabled]="loading()">
+      {{ loading() ? 'Refreshing...' : 'Refresh' }}
+    </button>
+  </div>
+
+  <div class="filters-row">
+    <div class="search-input-wrapper">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Search reviewer, product, or comment..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </div>
+    <select class="form-control filter-select" [ngModel]="ratingFilter()" (ngModelChange)="ratingFilter.set($event)">
+      <option value="all">All ratings</option>
+      <option value="5">5 stars</option>
+      <option value="4">4 stars</option>
+      <option value="3">3 stars</option>
+      <option value="2">2 stars</option>
+      <option value="1">1 star</option>
+    </select>
+    <span class="text-muted text-sm">{{ filteredReviews().length }} reviews</span>
+  </div>
+
+  <div class="card">
+    @if (loading()) {
+      <div class="state-box">
+        <div class="spinner"></div>
+        <p>Reviews are loading...</p>
+      </div>
+    } @else if (error()) {
+      <div class="state-box error-state">
+        <div class="state-icon">!</div>
+        <h3>{{ error() }}</h3>
+        <button class="btn btn-primary btn-sm" (click)="loadReviews()">Try Again</button>
+      </div>
+    } @else if (filteredReviews().length === 0) {
+      <div class="state-box">
+        <div class="state-icon">⭐</div>
+        <h3>No reviews found</h3>
+        <p>Customer reviews will appear here after they are submitted.</p>
+      </div>
+    } @else {
+      <div class="reviews-list">
+        @for (review of filteredReviews(); track review.id) {
+          <div class="review-row">
+            <div class="review-main">
+              <div class="review-topline">
+                <span class="reviewer">{{ reviewer(review) }}</span>
+                <span class="subject">{{ subject(review) }}</span>
+                <span class="badge badge-blue">{{ review.reviewType || 'PRODUCT' }}</span>
+              </div>
+              @if (review.reviewHeadline) {
+                <div class="headline">{{ review.reviewHeadline }}</div>
+              }
+              <p class="comment">{{ review.reviewText || 'No comment text provided.' }}</p>
+            </div>
+            <div class="review-meta">
+              <div class="stars">{{ getStars(review.starRating) }}</div>
+              <div class="date">{{ formatDate(review.createdAt) }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

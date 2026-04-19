@@ -32,6 +32,9 @@ public class UserService {
     private final StoreRepository storeRepository;
     private final ProductRepository productRepository;
     private final FavoriteRepository favoriteRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final NotificationRepository notificationRepository;
+    private final AuditLogRepository auditLogRepository;
     private final PasswordEncoder passwordEncoder;
 
     public PageResponse<UserDto> getAll(int page, int size, String search, String role) {
@@ -118,11 +121,19 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id));
+
         // 1. Favorites by this user
         favoriteRepository.deleteAll(favoriteRepository.findByUserId(id));
 
         // 2. Reviews written by this user
         reviewRepository.deleteAll(reviewRepository.findByUserId(id));
+
+        // 3. Auth/session and account-owned side data
+        refreshTokenRepository.deleteByUser(user);
+        notificationRepository.deleteByUserId(id);
+        auditLogRepository.detachUser(id);
 
         // 2. Orders by this user → order_items + shipments first
         var userOrders = orderRepository.findByUserId(id);
@@ -142,11 +153,22 @@ public class UserService {
                 favoriteRepository.deleteAll(favoriteRepository.findByProductId(product.getId()));
             }
             productRepository.deleteAll(products);
+            var storeOrders = orderRepository.findByStoreId(store.getId());
+            for (var order : storeOrders) {
+                order.setStore(null);
+            }
+            orderRepository.saveAll(storeOrders);
         }
         storeRepository.deleteAll(stores);
 
         // 4. User (customer_profile auto-cascaded via CascadeType.ALL)
-        userRepository.deleteById(id);
+        userRepository.delete(user);
+    }
+
+    @Transactional
+    public void deleteCurrentUser(String callerEmail) {
+        User caller = getCaller(callerEmail);
+        deleteUser(caller.getId());
     }
 
     public CustomerProfileDto getProfile(Long userId) {

@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Comparator;
 
 @Service
 @RequiredArgsConstructor
@@ -57,7 +58,7 @@ public class ReviewService {
         if (!productRepository.existsById(productId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: " + productId);
         }
-        return reviewRepository.findByProductId(productId).stream().map(ReviewDto::from).toList();
+        return reviewRepository.findByProductIdOrderByCreatedAtDesc(productId).stream().map(ReviewDto::from).toList();
     }
 
     public List<ReviewDto> getByUser(Long userId) {
@@ -69,6 +70,7 @@ public class ReviewService {
         List<Review> storeReviews   = reviewRepository.findByStoreId(storeId);
         return java.util.stream.Stream.concat(productReviews.stream(), storeReviews.stream())
                 .distinct()
+                .sorted(Comparator.comparing(Review::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .map(ReviewDto::from)
                 .toList();
     }
@@ -85,8 +87,8 @@ public class ReviewService {
                 .product(product)
                 .reviewType(ReviewType.PRODUCT)
                 .starRating(request.getStarRating())
-                .reviewText(request.getReviewText())
-                .reviewHeadline(request.getReviewHeadline())
+                .reviewText(request.getReviewText().trim())
+                .reviewHeadline(blankToNull(request.getReviewHeadline()))
                 .marketplace(request.getMarketplace())
                 .verifiedPurchase(request.getVerifiedPurchase())
                 .vine(request.getVine())
@@ -113,8 +115,8 @@ public class ReviewService {
                 .store(store)
                 .reviewType(ReviewType.STORE)
                 .starRating(request.getStarRating())
-                .reviewText(request.getReviewText())
-                .reviewHeadline(request.getReviewHeadline())
+                .reviewText(request.getReviewText().trim())
+                .reviewHeadline(blankToNull(request.getReviewHeadline()))
                 .ownerLiked(false)
                 .build();
         ReviewDto saved = ReviewDto.from(reviewRepository.save(review));
@@ -181,5 +183,12 @@ public class ReviewService {
 
         review.setOwnerLiked(!Boolean.TRUE.equals(review.getOwnerLiked()));
         return ReviewDto.from(reviewRepository.save(review));
+    }
+
+    private String blankToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 }
