@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -16,13 +16,23 @@ type ActiveTab = 'products' | 'reviews';
   templateUrl: './store-detail.html',
   styleUrl: './store-detail.css',
 })
-export class StoreDetailComponent implements OnInit {
+export class StoreDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private api = inject(ApiService);
   private fb = inject(FormBuilder);
+  readonly PRODUCT_RENDER_LIMIT = 40;
   authService = inject(AuthService);
   cartService = inject(CartService);
+
+  private intersectionObserver!: IntersectionObserver;
+  private productScrollSentinelRef?: ElementRef<HTMLDivElement>;
+
+  @ViewChild('productScrollSentinel')
+  set productScrollSentinel(ref: ElementRef<HTMLDivElement> | undefined) {
+    this.productScrollSentinelRef = ref;
+    this.observeProductSentinel();
+  }
 
   store = signal<StoreDto | null>(null);
   products = signal<ProductDto[]>([]);
@@ -34,6 +44,11 @@ export class StoreDetailComponent implements OnInit {
   reviewSuccess = signal(false);
   reviewError = signal('');
   hoveredStar = signal(0);
+  productsLoading = signal(false);
+  productsLoadingMore = signal(false);
+  productPage = signal(0);
+  productTotalPages = signal(0);
+  productTotalElements = signal(0);
 
   reviewForm: FormGroup = this.fb.group({
     starRating: [5, [Validators.required, Validators.min(1), Validators.max(5)]],
@@ -47,6 +62,14 @@ export class StoreDetailComponent implements OnInit {
     return r.reduce((s, rv) => s + rv.starRating, 0) / r.length;
   });
 
+  visibleProducts = computed(() =>
+    this.products()
+  );
+
+  hasMoreProducts = computed(() =>
+    this.productPage() + 1 < this.productTotalPages()
+  );
+
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!id) { this.router.navigate(['/individual/home']); return; }
@@ -59,13 +82,68 @@ export class StoreDetailComponent implements OnInit {
       error: () => this.router.navigate(['/individual/home']),
     });
 
-    this.api.getProducts({ storeId: id }).subscribe({
-      next: p => this.products.set(p),
-    });
+    this.loadProducts(id, true);
 
     this.api.getReviewsByStore(id).subscribe({
       next: r => this.reviews.set(r),
     });
+  }
+
+  ngAfterViewInit(): void {
+    this.intersectionObserver = new IntersectionObserver(
+      entries => {
+        const id = this.store()?.id;
+        if (entries[0].isIntersecting && id && this.hasMoreProducts() && !this.productsLoadingMore()) {
+          this.loadProducts(id, false);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    this.observeProductSentinel();
+  }
+
+  ngOnDestroy(): void {
+    this.intersectionObserver?.disconnect();
+  }
+
+  private loadProducts(storeId: number, reset = false): void {
+    if (this.productsLoading() || this.productsLoadingMore()) return;
+    const page = reset ? 0 : this.productPage() + 1;
+
+    if (reset) {
+      this.products.set([]);
+      this.productPage.set(0);
+      this.productTotalPages.set(0);
+      this.productTotalElements.set(0);
+      this.productsLoading.set(true);
+    } else {
+      this.productsLoadingMore.set(true);
+    }
+
+    this.api.getProductsPaged({
+      storeId,
+      page,
+      size: this.PRODUCT_RENDER_LIMIT,
+    }).subscribe({
+      next: res => {
+        this.products.update(list => reset ? res.content : [...list, ...res.content]);
+        this.productPage.set(res.currentPage);
+        this.productTotalPages.set(res.totalPages);
+        this.productTotalElements.set(res.totalElements);
+        this.productsLoading.set(false);
+        this.productsLoadingMore.set(false);
+      },
+      error: () => {
+        this.productsLoading.set(false);
+        this.productsLoadingMore.set(false);
+      },
+    });
+  }
+
+  private observeProductSentinel(): void {
+    if (!this.intersectionObserver || !this.productScrollSentinelRef?.nativeElement) return;
+    this.intersectionObserver.disconnect();
+    this.intersectionObserver.observe(this.productScrollSentinelRef.nativeElement);
   }
 
   setTab(tab: ActiveTab): void {

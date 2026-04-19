@@ -244,3 +244,48 @@
 .like-btn:hover:not(:disabled) { background: rgba(234,179,8,0.15); border-color: var(--accent-yellow); }
 .like-btn.liked { background: rgba(234,179,8,0.15); border-color: var(--accent-yellow); }
 .delete-btn:hover:not(:disabled) { background: rgba(239,68,68,0.1); border-color: var(--danger); }
+
+@media (max-width: 520px) {
+  .image-panel,
+  .info-panel,
+  .reviews-section {
+    padding: 1rem;
+  }
+
+  .info-header,
+  .form-footer,
+  .review-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .product-title,
+  .description-text,
+  .review-text,
+  .review-headline {
+    overflow-wrap: anywhere;
+  }
+
+  .fav-btn {
+    align-self: flex-start;
+  }
+
+  .action-btn {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .star-picker {
+    flex-wrap: wrap;
+  }
+
+  .review-date,
+  .owner-actions {
+    margin-left: 0;
+  }
+
+  .owner-actions,
+  .owner-btn {
+    width: 100%;
+  }
+}

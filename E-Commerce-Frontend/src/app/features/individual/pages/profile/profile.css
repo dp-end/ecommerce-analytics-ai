@@ -1,3 +1,41 @@
+.page,
+.profile-sidebar,
+.profile-main,
+.card {
+  min-width: 0;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.page-title {
+  margin: 0;
+}
+
+.page-subtitle {
+  margin-top: 0.25rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
 .profile-layout {
   display: grid;
   grid-template-columns: 300px 1fr;
@@ -89,6 +127,8 @@
 .user-email {
   font-size: 0.85rem;
   color: var(--text-muted);
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .role-badge {
@@ -112,6 +152,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.75rem;
   font-size: 0.85rem;
 }
 
@@ -122,6 +163,9 @@
 .meta-value {
   color: var(--text-secondary);
   font-weight: 500;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 /* Edit Form */
@@ -188,6 +232,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  min-width: 0;
 }
 
 .notif-title {
@@ -199,6 +244,7 @@
 .notif-desc {
   font-size: 0.78rem;
   color: var(--text-muted);
+  overflow-wrap: anywhere;
 }
 
 /* Toggle */
@@ -255,6 +301,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  min-width: 0;
 }
 
 .security-title {
@@ -266,6 +313,7 @@
 .security-desc {
   font-size: 0.78rem;
   color: var(--text-muted);
+  overflow-wrap: anywhere;
 }
 
 /* Modal */
@@ -330,4 +378,170 @@
   font-size: 0.85rem;
   font-weight: 500;
   animation: fadeIn 0.3s ease;
+}
+
+@media (max-width: 1100px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 1rem;
+  }
+
+  .header-actions {
+    justify-content: flex-start;
+  }
+
+  .header-actions .btn,
+  .save-toast {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .profile-layout,
+  .profile-main {
+    gap: 1rem;
+  }
+
+  .user-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .edit-actions,
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .edit-actions .btn,
+  .modal-footer .btn {
+    width: 100%;
+  }
+
+  .notification-row,
+  .security-row {
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .notification-row {
+    padding: 0.9rem 0.25rem;
+  }
+
+  .security-row {
+    flex-direction: column;
+  }
+
+  .security-row .btn {
+    width: 100%;
+  }
+
+  .card-header {
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .card-header .btn {
+    flex-shrink: 0;
+  }
+
+  .table-container {
+    overflow: visible;
+  }
+
+  .table-container table,
+  .table-container thead,
+  .table-container tbody,
+  .table-container tr,
+  .table-container td {
+    display: block;
+    width: 100%;
+  }
+
+  .table-container thead {
+    display: none;
+  }
+
+  .table-container tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .table-container tr {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.75rem;
+    background: var(--bg-card);
+  }
+
+  .table-container td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.4rem 0;
+    border: none;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .table-container td::before {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .table-container td:nth-child(1)::before { content: "Order ID"; }
+  .table-container td:nth-child(2)::before { content: "Date"; }
+  .table-container td:nth-child(3)::before { content: "Items"; }
+  .table-container td:nth-child(4)::before { content: "Total"; }
+  .table-container td:nth-child(5)::before { content: "Status"; }
+
+  .modal-backdrop {
+    align-items: flex-start;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+
+  .modal-box {
+    max-width: none;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .meta-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+  }
+
+  .meta-value {
+    text-align: left;
+  }
+
+  .notification-row {
+    align-items: center;
+  }
+
+  .notif-info {
+    flex: 1;
+  }
 }

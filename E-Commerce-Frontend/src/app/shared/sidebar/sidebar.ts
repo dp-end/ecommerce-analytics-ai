@@ -1,7 +1,8 @@
-import { Component, Input, computed, inject } from '@angular/core';
+import { Component, HostBinding, Input, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { MobileMenuService } from '../../core/services/mobile-menu.service';
 import { UserRole } from '../../core/models/user.model';
 
 interface NavItem {
@@ -21,9 +22,15 @@ export class SidebarComponent {
   @Input() role: UserRole = 'individual';
 
   private authService = inject(AuthService);
+  private mobileMenu = inject(MobileMenuService);
   private router = inject(Router);
 
   user = computed(() => this.authService.currentUser());
+
+  @HostBinding('class.mobile-open')
+  get mobileOpen(): boolean {
+    return this.mobileMenu.isOpen();
+  }
 
   navItems = computed((): NavItem[] => {
     switch (this.role) {
@@ -63,7 +70,7 @@ export class SidebarComponent {
   });
 
   closeMobileMenu(): void {
-    document.body.classList.remove('mobile-menu-open');
+    this.mobileMenu.close();
   }
 
   logout(): void {

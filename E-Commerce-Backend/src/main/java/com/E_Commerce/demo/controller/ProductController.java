@@ -60,13 +60,23 @@ public class ProductController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Long storeId,
             @RequestParam(required = false) Long categoryId,
-            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+            @PageableDefault(size = 40, sort = "id") Pageable pageable) {
         return ResponseEntity.ok(productService.getAllPaged(search, storeId, categoryId, pageable));
     }
 
     @GetMapping("/my")
     public ResponseEntity<List<ProductDto>> getMyProducts(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(productService.getMyProducts(userDetails.getUsername()));
+    }
+
+    @GetMapping("/my/paged")
+    public ResponseEntity<PageResponse<ProductDto>> getMyProductsPaged(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long categoryId,
+            @PageableDefault(size = 40, sort = "id") Pageable pageable,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(productService.getMyProductsPaged(
+                userDetails.getUsername(), search, categoryId, pageable));
     }
 
     @GetMapping("/low-stock")

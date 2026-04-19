@@ -107,7 +107,7 @@
 
   <!-- Results count -->
   <div class="results-header">
-    <span class="results-count">{{ filteredProducts().length }} ürün bulundu ({{ displayedProducts().length }} gösteriliyor)</span>
+    <span class="results-count">{{ totalProducts() }} ürün bulundu ({{ displayedProducts().length }} gösteriliyor)</span>
     <div class="results-actions">
       <button class="btn btn-secondary btn-sm filter-toggle-btn" (click)="showFilters.set(true)">
         🎛️ Filtreler
@@ -185,8 +185,8 @@
         <span>Daha fazla yükleniyor...</span>
       </div>
     }
-    @if (!hasMore() && filteredProducts().length > 0) {
-      <div class="all-loaded">Tüm ürünler yüklendi ({{ filteredProducts().length }} ürün)</div>
+    @if (!hasMore() && displayedProducts().length > 0) {
+      <div class="all-loaded">Tüm ürünler yüklendi ({{ displayedProducts().length }} ürün)</div>
     }
   </div>
 </div>

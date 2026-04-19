@@ -1,16 +1,16 @@
 import { Component, Input, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { FavoritesService } from '../../core/services/favorites.service';
+import { MobileMenuService } from '../../core/services/mobile-menu.service';
 import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })
@@ -20,13 +20,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
   favoritesService = inject(FavoritesService);
+  private mobileMenu = inject(MobileMenuService);
   private notificationService = inject(NotificationService);
   private notifSub?: Subscription;
 
   user = computed(() => this.authService.currentUser());
   isIndividual = computed(() => this.user()?.role === 'individual');
   favCount = computed(() => this.favoritesService.count());
-  searchQuery = signal('');
   showNotifications = signal(false);
 
   notifications = signal([
@@ -69,28 +69,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
     switch (this.user()?.role) {
       case 'admin': return 'Admin';
       case 'corporate': return 'Corporate';
-      case 'individual': return 'User';
+      case 'individual': return 'Individual';
       default: return '';
     }
-  }
-
-  onSearch(event: Event): void {
-    const q = (event.target as HTMLInputElement).value;
-    this.searchQuery.set(q);
-  }
-
-  submitSearch(): void {
-    const q = this.searchQuery().trim();
-    if (!q) return;
-    const role = this.user()?.role;
-    if (role === 'individual') {
-      this.router.navigate(['/individual/home'], { queryParams: { search: q } });
-    } else if (role === 'admin') {
-      this.router.navigate(['/admin/users'], { queryParams: { search: q } });
-    } else if (role === 'corporate') {
-      this.router.navigate(['/corporate/products'], { queryParams: { search: q } });
-    }
-    this.searchQuery.set('');
   }
 
   goToFavorites(): void {
@@ -110,6 +91,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   toggleMobileMenu(): void {
-    document.body.classList.toggle('mobile-menu-open');
+    this.mobileMenu.toggle();
   }
 }

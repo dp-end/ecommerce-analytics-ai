@@ -30,7 +30,7 @@
           <div class="stat-lbl">Yorum</div>
         </div>
         <div class="store-stat">
-          <div class="stat-val">{{ products().length }}</div>
+          <div class="stat-val">{{ productTotalElements() }}</div>
           <div class="stat-lbl">Ürün</div>
         </div>
         <span class="badge" [ngClass]="store()!.status.toUpperCase() === 'OPEN' ? 'badge-green' : 'badge-red'">
@@ -42,7 +42,7 @@
     <!-- Tabs -->
     <div class="tabs-bar">
       <button class="tab-btn" [class.active]="activeTab() === 'products'" (click)="setTab('products')">
-        🛍️ Ürünler ({{ products().length }})
+        🛍️ Ürünler ({{ productTotalElements() }})
       </button>
       <button class="tab-btn" [class.active]="activeTab() === 'reviews'" (click)="setTab('reviews')">
         ⭐ Yorumlar ({{ reviews().length }})
@@ -51,14 +51,19 @@
 
     <!-- Products Tab -->
     @if (activeTab() === 'products') {
-      @if (products().length === 0) {
+      @if (!productsLoading() && products().length === 0) {
         <div class="empty-state">
           <div class="empty-state-icon">📦</div>
           <div class="empty-state-title">Bu mağazada henüz ürün yok</div>
         </div>
+      } @else if (productsLoading()) {
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>Ürünler yükleniyor...</p>
+        </div>
       } @else {
         <div class="products-grid">
-          @for (product of products(); track product.id) {
+          @for (product of visibleProducts(); track product.id) {
             <div class="product-card card" (click)="navigateToProduct(product.id)" style="cursor:pointer">
               <div class="product-image">
                 <span class="product-emoji">{{ product.emoji || '📦' }}</span>
@@ -81,6 +86,17 @@
                 >🛒 Ekle</button>
               </div>
             </div>
+          }
+        </div>
+        <div #productScrollSentinel class="scroll-sentinel">
+          @if (productsLoadingMore()) {
+            <div class="loading-more">
+              <div class="loading-spinner"></div>
+              <span>Daha fazla ürün yükleniyor...</span>
+            </div>
+          }
+          @if (!hasMoreProducts() && products().length > 0) {
+            <div class="all-loaded">Tüm ürünler yüklendi ({{ products().length }} ürün)</div>
           }
         </div>
       }

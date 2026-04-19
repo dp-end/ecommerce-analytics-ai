@@ -41,7 +41,11 @@ public class ProductService {
 
     public PageResponse<ProductDto> getAllPaged(String search, Long storeId, Long categoryId, Pageable pageable) {
         Page<Product> page;
-        if (search != null && !search.isBlank()) {
+        if (search != null && !search.isBlank() && storeId != null) {
+            page = productRepository.searchByStoreAndName(storeId, search, pageable);
+        } else if (search != null && !search.isBlank() && categoryId != null) {
+            page = productRepository.searchByCategoryAndName(categoryId, search, pageable);
+        } else if (search != null && !search.isBlank()) {
             page = productRepository.searchByName(search, pageable);
         } else if (storeId != null) {
             page = productRepository.findByStoreId(storeId, pageable);
@@ -83,6 +87,35 @@ public class ProductService {
                 .stream().map(Store::getId).toList();
         if (storeIds.isEmpty()) return List.of();
         return productRepository.findByStoreIdIn(storeIds).stream().map(ProductDto::from).toList();
+    }
+
+    public PageResponse<ProductDto> getMyProductsPaged(String email, String search, Long categoryId, Pageable pageable) {
+        var owner = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+        List<Long> storeIds = storeRepository.findByOwnerId(owner.getId())
+                .stream().map(Store::getId).toList();
+        if (storeIds.isEmpty()) {
+            return new PageResponse<>(List.of(), 0, 0, pageable.getPageNumber(), pageable.getPageSize());
+        }
+
+        Page<Product> page;
+        if (search != null && !search.isBlank() && categoryId != null) {
+            page = productRepository.searchByStoreIdsAndCategoryAndName(storeIds, categoryId, search, pageable);
+        } else if (search != null && !search.isBlank()) {
+            page = productRepository.searchByStoreIdsAndName(storeIds, search, pageable);
+        } else if (categoryId != null) {
+            page = productRepository.findByStoreIdInAndCategoryId(storeIds, categoryId, pageable);
+        } else {
+            page = productRepository.findByStoreIdIn(storeIds, pageable);
+        }
+
+        return new PageResponse<>(
+                page.getContent().stream().map(ProductDto::from).toList(),
+                page.getTotalPages(),
+                page.getTotalElements(),
+                page.getNumber(),
+                page.getSize()
+        );
     }
 
     public List<ProductDto> getLowStock(Integer threshold) {

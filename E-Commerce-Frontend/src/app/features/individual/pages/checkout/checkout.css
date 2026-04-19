@@ -9,10 +9,12 @@
   grid-template-columns: 1fr 360px;
   gap: 1.5rem;
   align-items: start;
+  min-width: 0;
 }
 
 @media (max-width: 860px) {
   .checkout-layout { grid-template-columns: 1fr; }
+  .order-summary { position: static; }
 }
 
 /* Forms */
@@ -20,6 +22,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  min-width: 0;
 }
 
 .section-card { display: flex; flex-direction: column; gap: 1.25rem; }
@@ -150,8 +153,14 @@
 .total-row {
   display: flex;
   justify-content: space-between;
+  gap: 1rem;
   font-size: 0.875rem;
   color: var(--text-secondary);
+}
+
+.total-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .total-row .free { color: var(--accent-green); font-weight: 600; }
@@ -275,3 +284,32 @@
   gap: 1rem; padding: 4rem 2rem; text-align: center;
 }
 .empty-icon { font-size: 3rem; }
+
+@media (max-width: 520px) {
+  .form-grid,
+  .card-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .section-card,
+  .summary-card {
+    padding: 1rem;
+  }
+
+  .summary-item {
+    align-items: flex-start;
+  }
+
+  .s-name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .total-row {
+    align-items: flex-start;
+  }
+
+  .stripe-logos {
+    align-items: flex-start;
+  }
+}

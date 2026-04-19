@@ -26,8 +26,10 @@ export class IndividualHomeComponent implements OnInit, AfterViewInit, OnDestroy
 
   @ViewChild('scrollSentinel') scrollSentinel!: ElementRef<HTMLDivElement>;
   private intersectionObserver!: IntersectionObserver;
+  private filterReloadTimer?: ReturnType<typeof setTimeout>;
+  private initialized = false;
 
-  readonly PAGE_SIZE = 12;
+  readonly PAGE_SIZE = 40;
 
   products = signal<ProductDto[]>([]);
   categories = signal<CategoryDto[]>([]);
@@ -36,7 +38,9 @@ export class IndividualHomeComponent implements OnInit, AfterViewInit, OnDestroy
   sortBy = signal<'featured' | 'price-asc' | 'price-desc' | 'rating'>('featured');
   loading = signal(false);
   isLoadingMore = signal(false);
-  displayPage = signal(1);
+  currentPage = signal(0);
+  totalPages = signal(0);
+  totalProducts = signal(0);
 
   // Filter panel
   showFilters = signal(false);
@@ -75,32 +79,28 @@ export class IndividualHomeComponent implements OnInit, AfterViewInit, OnDestroy
   });
 
   displayedProducts = computed(() =>
-    this.filteredProducts().slice(0, this.displayPage() * this.PAGE_SIZE)
+    this.filteredProducts()
   );
 
   hasMore = computed(() =>
-    this.filteredProducts().length > this.displayPage() * this.PAGE_SIZE
+    this.currentPage() + 1 < this.totalPages()
   );
 
   cartCount = computed(() => this.cartService.count());
 
   constructor() {
-    // Reset pagination when any filter changes
     effect(() => {
-      void [this.activeCategory(), this.searchQuery(), this.sortBy(),
-            this.minPrice(), this.maxPrice(), this.minRating()];
-      this.displayPage.set(1);
+      void [this.activeCategory(), this.searchQuery()];
+      if (!this.initialized) return;
+      this.scheduleProductReload();
     }, { allowSignalWrites: true });
   }
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       if (params['search']) this.searchQuery.set(params['search']);
-    });
-    this.loading.set(true);
-    this.api.getProducts().subscribe({
-      next: products => { this.products.set(products); this.loading.set(false); },
-      error: () => this.loading.set(false),
+      this.initialized = true;
+      this.loadProducts(true);
     });
     this.api.getCategories().subscribe({
       next: cats => this.categories.set(cats),
@@ -123,16 +123,53 @@ export class IndividualHomeComponent implements OnInit, AfterViewInit, OnDestroy
 
   ngOnDestroy(): void {
     this.intersectionObserver?.disconnect();
+    if (this.filterReloadTimer) clearTimeout(this.filterReloadTimer);
+  }
+
+  private scheduleProductReload(): void {
+    if (this.filterReloadTimer) clearTimeout(this.filterReloadTimer);
+    this.filterReloadTimer = setTimeout(() => this.loadProducts(true), 250);
+  }
+
+  private loadProducts(reset = false): void {
+    if (this.loading() || this.isLoadingMore()) return;
+    const page = reset ? 0 : this.currentPage() + 1;
+    const category = this.activeCategory();
+
+    if (reset) {
+      this.products.set([]);
+      this.currentPage.set(0);
+      this.totalPages.set(0);
+      this.totalProducts.set(0);
+      this.loading.set(true);
+    } else {
+      this.isLoadingMore.set(true);
+    }
+
+    this.api.getProductsPaged({
+      page,
+      size: this.PAGE_SIZE,
+      search: this.searchQuery().trim() || undefined,
+      categoryId: category === 'all' ? undefined : category,
+    }).subscribe({
+      next: res => {
+        this.products.update(list => reset ? res.content : [...list, ...res.content]);
+        this.currentPage.set(res.currentPage);
+        this.totalPages.set(res.totalPages);
+        this.totalProducts.set(res.totalElements);
+        this.loading.set(false);
+        this.isLoadingMore.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.isLoadingMore.set(false);
+      },
+    });
   }
 
   private loadNextPage(): void {
     if (!this.hasMore() || this.isLoadingMore()) return;
-    this.isLoadingMore.set(true);
-    // Simulate short async delay for smooth UX, then reveal next page
-    setTimeout(() => {
-      this.displayPage.update(p => p + 1);
-      this.isLoadingMore.set(false);
-    }, 400);
+    this.loadProducts(false);
   }
 
   setCategory(cat: number | 'all'): void {

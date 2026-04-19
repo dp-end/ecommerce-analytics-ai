@@ -30,6 +30,7 @@ export class ApiService {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
   private base = environment.apiUrl;
+  private readonly productRenderSize = 40;
 
   // ─── Auth ──────────────────────────────────────────────────────────────────
   login(email: string, password: string): Observable<AuthResponse> {
@@ -121,13 +122,23 @@ export class ApiService {
     if (params?.storeId) query.push(`storeId=${params.storeId}`);
     if (params?.categoryId) query.push(`categoryId=${params.categoryId}`);
     if (params?.page !== undefined) query.push(`page=${params.page}`);
-    if (params?.size !== undefined) query.push(`size=${params.size}`);
+    query.push(`size=${params?.size ?? this.productRenderSize}`);
     const url = `${this.base}/api/products/paged${query.length ? '?' + query.join('&') : ''}`;
     return this.http.get<PageResponse<ProductDto>>(url);
   }
 
   getMyProducts(): Observable<ProductDto[]> {
     return this.http.get<ProductDto[]>(`${this.base}/api/products/my`);
+  }
+
+  getMyProductsPaged(params?: { search?: string; categoryId?: number; page?: number; size?: number }): Observable<PageResponse<ProductDto>> {
+    const query: string[] = [];
+    if (params?.search) query.push(`search=${encodeURIComponent(params.search)}`);
+    if (params?.categoryId) query.push(`categoryId=${params.categoryId}`);
+    if (params?.page !== undefined) query.push(`page=${params.page}`);
+    query.push(`size=${params?.size ?? this.productRenderSize}`);
+    const url = `${this.base}/api/products/my/paged${query.length ? '?' + query.join('&') : ''}`;
+    return this.http.get<PageResponse<ProductDto>>(url);
   }
 
   getProductById(id: number): Observable<ProductDto> {

@@ -1,3 +1,27 @@
+.page,
+.cart-layout,
+.cart-items,
+.order-summary,
+.card {
+  min-width: 0;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.page-title {
+  margin: 0;
+}
+
+.page-subtitle {
+  margin-top: 0.25rem;
+}
+
 .cart-layout {
   display: grid;
   grid-template-columns: 1fr 300px;
@@ -59,6 +83,7 @@
   font-size: 0.78rem;
   color: var(--text-muted);
   margin-bottom: 0.3rem;
+  overflow-wrap: anywhere;
 }
 
 .item-price {
@@ -148,8 +173,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
   font-size: 0.9rem;
   color: var(--text-secondary);
+}
+
+.summary-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .summary-row .free-shipping {
@@ -197,4 +228,124 @@
 
 .promo-input-row .form-control {
   flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 1rem;
+  }
+
+  .page-header .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cart-layout,
+  .cart-items,
+  .order-summary {
+    gap: 1rem;
+  }
+
+  .cart-item {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: start;
+    gap: 0.875rem;
+    padding: 1rem;
+  }
+
+  .item-emoji {
+    width: 48px;
+    height: 48px;
+    font-size: 2rem;
+  }
+
+  .item-info {
+    width: 100%;
+  }
+
+  .item-name {
+    overflow-wrap: anywhere;
+  }
+
+  .item-controls {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .qty-control {
+    order: 1;
+  }
+
+  .item-subtotal {
+    order: 2;
+    min-width: 0;
+    flex: 1;
+    text-align: right;
+  }
+
+  .remove-btn {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    border-color: rgba(220, 38, 38, 0.25) !important;
+  }
+
+  .order-summary {
+    position: static;
+  }
+
+  .summary-row {
+    align-items: flex-start;
+  }
+
+  .total-row {
+    font-size: 1rem;
+  }
+
+  .promo-input-row {
+    flex-direction: column;
+  }
+
+  .promo-input-row .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .cart-item {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .item-emoji {
+    justify-self: center;
+  }
+
+  .item-controls {
+    justify-content: center;
+  }
+
+  .item-subtotal {
+    flex-basis: 100%;
+    text-align: center;
+  }
+
+  .summary-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
 }
