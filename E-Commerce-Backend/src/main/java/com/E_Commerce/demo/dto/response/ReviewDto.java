@@ -1,6 +1,7 @@
 package com.E_Commerce.demo.dto.response;
 
 import com.E_Commerce.demo.entity.Review;
+import com.E_Commerce.demo.entity.ReviewType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 @Data @Builder
 public class ReviewDto {
     private Long id;
+    private ReviewType reviewType;
     private Long userId;
     private String customerName;
     private Long productId;
@@ -30,6 +32,7 @@ public class ReviewDto {
     public static ReviewDto from(Review r) {
         return ReviewDto.builder()
                 .id(r.getId())
+                .reviewType(r.getReviewType())
                 .userId(r.getUser().getId())
                 .customerName(r.getUser().getName())
                 .productId(r.getProduct() != null ? r.getProduct().getId() : null)

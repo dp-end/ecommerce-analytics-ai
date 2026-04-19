@@ -40,15 +40,14 @@
   gap: 0.875rem;
 }
 
-.logo-icon-lg {
+.logo-img-lg {
   width: 48px;
   height: 48px;
-  background: rgba(255, 255, 255, 0.2);
+  object-fit: contain;
   border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 4px;
+  flex-shrink: 0;
 }
 
 .brand-name {
@@ -159,14 +158,12 @@
   margin-bottom: 1.5rem;
 }
 
-.logo-icon-sm {
+.logo-img-sm {
   width: 34px;
   height: 34px;
-  background: var(--accent-primary);
+  object-fit: contain;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-shrink: 0;
 }
 
 .mobile-brand-name {

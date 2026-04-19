@@ -1,7 +1,10 @@
 package com.E_Commerce.demo.controller;
 
 import com.E_Commerce.demo.dto.request.OrderRequest;
+import com.E_Commerce.demo.entity.Payment;
 import com.E_Commerce.demo.entity.Product;
+import com.E_Commerce.demo.repository.OrderRepository;
+import com.E_Commerce.demo.repository.PaymentRepository;
 import com.E_Commerce.demo.repository.ProductRepository;
 import com.E_Commerce.demo.service.NotificationService;
 import com.E_Commerce.demo.service.OrderService;
@@ -30,6 +33,8 @@ public class PaymentController {
     private final OrderService orderService;
     private final ProductRepository productRepository;
     private final NotificationService notificationService;
+    private final PaymentRepository paymentRepository;
+    private final OrderRepository orderRepository;
 
     @Value("${stripe.webhook.secret:}")
     private String webhookSecret;
@@ -120,12 +125,35 @@ public class PaymentController {
                     if (orderIdStr != null) {
                         Long orderId = Long.parseLong(orderIdStr);
                         orderService.updateStatus(orderId, "COMPLETED");
+
+                        orderRepository.findById(orderId).ifPresent(order -> {
+                            boolean alreadySaved = paymentRepository.findByStripeSessionId(session.getId()).isPresent();
+                            if (!alreadySaved) {
+                                java.math.BigDecimal amount = session.getAmountTotal() != null
+                                        ? java.math.BigDecimal.valueOf(session.getAmountTotal()).movePointLeft(2)
+                                        : java.math.BigDecimal.ZERO;
+                                paymentRepository.save(Payment.builder()
+                                        .order(order)
+                                        .stripeSessionId(session.getId())
+                                        .amount(amount)
+                                        .status(Payment.PaymentStatus.COMPLETED)
+                                        .build());
+                            }
+                        });
+
                         notificationService.sendAdminNotification(
                                 "Payment completed for order #" + orderId, "success");
                     }
                 }
             }
-            case "payment_intent.payment_failed" -> {
+            case "checkout.session.expired", "payment_intent.payment_failed" -> {
+                var dataObject = event.getDataObjectDeserializer().getObject();
+                if (dataObject.isPresent() && dataObject.get() instanceof Session session) {
+                    paymentRepository.findByStripeSessionId(session.getId()).ifPresent(p -> {
+                        p.setStatus(Payment.PaymentStatus.FAILED);
+                        paymentRepository.save(p);
+                    });
+                }
                 notificationService.sendAdminNotification("A payment has failed", "error");
             }
         }

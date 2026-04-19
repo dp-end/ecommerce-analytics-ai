@@ -48,6 +48,14 @@
   border: 2px solid var(--bg-secondary);
 }
 
+.logo-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
 .logo-text {
   font-size: 1.2rem;
   font-weight: 700;

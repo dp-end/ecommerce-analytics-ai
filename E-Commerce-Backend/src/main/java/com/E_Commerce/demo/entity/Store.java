@@ -1,5 +1,6 @@
 package com.E_Commerce.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -37,11 +38,17 @@ public class Store {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "store", fetch = FetchType.LAZY)
     private List<Product> products;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "store", fetch = FetchType.LAZY)
     private List<Order> orders;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Review> reviews;
 
     public enum StoreStatus { OPEN, CLOSED }
 }

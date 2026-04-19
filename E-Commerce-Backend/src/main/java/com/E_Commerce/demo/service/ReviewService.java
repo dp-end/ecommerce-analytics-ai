@@ -6,6 +6,7 @@ import com.E_Commerce.demo.dto.response.PageResponse;
 import com.E_Commerce.demo.dto.response.ReviewDto;
 import com.E_Commerce.demo.entity.Product;
 import com.E_Commerce.demo.entity.Review;
+import com.E_Commerce.demo.entity.ReviewType;
 import com.E_Commerce.demo.entity.Store;
 import com.E_Commerce.demo.entity.User;
 import com.E_Commerce.demo.repository.ProductRepository;
@@ -64,7 +65,12 @@ public class ReviewService {
     }
 
     public List<ReviewDto> getByStore(Long storeId) {
-        return reviewRepository.findByProductStoreId(storeId).stream().map(ReviewDto::from).toList();
+        List<Review> productReviews = reviewRepository.findByProductStoreId(storeId);
+        List<Review> storeReviews   = reviewRepository.findByStoreId(storeId);
+        return java.util.stream.Stream.concat(productReviews.stream(), storeReviews.stream())
+                .distinct()
+                .map(ReviewDto::from)
+                .toList();
     }
 
     @Transactional
@@ -77,6 +83,7 @@ public class ReviewService {
         Review review = Review.builder()
                 .user(user)
                 .product(product)
+                .reviewType(ReviewType.PRODUCT)
                 .starRating(request.getStarRating())
                 .reviewText(request.getReviewText())
                 .reviewHeadline(request.getReviewHeadline())
@@ -104,6 +111,7 @@ public class ReviewService {
         Review review = Review.builder()
                 .user(user)
                 .store(store)
+                .reviewType(ReviewType.STORE)
                 .starRating(request.getStarRating())
                 .reviewText(request.getReviewText())
                 .reviewHeadline(request.getReviewHeadline())
@@ -137,8 +145,11 @@ public class ReviewService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         boolean isAdmin = caller.getRoleType() == User.RoleType.ADMIN;
-        boolean isOwner = review.getProduct().getStore() != null
-                && review.getProduct().getStore().getOwner().getId().equals(caller.getId());
+        Store owningStore = review.getStore() != null
+                ? review.getStore()
+                : (review.getProduct() != null ? review.getProduct().getStore() : null);
+        boolean isOwner = owningStore != null
+                && owningStore.getOwner().getId().equals(caller.getId());
 
         if (!isAdmin && !isOwner) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
@@ -160,8 +171,10 @@ public class ReviewService {
         User caller = userRepository.findByEmail(callerEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        if (review.getProduct().getStore() == null
-                || !review.getProduct().getStore().getOwner().getId().equals(caller.getId())) {
+        Store owningStore = review.getStore() != null
+                ? review.getStore()
+                : (review.getProduct() != null ? review.getProduct().getStore() : null);
+        if (owningStore == null || !owningStore.getOwner().getId().equals(caller.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Only the store owner can endorse this review");
         }

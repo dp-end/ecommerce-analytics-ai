@@ -36,6 +36,13 @@
       "sourceType": "com.E_Commerce.demo.config.AiServiceProperties"
     },
     {
+      "name": "ai.service.internal-secret",
+      "type": "java.lang.String",
+      "description": "Shared secret sent as X-Internal-Token header to the Python AI service for service-to-service auth.",
+      "defaultValue": "",
+      "sourceType": "com.E_Commerce.demo.config.AiServiceProperties"
+    },
+    {
       "name": "stripe.api.key",
       "type": "java.lang.String",
       "description": "Stripe secret API key (sk_test_... or sk_live_...)."
