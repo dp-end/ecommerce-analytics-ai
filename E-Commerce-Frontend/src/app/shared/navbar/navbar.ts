@@ -91,4 +91,8 @@ export class NavbarComponent {
   markAllRead(): void {
     this.notifications.update(list => list.map(n => ({ ...n, read: true })));
   }
+
+  toggleMobileMenu(): void {
+    document.body.classList.toggle('mobile-menu-open');
+  }
 }

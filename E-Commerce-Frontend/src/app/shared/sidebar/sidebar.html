@@ -1,14 +1,17 @@
+<div class="sidebar-overlay" (click)="closeMobileMenu()"></div>
 <aside class="sidebar">
   <!-- Logo -->
   <div class="sidebar-logo">
-    <div class="logo-icon">
-      <span class="logo-pulse"></span>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-        <path d="M3 3v18h18" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M7 16l4-4 4 4 4-8" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+    <div class="site-logo">
+      <div class="logo-icon">
+        <span class="logo-pulse"></span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M3 3v18h18" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M7 16l4-4 4 4 4-8" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="logo-text">DataPulse</span>
     </div>
-    <span class="logo-text">DataPulse</span>
   </div>
 
   <!-- Role Badge -->
@@ -25,6 +28,7 @@
             [routerLink]="item.route"
             routerLinkActive="active"
             class="nav-item"
+            (click)="closeMobileMenu()"
           >
             <span class="nav-icon">{{ item.icon }}</span>
             <span class="nav-label">{{ item.label }}</span>

@@ -2,6 +2,8 @@
    DataPulse - Açık Tema (Hepsiburada/Trendyol Stili)
    ========================================= */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 /* Custom Properties */
 :root {
   --bg-primary: #F5F5F5;
@@ -50,7 +52,7 @@
   --transition-base: 250ms ease;
   --transition-slow: 350ms ease;
 
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
 }
 
@@ -247,12 +249,13 @@ small {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
 .card:hover {
   border-color: rgba(255, 96, 0, 0.3);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.10);
 }
 
 .card-header {
@@ -294,7 +297,7 @@ small {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -321,6 +324,7 @@ small {
   background: var(--accent-primary-dark);
   border-color: var(--accent-primary-dark);
   box-shadow: var(--shadow-orange);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
@@ -332,6 +336,7 @@ small {
 .btn-secondary:hover:not(:disabled) {
   background: #E8E8E8;
   border-color: #CCCCCC;
+  transform: scale(1.02);
 }
 
 .btn-ghost {
@@ -720,6 +725,20 @@ tbody td {
    Responsive
    ========================================== */
 
+/* ==========================================
+   Table Responsive
+   ========================================== */
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ==========================================
+   Responsive
+   ========================================== */
+
 @media (max-width: 1024px) {
   :root {
     --sidebar-width: 240px;
@@ -732,10 +751,33 @@ tbody td {
 
   h1 { font-size: 1.5rem; }
   h2 { font-size: 1.25rem; }
+
+  .container {
+    padding: 0 1rem;
+  }
 }
 
 @media (max-width: 480px) {
   .grid-cols-4,
   .grid-cols-3,
   .grid-cols-2 { grid-template-columns: 1fr; }
+
+  h1 { font-size: 1.25rem; }
+  h2 { font-size: 1.125rem; }
+}
+
+/* Mobile sidebar overlay backdrop */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 250;
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 768px) {
+  .sidebar-overlay.visible {
+    display: block;
+  }
 }

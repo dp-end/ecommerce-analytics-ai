@@ -62,6 +62,10 @@ export class SidebarComponent {
     }
   });
 
+  closeMobileMenu(): void {
+    document.body.classList.remove('mobile-menu-open');
+  }
+
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);

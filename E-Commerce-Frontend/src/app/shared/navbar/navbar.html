@@ -1,4 +1,11 @@
 <header class="navbar">
+  <!-- Hamburger (mobile only) -->
+  <button class="hamburger-btn" (click)="toggleMobileMenu()" aria-label="Toggle menu">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
   <!-- Page Title -->
   <div class="navbar-left">
     <h1 class="page-title">{{ pageTitle }}</h1>

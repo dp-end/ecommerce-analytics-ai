@@ -208,3 +208,44 @@
   border-color: rgba(239, 68, 68, 0.3);
   color: var(--accent-red);
 }
+
+/* Overlay backdrop (rendered before <aside>) */
+.sidebar-overlay {
+  display: none;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  :host {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 300;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: none;
+  }
+
+  :host-context(body.mobile-menu-open) {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 299;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(2px);
+  }
+
+  :host-context(body.mobile-menu-open) .sidebar-overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
