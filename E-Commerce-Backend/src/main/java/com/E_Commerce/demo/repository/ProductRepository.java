@@ -1,6 +1,8 @@
 package com.E_Commerce.demo.repository;
 
 import com.E_Commerce.demo.entity.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,6 +20,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Product> searchByName(@Param("keyword") String keyword);
+
+    @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    Page<Product> searchByName(@Param("keyword") String keyword, Pageable pageable);
+
+    Page<Product> findByStoreId(Long storeId, Pageable pageable);
+    Page<Product> findByCategoryId(Long categoryId, Pageable pageable);
 
     @Query("SELECT p FROM Product p WHERE p.store.id = :storeId AND LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Product> searchByStoreAndName(@Param("storeId") Long storeId, @Param("keyword") String keyword);

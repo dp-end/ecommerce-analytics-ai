@@ -1,6 +1,7 @@
 package com.E_Commerce.demo.service;
 
 import com.E_Commerce.demo.dto.request.ProductRequest;
+import com.E_Commerce.demo.dto.response.PageResponse;
 import com.E_Commerce.demo.dto.response.ProductDto;
 import com.E_Commerce.demo.entity.Category;
 import com.E_Commerce.demo.entity.Product;
@@ -12,6 +13,8 @@ import com.E_Commerce.demo.repository.ReviewRepository;
 import com.E_Commerce.demo.repository.StoreRepository;
 import com.E_Commerce.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +34,26 @@ public class ProductService {
 
     public List<ProductDto> getAll() {
         return productRepository.findAll().stream().map(ProductDto::from).toList();
+    }
+
+    public PageResponse<ProductDto> getAllPaged(String search, Long storeId, Long categoryId, Pageable pageable) {
+        Page<Product> page;
+        if (search != null && !search.isBlank()) {
+            page = productRepository.searchByName(search, pageable);
+        } else if (storeId != null) {
+            page = productRepository.findByStoreId(storeId, pageable);
+        } else if (categoryId != null) {
+            page = productRepository.findByCategoryId(categoryId, pageable);
+        } else {
+            page = productRepository.findAll(pageable);
+        }
+        return new PageResponse<>(
+                page.getContent().stream().map(ProductDto::from).toList(),
+                page.getTotalPages(),
+                page.getTotalElements(),
+                page.getNumber(),
+                page.getSize()
+        );
     }
 
     public ProductDto getById(Long id) {

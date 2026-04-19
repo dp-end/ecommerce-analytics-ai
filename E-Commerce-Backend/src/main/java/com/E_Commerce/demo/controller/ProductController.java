@@ -1,10 +1,13 @@
 package com.E_Commerce.demo.controller;
 
 import com.E_Commerce.demo.dto.request.ProductRequest;
+import com.E_Commerce.demo.dto.response.PageResponse;
 import com.E_Commerce.demo.dto.response.ProductDto;
 import com.E_Commerce.demo.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -50,6 +53,15 @@ public class ProductController {
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<ProductDto>> getByCategory(@PathVariable Long categoryId) {
         return ResponseEntity.ok(productService.getByCategory(categoryId));
+    }
+
+    @GetMapping("/paged")
+    public ResponseEntity<PageResponse<ProductDto>> getAllPaged(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long storeId,
+            @RequestParam(required = false) Long categoryId,
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(productService.getAllPaged(search, storeId, categoryId, pageable));
     }
 
     @GetMapping("/my")

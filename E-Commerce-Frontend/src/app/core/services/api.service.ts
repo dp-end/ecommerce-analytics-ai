@@ -115,6 +115,17 @@ export class ApiService {
     return this.http.get<ProductDto[]>(url);
   }
 
+  getProductsPaged(params?: { search?: string; storeId?: number; categoryId?: number; page?: number; size?: number }): Observable<PageResponse<ProductDto>> {
+    const query: string[] = [];
+    if (params?.search) query.push(`search=${encodeURIComponent(params.search)}`);
+    if (params?.storeId) query.push(`storeId=${params.storeId}`);
+    if (params?.categoryId) query.push(`categoryId=${params.categoryId}`);
+    if (params?.page !== undefined) query.push(`page=${params.page}`);
+    if (params?.size !== undefined) query.push(`size=${params.size}`);
+    const url = `${this.base}/api/products/paged${query.length ? '?' + query.join('&') : ''}`;
+    return this.http.get<PageResponse<ProductDto>>(url);
+  }
+
   getMyProducts(): Observable<ProductDto[]> {
     return this.http.get<ProductDto[]>(`${this.base}/api/products/my`);
   }
@@ -211,6 +222,10 @@ export class ApiService {
 
   getCustomerAnalytics(): Observable<CustomerAnalytics> {
     return this.http.get<CustomerAnalytics>(`${this.base}/api/analytics/customers`);
+  }
+
+  getReviewsPaged(page = 0, size = 20): Observable<PageResponse<ReviewDto>> {
+    return this.http.get<PageResponse<ReviewDto>>(`${this.base}/api/reviews/paged?page=${page}&size=${size}`);
   }
 
   // ─── Reviews (by product) ──────────────────────────────────────────────────

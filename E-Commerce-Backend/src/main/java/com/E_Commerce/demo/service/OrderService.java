@@ -21,6 +21,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final StoreRepository storeRepository;
     private final ProductRepository productRepository;
+    private final NotificationService notificationService;
 
     public List<OrderDto> getAll() {
         return orderRepository.findAll().stream().map(OrderDto::from).toList();
@@ -101,7 +102,10 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + id));
         order.setStatus(Order.OrderStatus.valueOf(status));
-        return OrderDto.from(orderRepository.save(order));
+        OrderDto saved = OrderDto.from(orderRepository.save(order));
+        String userEmail = order.getUser().getEmail();
+        notificationService.sendOrderStatusUpdate(id, status, userEmail);
+        return saved;
     }
 
     @Transactional

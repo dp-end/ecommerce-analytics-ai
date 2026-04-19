@@ -1,14 +1,20 @@
 package com.E_Commerce.demo.service;
 
 import com.E_Commerce.demo.dto.request.ReviewRequest;
+import com.E_Commerce.demo.dto.request.StoreReviewRequest;
+import com.E_Commerce.demo.dto.response.PageResponse;
 import com.E_Commerce.demo.dto.response.ReviewDto;
 import com.E_Commerce.demo.entity.Product;
 import com.E_Commerce.demo.entity.Review;
+import com.E_Commerce.demo.entity.Store;
 import com.E_Commerce.demo.entity.User;
 import com.E_Commerce.demo.repository.ProductRepository;
 import com.E_Commerce.demo.repository.ReviewRepository;
+import com.E_Commerce.demo.repository.StoreRepository;
 import com.E_Commerce.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,9 +30,21 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final StoreRepository storeRepository;
 
     public List<ReviewDto> getAll() {
         return reviewRepository.findAll().stream().map(ReviewDto::from).toList();
+    }
+
+    public PageResponse<ReviewDto> getAllPaged(Pageable pageable) {
+        Page<Review> page = reviewRepository.findAll(pageable);
+        return new PageResponse<>(
+                page.getContent().stream().map(ReviewDto::from).toList(),
+                page.getTotalPages(),
+                page.getTotalElements(),
+                page.getNumber(),
+                page.getSize()
+        );
     }
 
     public ReviewDto getById(Long id) {
@@ -72,6 +90,30 @@ public class ReviewService {
         Double avgRating = reviewRepository.avgRatingByProduct(product.getId());
         product.setRating(avgRating != null ? avgRating : 0.0);
         productRepository.save(product);
+
+        return saved;
+    }
+
+    @Transactional
+    public ReviewDto createStoreReview(StoreReviewRequest request, String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        Store store = storeRepository.findById(request.getStoreId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Store not found: " + request.getStoreId()));
+
+        Review review = Review.builder()
+                .user(user)
+                .store(store)
+                .starRating(request.getStarRating())
+                .reviewText(request.getReviewText())
+                .reviewHeadline(request.getReviewHeadline())
+                .ownerLiked(false)
+                .build();
+        ReviewDto saved = ReviewDto.from(reviewRepository.save(review));
+
+        Double avgRating = reviewRepository.avgRatingByStore(store.getId());
+        store.setRating(avgRating != null ? avgRating : 0.0);
+        storeRepository.save(store);
 
         return saved;
     }

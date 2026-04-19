@@ -1,10 +1,14 @@
 package com.E_Commerce.demo.controller;
 
 import com.E_Commerce.demo.dto.request.ReviewRequest;
+import com.E_Commerce.demo.dto.request.StoreReviewRequest;
+import com.E_Commerce.demo.dto.response.PageResponse;
 import com.E_Commerce.demo.dto.response.ReviewDto;
 import com.E_Commerce.demo.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,6 +29,12 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.getAll());
     }
 
+    @GetMapping("/paged")
+    public ResponseEntity<PageResponse<ReviewDto>> getAllPaged(
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(reviewService.getAllPaged(pageable));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ReviewDto> getById(@PathVariable Long id) {
         return ResponseEntity.ok(reviewService.getById(id));
@@ -43,6 +53,14 @@ public class ReviewController {
     @GetMapping("/store/{storeId}")
     public ResponseEntity<List<ReviewDto>> getByStore(@PathVariable Long storeId) {
         return ResponseEntity.ok(reviewService.getByStore(storeId));
+    }
+
+    @PostMapping("/store")
+    public ResponseEntity<ReviewDto> createStoreReview(
+            @Valid @RequestBody StoreReviewRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(reviewService.createStoreReview(request, userDetails.getUsername()));
     }
 
     @PostMapping

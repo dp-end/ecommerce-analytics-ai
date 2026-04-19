@@ -13,6 +13,7 @@ public class ReviewDto {
     private String customerName;
     private Long productId;
     private String productName;
+    private Long storeId;
     private Integer starRating;
     private String reviewText;
     private Integer helpful;
@@ -31,8 +32,11 @@ public class ReviewDto {
                 .id(r.getId())
                 .userId(r.getUser().getId())
                 .customerName(r.getUser().getName())
-                .productId(r.getProduct().getId())
-                .productName(r.getProduct().getName())
+                .productId(r.getProduct() != null ? r.getProduct().getId() : null)
+                .productName(r.getProduct() != null ? r.getProduct().getName() : null)
+                .storeId(r.getStore() != null ? r.getStore().getId()
+                        : (r.getProduct() != null && r.getProduct().getStore() != null
+                                ? r.getProduct().getStore().getId() : null))
                 .starRating(r.getStarRating())
                 .reviewText(r.getReviewText())
                 .helpful(r.getHelpful())
