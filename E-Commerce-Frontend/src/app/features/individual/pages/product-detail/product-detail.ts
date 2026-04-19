@@ -27,6 +27,8 @@ export class ProductDetailComponent implements OnInit {
   reviews = signal<ReviewDto[]>([]);
   loading = signal(true);
   error = signal('');
+  reviewsLoading = signal(false);
+  reviewsError = signal('');
 
   // Comment form state
   newRating = signal(5);
@@ -58,9 +60,17 @@ export class ProductDetailComponent implements OnInit {
   }
 
   private loadReviews(productId: number): void {
+    this.reviewsLoading.set(true);
+    this.reviewsError.set('');
     this.api.getReviewsByProduct(productId).subscribe({
-      next: r => this.reviews.set(r),
-      error: () => {},
+      next: r => {
+        this.reviews.set(r);
+        this.reviewsLoading.set(false);
+      },
+      error: () => {
+        this.reviewsError.set('Yorumlar yüklenemedi.');
+        this.reviewsLoading.set(false);
+      },
     });
   }
 
@@ -150,6 +160,13 @@ export class ProductDetailComponent implements OnInit {
     this.favoritesService.toggle(p.id);
   }
 
+  backPath(): string {
+    const role = this.authService.currentUser()?.role;
+    if (role === 'admin') return '/admin/stores';
+    if (role === 'corporate') return '/corporate/products';
+    return '/individual/home';
+  }
+
   isFavorite(): boolean {
     const p = this.product();
     return p ? this.favoritesService.isFavorite(p.id) : false;
@@ -165,6 +182,7 @@ export class ProductDetailComponent implements OnInit {
   }
 
   getStars(rating: number): string {
+    rating = Number(rating) || 0;
     const full = Math.floor(rating);
     return '★'.repeat(full) + '☆'.repeat(5 - full);
   }

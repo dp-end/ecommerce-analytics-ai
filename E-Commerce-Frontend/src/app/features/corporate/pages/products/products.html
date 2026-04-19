@@ -36,7 +36,10 @@
   } @else {
     <div class="products-grid">
       @for (product of visibleProducts(); track product.id) {
-        <div class="product-card card">
+        <div class="product-card card clickable-product" role="button" tabindex="0"
+          (click)="openProduct(product.id)"
+          (keydown.enter)="openProduct(product.id)"
+          (keydown.space)="openProduct(product.id)">
           <div class="product-img">
             @if (product.imageUrl) {
               <img [src]="product.imageUrl" [alt]="product.name" class="product-image" />
@@ -56,7 +59,7 @@
             </span>
           </div>
           <div class="product-actions">
-            <button class="btn btn-danger btn-sm" style="margin-left:auto" (click)="deleteProduct(product.id)">🗑️</button>
+            <button class="btn btn-danger btn-sm" style="margin-left:auto" (click)="deleteProduct(product.id); $event.stopPropagation()">🗑️</button>
           </div>
         </div>
       }

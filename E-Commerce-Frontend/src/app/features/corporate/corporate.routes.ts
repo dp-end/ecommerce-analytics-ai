@@ -36,6 +36,14 @@ export const corporateRoutes: Routes = [
         loadComponent: () => import('./pages/reviews/reviews').then(m => m.CorporateReviewsComponent),
       },
       {
+        path: 'store/:id',
+        loadComponent: () => import('../individual/pages/store-detail/store-detail').then(m => m.StoreDetailComponent),
+      },
+      {
+        path: 'product/:id',
+        loadComponent: () => import('../individual/pages/product-detail/product-detail').then(m => m.ProductDetailComponent),
+      },
+      {
         path: 'chatbot',
         loadComponent: () => import('../chatbot/chatbot').then(m => m.ChatbotComponent),
       },

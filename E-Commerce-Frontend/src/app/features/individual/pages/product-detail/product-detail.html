@@ -1,7 +1,7 @@
 <div class="page fade-in">
 
   <!-- Back button -->
-  <a routerLink="/individual/home" class="back-link">← Ürünlere Geri Dön</a>
+  <a [routerLink]="backPath()" class="back-link">← Ürünlere Geri Dön</a>
 
   @if (loading()) {
     <div class="state-box">
@@ -175,7 +175,17 @@
       }
 
       <!-- Review list -->
-      @if (reviews().length === 0) {
+      @if (reviewsLoading()) {
+        <div class="empty-reviews">
+          <span class="empty-icon">...</span>
+          <p>Yorumlar yükleniyor...</p>
+        </div>
+      } @else if (reviewsError()) {
+        <div class="empty-reviews error-state">
+          <span class="empty-icon">!</span>
+          <p>{{ reviewsError() }}</p>
+        </div>
+      } @else if (reviews().length === 0) {
         <div class="empty-reviews">
           <span class="empty-icon">💬</span>
           <p>Henüz yorum yapılmamış. İlk yorumu siz yapın!</p>

@@ -57,14 +57,27 @@
       </div>
     </div>
     <div class="reviews-list">
+      @if (loading()) {
+        <div class="empty-state">
+          <div class="empty-state-title">Reviews are loading...</div>
+        </div>
+      } @else if (error()) {
+        <div class="empty-state">
+          <div class="empty-state-title">{{ error() }}</div>
+        </div>
+      } @else if (reviews().length === 0) {
+        <div class="empty-state">
+          <div class="empty-state-title">No reviews yet</div>
+        </div>
+      } @else {
       @for (review of reviews(); track review.id) {
         <div class="review-item">
           <div class="review-header">
             <div class="reviewer-info">
-              <div class="reviewer-av">{{ review.customerName[0] }}</div>
+              <div class="reviewer-av">{{ reviewerInitial(review) }}</div>
               <div>
-                <div class="reviewer-name">{{ review.customerName }}</div>
-                <div class="review-product">{{ review.productName }}</div>
+                <div class="reviewer-name">{{ review.customerName || 'Customer' }}</div>
+                <div class="review-product">{{ reviewSubject(review) }}</div>
               </div>
             </div>
             <div class="review-meta">
@@ -80,6 +93,7 @@
             <button class="btn btn-ghost btn-sm">Reply</button>
           </div>
         </div>
+      }
       }
     </div>
   </div>

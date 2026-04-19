@@ -116,14 +116,21 @@ export interface ShipmentDto {
 // ─── Review ──────────────────────────────────────────────────────────────────
 export interface ReviewDto {
   id: number;
+  reviewType?: 'PRODUCT' | 'STORE';
   userId: number;
   customerName: string;
-  productId: number;
-  productName: string;
+  productId?: number;
+  productName?: string;
+  storeId?: number;
   starRating: number;
   reviewText?: string;
   reviewHeadline?: string;
   helpful: number;
+  helpfulVotes?: number;
+  totalVotes?: number;
+  marketplace?: string;
+  verifiedPurchase?: boolean;
+  vine?: boolean;
   sentiment?: string;
   ownerLiked: boolean;
   createdAt: string;

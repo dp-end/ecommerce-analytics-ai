@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ApiService } from '../../../../core/services/api.service';
 import { StoreDto } from '../../../../core/models/api.models';
 
@@ -13,6 +14,7 @@ import { StoreDto } from '../../../../core/models/api.models';
 })
 export class AdminStoresComponent implements OnInit {
   private api = inject(ApiService);
+  private router = inject(Router);
 
   stores       = signal<StoreDto[]>([]);
   searchQuery  = signal('');
@@ -89,6 +91,10 @@ export class AdminStoresComponent implements OnInit {
     this.api.updateStoreStatus(store.id, newStatus).subscribe({
       next: updated => this.stores.update(list => list.map(s => s.id === updated.id ? updated : s)),
     });
+  }
+
+  openStore(store: StoreDto): void {
+    this.router.navigate(['/admin/stores', store.id]);
   }
 
   deleteStore(id: number): void {

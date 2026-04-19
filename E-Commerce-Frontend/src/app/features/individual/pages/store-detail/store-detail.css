@@ -4,6 +4,17 @@
   gap: 1.5rem;
 }
 
+.back-link {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  text-decoration: none;
+  width: fit-content;
+}
+
+.back-link:hover {
+  color: var(--accent-primary);
+}
+
 /* Loading */
 .loading-state {
   display: flex;

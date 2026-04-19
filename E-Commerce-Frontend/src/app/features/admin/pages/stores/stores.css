@@ -41,6 +41,20 @@
   transition: all var(--transition-base);
 }
 
+.clickable-store {
+  cursor: pointer;
+}
+
+.clickable-store:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.clickable-store:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 3px;
+}
+
 .store-header {
   display: flex;
   align-items: flex-start;

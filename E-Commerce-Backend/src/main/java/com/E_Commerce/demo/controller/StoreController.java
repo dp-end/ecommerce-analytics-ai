@@ -28,10 +28,8 @@ public class StoreController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<StoreDto> getById(
-            @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(storeService.getById(id, userDetails.getUsername()));
+    public ResponseEntity<StoreDto> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(storeService.getById(id));
     }
 
     @GetMapping("/owner/{ownerId}")

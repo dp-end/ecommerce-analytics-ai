@@ -59,6 +59,7 @@ export class CorporateAnalyticsComponent implements OnInit {
 
     const reviewsByProduct = new Map<number, number[]>();
     for (const r of this.reviews()) {
+      if (!r.productId) continue;
       if (!reviewsByProduct.has(r.productId)) reviewsByProduct.set(r.productId, []);
       reviewsByProduct.get(r.productId)!.push(r.starRating);
     }

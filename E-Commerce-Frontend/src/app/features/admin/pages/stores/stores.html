@@ -35,7 +35,14 @@
   } @else {
     <div class="stores-grid">
       @for (store of filteredStores(); track store.id) {
-        <div class="store-card card">
+        <div
+          class="store-card card clickable-store"
+          role="button"
+          tabindex="0"
+          (click)="openStore(store)"
+          (keydown.enter)="openStore(store)"
+          (keydown.space)="openStore(store)"
+        >
           <div class="store-header">
             <div class="store-icon-wrapper">
               <span class="store-emoji">{{ getCategoryEmoji(store.category) }}</span>
@@ -66,10 +73,10 @@
           <div style="display:flex;gap:.5rem;margin-top:.25rem">
             <button class="btn btn-sm" style="flex:1"
               [ngClass]="store.status.toUpperCase() === 'OPEN' ? 'btn-danger' : 'btn-success'"
-              (click)="toggleStatus(store)">
+              (click)="toggleStatus(store); $event.stopPropagation()">
               {{ store.status.toUpperCase() === 'OPEN' ? '🔒 Kapat' : '🔓 Aç' }}
             </button>
-            <button class="btn btn-sm btn-danger" (click)="deleteStore(store.id)">🗑️</button>
+            <button class="btn btn-sm btn-danger" (click)="deleteStore(store.id); $event.stopPropagation()">🗑️</button>
           </div>
         </div>
       }

@@ -1,9 +1,15 @@
 <div class="page fade-in">
+  <a [routerLink]="backPath()" class="back-link">← Geri Dön</a>
 
   @if (loading()) {
     <div class="loading-state">
       <div class="loading-spinner"></div>
       <p>Mağaza yükleniyor...</p>
+    </div>
+  } @else if (storeError()) {
+    <div class="empty-state">
+      <div class="empty-state-icon">!</div>
+      <div class="empty-state-title">{{ storeError() }}</div>
     </div>
   }
 
@@ -51,7 +57,12 @@
 
     <!-- Products Tab -->
     @if (activeTab() === 'products') {
-      @if (!productsLoading() && products().length === 0) {
+      @if (productsError()) {
+        <div class="empty-state">
+          <div class="empty-state-icon">!</div>
+          <div class="empty-state-title">{{ productsError() }}</div>
+        </div>
+      } @else if (!productsLoading() && products().length === 0) {
         <div class="empty-state">
           <div class="empty-state-icon">📦</div>
           <div class="empty-state-title">Bu mağazada henüz ürün yok</div>
@@ -73,7 +84,7 @@
                 <h3 class="product-name">{{ product.name }}</h3>
                 <p class="product-desc">{{ product.description }}</p>
                 <div class="product-rating">
-                  <span class="stars">{{ getStars(product.rating) }}</span>
+                  <span class="stars">{{ getStars(product.rating || 0) }}</span>
                   <span class="rating-num">{{ product.rating | number:'1.1-1' }}</span>
                 </div>
               </div>
@@ -194,7 +205,17 @@
 
         <!-- Reviews List -->
         <div class="reviews-list-section">
-          @if (reviews().length === 0) {
+          @if (reviewsLoading()) {
+            <div class="empty-state">
+              <div class="empty-state-icon">...</div>
+              <div class="empty-state-title">Yorumlar yükleniyor...</div>
+            </div>
+          } @else if (reviewsError()) {
+            <div class="empty-state">
+              <div class="empty-state-icon">!</div>
+              <div class="empty-state-title">{{ reviewsError() }}</div>
+            </div>
+          } @else if (reviews().length === 0) {
             <div class="empty-state">
               <div class="empty-state-icon">💬</div>
               <div class="empty-state-title">Henüz yorum yok</div>
@@ -207,10 +228,10 @@
                   <div class="review-header">
                     <div class="reviewer-info">
                       <div class="reviewer-avatar avatar avatar-sm avatar-purple">
-                        {{ review.customerName.charAt(0).toUpperCase() }}
+                        {{ (review.customerName || '?').charAt(0).toUpperCase() }}
                       </div>
                       <div>
-                        <div class="reviewer-name">{{ review.customerName }}</div>
+                        <div class="reviewer-name">{{ review.customerName || 'Müşteri' }}</div>
                         <div class="review-date">{{ review.createdAt | date:'dd.MM.yyyy' }}</div>
                       </div>
                     </div>

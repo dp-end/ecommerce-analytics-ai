@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
+import { forkJoin } from 'rxjs';
 import { ApiService } from '../../../../core/services/api.service';
 import { ReviewDto } from '../../../../core/models/api.models';
 
@@ -21,29 +22,51 @@ export class CorporateReviewsComponent implements OnInit {
   avgRating = signal(0);
   ratingBars = signal<{ star: number; count: number; pct: number }[]>([]);
   loading = signal(false);
+  error = signal('');
+  private chart: Chart | null = null;
 
   ngOnInit(): void {
     this.loading.set(true);
-    this.api.getReviews().subscribe({
-      next: reviews => {
-        this.reviews.set(reviews);
-        this.loading.set(false);
-        if (reviews.length > 0) {
-          const total = reviews.reduce((sum, r) => sum + r.starRating, 0);
-          this.avgRating.set(Math.round((total / reviews.length) * 10) / 10);
-          this.computeRatingBars(reviews);
-          this.initChart(reviews);
+    this.error.set('');
+    this.initChart([]);
+
+    this.api.getMyStores().subscribe({
+      next: stores => {
+        if (!stores.length) {
+          this.reviews.set([]);
+          this.computeReviewSummary([]);
+          this.loading.set(false);
+          return;
         }
+
+        forkJoin(stores.map(store => this.api.getReviewsByStore(store.id))).subscribe({
+          next: results => {
+            const reviewMap = new Map<number, ReviewDto>();
+            results.flat().forEach(review => reviewMap.set(review.id, review));
+            const reviews = Array.from(reviewMap.values());
+            this.reviews.set(reviews);
+            this.computeReviewSummary(reviews);
+            this.loading.set(false);
+          },
+          error: () => {
+            this.error.set('Reviews could not be loaded.');
+            this.loading.set(false);
+          },
+        });
       },
-      error: () => this.loading.set(false),
+      error: () => {
+        this.error.set('Stores could not be loaded.');
+        this.loading.set(false);
+      },
     });
   }
 
   private initChart(reviews: ReviewDto[]): void {
+    if (this.chart) this.chart.destroy();
     const distribution = [1, 2, 3, 4, 5].map(star =>
       reviews.filter(r => r.starRating === star).length
     );
-    new Chart(this.ratingChartRef.nativeElement, {
+    this.chart = new Chart(this.ratingChartRef.nativeElement, {
       type: 'bar',
       data: {
         labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
@@ -69,6 +92,20 @@ export class CorporateReviewsComponent implements OnInit {
     });
   }
 
+  private computeReviewSummary(reviews: ReviewDto[]): void {
+    if (!reviews.length) {
+      this.avgRating.set(0);
+      this.computeRatingBars([]);
+      this.initChart([]);
+      return;
+    }
+
+    const total = reviews.reduce((sum, r) => sum + r.starRating, 0);
+    this.avgRating.set(Math.round((total / reviews.length) * 10) / 10);
+    this.computeRatingBars(reviews);
+    this.initChart(reviews);
+  }
+
   getStars(count: number): string {
     return '★'.repeat(count) + '☆'.repeat(5 - count);
   }
@@ -85,5 +122,13 @@ export class CorporateReviewsComponent implements OnInit {
   formatDate(dateStr: string): string {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('tr-TR');
+  }
+
+  reviewerInitial(review: ReviewDto): string {
+    return (review.customerName || '?').charAt(0).toUpperCase();
+  }
+
+  reviewSubject(review: ReviewDto): string {
+    return review.productName || (review.reviewType === 'STORE' ? 'Store review' : 'Product review');
   }
 }

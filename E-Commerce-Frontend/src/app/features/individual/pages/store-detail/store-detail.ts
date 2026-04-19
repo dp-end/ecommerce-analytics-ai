@@ -38,14 +38,18 @@ export class StoreDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   products = signal<ProductDto[]>([]);
   reviews = signal<ReviewDto[]>([]);
   loading = signal(true);
+  storeError = signal('');
   activeTab = signal<ActiveTab>('products');
 
   reviewSubmitting = signal(false);
   reviewSuccess = signal(false);
   reviewError = signal('');
+  reviewsLoading = signal(false);
+  reviewsError = signal('');
   hoveredStar = signal(0);
   productsLoading = signal(false);
   productsLoadingMore = signal(false);
+  productsError = signal('');
   productPage = signal(0);
   productTotalPages = signal(0);
   productTotalElements = signal(0);
@@ -72,20 +76,36 @@ export class StoreDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (!id) { this.router.navigate(['/individual/home']); return; }
+    if (!id) {
+      this.storeError.set('Geçersiz mağaza ID.');
+      this.loading.set(false);
+      return;
+    }
 
     this.api.getStoreById(id).subscribe({
       next: s => {
         this.store.set(s);
         this.loading.set(false);
       },
-      error: () => this.router.navigate(['/individual/home']),
+      error: err => {
+        this.storeError.set(err?.status === 404 ? 'Mağaza bulunamadı.' : 'Mağaza bilgileri yüklenemedi.');
+        this.loading.set(false);
+      },
     });
 
     this.loadProducts(id, true);
 
+    this.reviewsLoading.set(true);
+    this.reviewsError.set('');
     this.api.getReviewsByStore(id).subscribe({
-      next: r => this.reviews.set(r),
+      next: r => {
+        this.reviews.set(r);
+        this.reviewsLoading.set(false);
+      },
+      error: () => {
+        this.reviewsError.set('Yorumlar yüklenemedi.');
+        this.reviewsLoading.set(false);
+      },
     });
   }
 
@@ -115,6 +135,7 @@ export class StoreDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       this.productPage.set(0);
       this.productTotalPages.set(0);
       this.productTotalElements.set(0);
+      this.productsError.set('');
       this.productsLoading.set(true);
     } else {
       this.productsLoadingMore.set(true);
@@ -134,6 +155,7 @@ export class StoreDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         this.productsLoadingMore.set(false);
       },
       error: () => {
+        this.productsError.set('Ürünler yüklenemedi.');
         this.productsLoading.set(false);
         this.productsLoadingMore.set(false);
       },
@@ -160,6 +182,7 @@ export class StoreDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getStars(rating: number): string {
+    rating = Number(rating) || 0;
     const full = Math.floor(rating);
     return '★'.repeat(full) + '☆'.repeat(5 - full);
   }
@@ -203,7 +226,21 @@ export class StoreDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   navigateToProduct(id: number): void {
-    this.router.navigate(['/individual/product', id]);
+    this.router.navigate([this.roleBasePath(), 'product', id]);
+  }
+
+  backPath(): string {
+    const role = this.authService.currentUser()?.role;
+    if (role === 'admin') return '/admin/stores';
+    if (role === 'corporate') return '/corporate/dashboard';
+    return '/individual/home';
+  }
+
+  private roleBasePath(): string {
+    const role = this.authService.currentUser()?.role;
+    if (role === 'admin') return '/admin';
+    if (role === 'corporate') return '/corporate';
+    return '/individual';
   }
 
   getSentimentClass(sentiment?: string): string {

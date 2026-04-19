@@ -1,6 +1,7 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ApiService } from '../../../../core/services/api.service';
 import { CategoryDto, ProductDto, StoreDto } from '../../../../core/models/api.models';
 
@@ -13,6 +14,7 @@ import { CategoryDto, ProductDto, StoreDto } from '../../../../core/models/api.m
 })
 export class CorporateProductsComponent implements OnInit, AfterViewInit, OnDestroy {
   private api = inject(ApiService);
+  private router = inject(Router);
   readonly RENDER_LIMIT = 40;
   private intersectionObserver!: IntersectionObserver;
   private productScrollSentinelRef?: ElementRef<HTMLDivElement>;
@@ -232,6 +234,10 @@ export class CorporateProductsComponent implements OnInit, AfterViewInit, OnDest
         this.totalProducts.update(total => Math.max(0, total - 1));
       },
     });
+  }
+
+  openProduct(id: number): void {
+    this.router.navigate(['/corporate/product', id]);
   }
 
   getStockBadge(stock: number): string {
