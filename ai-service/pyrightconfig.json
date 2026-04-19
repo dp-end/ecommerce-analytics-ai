@@ -1,8 +1,5 @@
 {
   "venvPath": ".",
   "venv": "venv",
-  "pythonVersion": "3.12",
-  "typeCheckingMode": "basic",
-  "reportMissingImports": "none",
-  "reportMissingModuleSource": "none"
+  "pythonVersion": "3.14"
 }

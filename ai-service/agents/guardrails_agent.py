@@ -23,7 +23,7 @@ from agents.state import AgentState
 logger = logging.getLogger(__name__)
 
 _DETERMINISTIC_BLOCK_RE = re.compile(
-    r"(--|/\*|\*/|\bOR\s+1\s*=\s*1\b|\bUNION\s+SELECT\b|\bDROP\b|\bDELETE\b|\bUPDATE\b|"
+    r"(--|/\*|\*/|\bOR\s+1\s*=\s*1\b|\bUNION\s+SELECT\b|\bDROP\b|\bDELETE\b|\bUPDATE\b|)"
     r"\bINSERT\b|\bALTER\b|\bTRUNCATE\b|\bCREATE\b|\bREPLACE\b|\bMERGE\b|"
     # English prompt-injection patterns
     r"ignore\s+(all\s+)?previous\s+instructions|"

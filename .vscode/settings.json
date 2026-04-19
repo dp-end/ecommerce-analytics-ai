@@ -4,5 +4,10 @@
     "python-envs.defaultEnvManager": "ms-python.python:system",
     "python-envs.defaultPackageManager": "ms-python.python:pip",
     "python.defaultInterpreterPath": "${workspaceFolder}/ai-service/venv/bin/python3",
-    "python.analysis.extraPaths": ["${workspaceFolder}/ai-service"]
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/ai-service",
+        "${workspaceFolder}/ai-service/venv/lib/python3.14/site-packages"
+    ],
+    "python.analysis.venvPath": "${workspaceFolder}/ai-service",
+    "python.analysis.venv": "venv"
 }

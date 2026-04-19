@@ -7,7 +7,8 @@ let isRefreshing = false;
 let refreshQueue: Array<(token: string) => void> = [];
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = localStorage.getItem('datapulse_token');
+  const isAuthEndpoint = req.url.includes('/api/auth/');
+  const token = isAuthEndpoint ? null : localStorage.getItem('datapulse_token');
   const authReq = token ? addToken(req, token) : req;
 
   return next(authReq).pipe(
