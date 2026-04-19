@@ -6,6 +6,7 @@ import com.E_Commerce.demo.dto.response.ProductDto;
 import com.E_Commerce.demo.entity.Category;
 import com.E_Commerce.demo.entity.Product;
 import com.E_Commerce.demo.entity.Store;
+import com.E_Commerce.demo.entity.User;
 import com.E_Commerce.demo.repository.CategoryRepository;
 import com.E_Commerce.demo.repository.FavoriteRepository;
 import com.E_Commerce.demo.repository.ProductRepository;
@@ -15,8 +16,10 @@ import com.E_Commerce.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -114,6 +117,30 @@ public class ProductService {
     }
 
     @Transactional
+    public ProductDto create(ProductRequest request, String callerEmail) {
+        User caller = getCaller(callerEmail);
+        Store store = resolveManagedStore(request.getStoreId(), caller);
+        Category category = request.getCategoryId() != null
+                ? categoryRepository.findById(request.getCategoryId())
+                        .orElseThrow(() -> new RuntimeException("Category not found: " + request.getCategoryId()))
+                : null;
+
+        Product product = Product.builder()
+                .name(request.getName())
+                .store(store)
+                .category(category)
+                .sku(request.getSku())
+                .brand(request.getBrand())
+                .unitPrice(request.getUnitPrice())
+                .stock(request.getStock() != null ? request.getStock() : 0)
+                .description(request.getDescription())
+                .emoji(request.getEmoji())
+                .imageUrl(request.getImageUrl())
+                .build();
+        return ProductDto.from(productRepository.save(product));
+    }
+
+    @Transactional
     public ProductDto update(Long id, ProductRequest request) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found: " + id));
@@ -131,9 +158,73 @@ public class ProductService {
     }
 
     @Transactional
+    public ProductDto update(Long id, ProductRequest request, String callerEmail) {
+        User caller = getCaller(callerEmail);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found: " + id));
+        ensureCanManageProduct(caller, product);
+
+        product.setName(request.getName());
+        product.setUnitPrice(request.getUnitPrice());
+        if (request.getStock() != null) product.setStock(request.getStock());
+        if (request.getDescription() != null) product.setDescription(request.getDescription());
+        if (request.getEmoji() != null) product.setEmoji(request.getEmoji());
+        if (request.getSku() != null) product.setSku(request.getSku());
+        if (request.getBrand() != null) product.setBrand(request.getBrand());
+        if (request.getStoreId() != null) {
+            product.setStore(resolveManagedStore(request.getStoreId(), caller));
+        }
+        if (request.getCategoryId() != null) {
+            product.setCategory(categoryRepository.findById(request.getCategoryId()).orElse(null));
+        }
+        return ProductDto.from(productRepository.save(product));
+    }
+
+    @Transactional
     public void delete(Long id) {
         favoriteRepository.deleteAll(favoriteRepository.findByProductId(id));
         reviewRepository.deleteAll(reviewRepository.findByProductId(id));
         productRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void delete(Long id, String callerEmail) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found: " + id));
+        ensureCanManageProduct(getCaller(callerEmail), product);
+        favoriteRepository.deleteAll(favoriteRepository.findByProductId(id));
+        reviewRepository.deleteAll(reviewRepository.findByProductId(id));
+        productRepository.deleteById(id);
+    }
+
+    private User getCaller(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated user not found"));
+    }
+
+    private Store resolveManagedStore(Long storeId, User caller) {
+        if (storeId == null) {
+            if (caller.getRoleType() == User.RoleType.ADMIN) {
+                return null;
+            }
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Corporate users must provide one of their store IDs");
+        }
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new RuntimeException("Store not found: " + storeId));
+        if (caller.getRoleType() == User.RoleType.ADMIN
+                || (store.getOwner() != null && store.getOwner().getId().equals(caller.getId()))) {
+            return store;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only manage products for your own stores");
+    }
+
+    private void ensureCanManageProduct(User caller, Product product) {
+        if (caller.getRoleType() == User.RoleType.ADMIN
+                || (product.getStore() != null
+                        && product.getStore().getOwner() != null
+                        && product.getStore().getOwner().getId().equals(caller.getId()))) {
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only manage products for your own stores");
     }
 }

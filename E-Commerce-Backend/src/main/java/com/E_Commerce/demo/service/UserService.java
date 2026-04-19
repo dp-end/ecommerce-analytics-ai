@@ -13,6 +13,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
@@ -55,6 +57,12 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found: " + id)));
     }
 
+    public UserDto getById(Long id, String callerEmail) {
+        User caller = getCaller(callerEmail);
+        ensureAdminOrSelf(caller, id);
+        return getById(id);
+    }
+
     public UserDto getByEmail(String email) {
         return UserDto.from(userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found: " + email)));
@@ -84,6 +92,13 @@ public class UserService {
     }
 
     @Transactional
+    public UserDto updateUser(Long id, String name, String email, String avatar, String gender, String callerEmail) {
+        User caller = getCaller(callerEmail);
+        ensureAdminOrSelf(caller, id);
+        return updateUser(id, name, email, avatar, gender);
+    }
+
+    @Transactional
     public void changePassword(Long id, String currentPassword, String newPassword) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found: " + id));
@@ -92,6 +107,13 @@ public class UserService {
         }
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    @Transactional
+    public void changePassword(Long id, String currentPassword, String newPassword, String callerEmail) {
+        User caller = getCaller(callerEmail);
+        ensureAdminOrSelf(caller, id);
+        changePassword(id, currentPassword, newPassword);
     }
 
     @Transactional
@@ -134,6 +156,12 @@ public class UserService {
         );
     }
 
+    public CustomerProfileDto getProfile(Long userId, String callerEmail) {
+        User caller = getCaller(callerEmail);
+        ensureAdminOrSelf(caller, userId);
+        return getProfile(userId);
+    }
+
     @Transactional
     public CustomerProfileDto updateProfile(Long userId, CustomerProfile updates) {
         CustomerProfile profile = customerProfileRepository.findByUserId(userId)
@@ -144,5 +172,24 @@ public class UserService {
         if (updates.getTotalSpend() != null) profile.setTotalSpend(updates.getTotalSpend());
         if (updates.getSatisfactionLevel() != null) profile.setSatisfactionLevel(updates.getSatisfactionLevel());
         return CustomerProfileDto.from(customerProfileRepository.save(profile));
+    }
+
+    @Transactional
+    public CustomerProfileDto updateProfile(Long userId, CustomerProfile updates, String callerEmail) {
+        User caller = getCaller(callerEmail);
+        ensureAdminOrSelf(caller, userId);
+        return updateProfile(userId, updates);
+    }
+
+    private User getCaller(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated user not found"));
+    }
+
+    private void ensureAdminOrSelf(User caller, Long targetUserId) {
+        if (caller.getRoleType() == User.RoleType.ADMIN || caller.getId().equals(targetUserId)) {
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only access your own user data");
     }
 }

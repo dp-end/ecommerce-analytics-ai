@@ -37,23 +37,29 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDto> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getById(id));
+    public ResponseEntity<UserDto> getById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(userService.getById(id, userDetails.getUsername()));
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<UserDto> updateUser(
             @PathVariable Long id,
-            @RequestBody Map<String, String> updates) {
+            @RequestBody Map<String, String> updates,
+            @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(userService.updateUser(id,
-                updates.get("name"), updates.get("email"), updates.get("avatar"), updates.get("gender")));
+                updates.get("name"), updates.get("email"), updates.get("avatar"), updates.get("gender"),
+                userDetails.getUsername()));
     }
 
     @PatchMapping("/{id}/password")
     public ResponseEntity<Void> changePassword(
             @PathVariable Long id,
-            @RequestBody Map<String, String> body) {
-        userService.changePassword(id, body.get("currentPassword"), body.get("newPassword"));
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        userService.changePassword(id, body.get("currentPassword"), body.get("newPassword"),
+                userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
 
@@ -73,14 +79,17 @@ public class UserController {
     }
 
     @GetMapping("/{id}/profile")
-    public ResponseEntity<CustomerProfileDto> getProfile(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getProfile(id));
+    public ResponseEntity<CustomerProfileDto> getProfile(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(userService.getProfile(id, userDetails.getUsername()));
     }
 
     @PutMapping("/{id}/profile")
     public ResponseEntity<CustomerProfileDto> updateProfile(
             @PathVariable Long id,
-            @RequestBody CustomerProfile updates) {
-        return ResponseEntity.ok(userService.updateProfile(id, updates));
+            @RequestBody CustomerProfile updates,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(userService.updateProfile(id, updates, userDetails.getUsername()));
     }
 }

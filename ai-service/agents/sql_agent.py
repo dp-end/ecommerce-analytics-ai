@@ -109,6 +109,23 @@ _MUTATION_RE = re.compile(
     r"\b(INSERT|UPDATE|DELETE|DROP|TRUNCATE|ALTER|CREATE|REPLACE|MERGE)\b",
     re.IGNORECASE,
 )
+_SELECT_RE = re.compile(r"^\s*SELECT\b", re.IGNORECASE | re.DOTALL)
+_LIMIT_RE = re.compile(r"\bLIMIT\s+\d+\b", re.IGNORECASE)
+_AGGREGATE_RE = re.compile(r"\b(COUNT|SUM|AVG|MIN|MAX)\s*\(", re.IGNORECASE)
+_SENSITIVE_RE = re.compile(r"\b(password_hash|api_key|secret|token)\b", re.IGNORECASE)
+_TABLE_REF_RE = re.compile(r"\b(?:FROM|JOIN)\s+`?([a-zA-Z_][a-zA-Z0-9_]*)`?", re.IGNORECASE)
+_ALLOWED_TABLES = {
+    "users",
+    "stores",
+    "categories",
+    "products",
+    "orders",
+    "order_items",
+    "shipments",
+    "reviews",
+    "customer_profiles",
+    "audit_logs",
+}
 
 
 def _strip_markdown(sql: str) -> str:
@@ -120,6 +137,62 @@ def _strip_markdown(sql: str) -> str:
         if sql.lower().startswith("sql"):
             sql = sql[3:]
     return sql.strip()
+
+
+def _has_role_scope(sql: str, role: str, user_id: object) -> bool:
+    if role == "ADMIN":
+        return True
+    if user_id in (None, "", "unknown"):
+        return False
+
+    compact = re.sub(r"\s+", " ", sql).lower()
+    user_id_text = re.escape(str(user_id))
+
+    if role == "INDIVIDUAL":
+        return re.search(rf"\b(?:[a-z_][a-z0-9_]*\.)?user_id\s*=\s*{user_id_text}\b", compact) is not None
+
+    if role == "CORPORATE":
+        store_owner_scope = re.search(
+            rf"\b(?:[a-z_][a-z0-9_]*\.)?(?:user_id|owner_id)\s*=\s*{user_id_text}\b",
+            compact,
+        )
+        owned_store_subquery = re.search(
+            rf"\bstore_id\s+in\s*\([^)]*\buser_id\s*=\s*{user_id_text}\b",
+            compact,
+        )
+        return store_owner_scope is not None or owned_store_subquery is not None
+
+    return False
+
+
+def _validate_and_normalize_sql(sql: str, role: str, user_id: object) -> tuple[bool, str, str]:
+    """Return (ok, normalized_sql, error)."""
+    sql = sql.strip().rstrip(";").strip()
+
+    if not _SELECT_RE.match(sql):
+        return False, sql, "Güvenlik ihlali: yalnızca SELECT ile başlayan tek sorgular çalıştırılabilir."
+
+    if ";" in sql:
+        return False, sql, "Güvenlik ihlali: çoklu SQL statement çalıştırılamaz."
+
+    if _MUTATION_RE.search(sql):
+        return False, sql, "Güvenlik ihlali: sadece SELECT sorguları çalıştırılabilir."
+
+    if _SENSITIVE_RE.search(sql) or re.search(r"\bSELECT\s+\*", sql, re.IGNORECASE):
+        return False, sql, "Güvenlik ihlali: hassas kolonlar veya SELECT * kullanılamaz."
+
+    referenced_tables = {match.group(1).lower() for match in _TABLE_REF_RE.finditer(sql)}
+    unknown_tables = referenced_tables - _ALLOWED_TABLES
+    if unknown_tables:
+        return False, sql, f"Güvenlik ihlali: izin verilmeyen tablo referansı: {', '.join(sorted(unknown_tables))}."
+
+    if not _has_role_scope(sql, role.upper(), user_id):
+        return False, sql, "Güvenlik ihlali: sorgu mevcut kullanıcının rol kapsamıyla sınırlandırılmamış."
+
+    if not _LIMIT_RE.search(sql) and not _AGGREGATE_RE.search(sql):
+        sql = f"{sql} LIMIT 100"
+
+    return True, sql, ""
 
 
 def sql_node(state: AgentState) -> AgentState:
@@ -163,12 +236,13 @@ def sql_node(state: AgentState) -> AgentState:
             "agent_trace": trace,
         }
 
-    # ── 3. Safety check — block mutating statements ───────────────────────────
-    if _MUTATION_RE.search(sql_query):
-        trace.append("sql_agent: BLOCKED — mutating statement detected")
+    # ── 3. Safety check — validate before execution ──────────────────────────
+    ok, sql_query, validation_error = _validate_and_normalize_sql(sql_query, str(role), user_id)
+    if not ok:
+        trace.append(f"sql_agent: BLOCKED — {validation_error}")
         return {
             **state,
-            "error": "Güvenlik ihlali: sadece SELECT sorguları çalıştırılabilir.",
+            "error": validation_error,
             "sql_query": sql_query,
             "iteration_count": iteration + 1,
             "agent_trace": trace,

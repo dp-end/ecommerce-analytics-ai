@@ -9,6 +9,8 @@ import com.E_Commerce.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -24,13 +26,36 @@ public class StoreService {
         return storeRepository.findAll().stream().map(StoreDto::from).toList();
     }
 
+    public List<StoreDto> getAll(String callerEmail) {
+        User caller = getCaller(callerEmail);
+        if (caller.getRoleType() == User.RoleType.ADMIN) {
+            return getAll();
+        }
+        return storeRepository.findByOwnerId(caller.getId()).stream().map(StoreDto::from).toList();
+    }
+
     public StoreDto getById(Long id) {
         return StoreDto.from(storeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Store not found: " + id)));
     }
 
+    public StoreDto getById(Long id, String callerEmail) {
+        Store store = storeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Store not found: " + id));
+        ensureAdminOrOwner(getCaller(callerEmail), store);
+        return StoreDto.from(store);
+    }
+
     public List<StoreDto> getByOwner(Long ownerId) {
         return storeRepository.findByOwnerId(ownerId).stream().map(StoreDto::from).toList();
+    }
+
+    public List<StoreDto> getByOwner(Long ownerId, String callerEmail) {
+        User caller = getCaller(callerEmail);
+        if (caller.getRoleType() != User.RoleType.ADMIN && !caller.getId().equals(ownerId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only access your own stores");
+        }
+        return getByOwner(ownerId);
     }
 
     public List<StoreDto> getByOwnerEmail(String email) {
@@ -61,6 +86,16 @@ public class StoreService {
     }
 
     @Transactional
+    public StoreDto update(Long id, StoreRequest request, String callerEmail) {
+        Store store = storeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Store not found: " + id));
+        ensureAdminOrOwner(getCaller(callerEmail), store);
+        store.setName(request.getName());
+        if (request.getCategory() != null) store.setCategory(request.getCategory());
+        return StoreDto.from(storeRepository.save(store));
+    }
+
+    @Transactional
     public StoreDto updateStatus(Long id, String status) {
         Store store = storeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Store not found: " + id));
@@ -71,5 +106,18 @@ public class StoreService {
     @Transactional
     public void delete(Long id) {
         storeRepository.deleteById(id);
+    }
+
+    private User getCaller(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated user not found"));
+    }
+
+    private void ensureAdminOrOwner(User caller, Store store) {
+        if (caller.getRoleType() == User.RoleType.ADMIN
+                || (store.getOwner() != null && store.getOwner().getId().equals(caller.getId()))) {
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only access your own store");
     }
 }

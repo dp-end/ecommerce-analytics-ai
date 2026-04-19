@@ -53,6 +53,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/stores/**").hasAnyRole("ADMIN", "CORPORATE")
                 // Product browsing is public (read), management requires auth
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/products/**").hasAnyRole("ADMIN", "CORPORATE")
+                .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAnyRole("ADMIN", "CORPORATE")
+                .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasAnyRole("ADMIN", "CORPORATE")
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
                 // All other requests require authentication

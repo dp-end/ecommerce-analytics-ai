@@ -29,8 +29,10 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderDto> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.getById(id));
+    public ResponseEntity<OrderDto> getById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(orderService.getById(id, userDetails.getUsername()));
     }
 
     @GetMapping("/my")
@@ -39,13 +41,17 @@ public class OrderController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<OrderDto>> getByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(orderService.getByUser(userId));
+    public ResponseEntity<List<OrderDto>> getByUser(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(orderService.getByUser(userId, userDetails.getUsername()));
     }
 
     @GetMapping("/store/{storeId}")
-    public ResponseEntity<List<OrderDto>> getByStore(@PathVariable Long storeId) {
-        return ResponseEntity.ok(orderService.getByStore(storeId));
+    public ResponseEntity<List<OrderDto>> getByStore(
+            @PathVariable Long storeId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(orderService.getByStore(storeId, userDetails.getUsername()));
     }
 
     @GetMapping("/status/{status}")
@@ -64,8 +70,9 @@ public class OrderController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<OrderDto> updateStatus(
             @PathVariable Long id,
-            @RequestBody Map<String, String> body) {
-        return ResponseEntity.ok(orderService.updateStatus(id, body.get("status")));
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(orderService.updateStatus(id, body.get("status"), userDetails.getUsername()));
     }
 
     @DeleteMapping("/{id}")

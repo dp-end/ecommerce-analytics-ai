@@ -23,18 +23,22 @@ public class StoreController {
     private final StoreService storeService;
 
     @GetMapping
-    public ResponseEntity<List<StoreDto>> getAll() {
-        return ResponseEntity.ok(storeService.getAll());
+    public ResponseEntity<List<StoreDto>> getAll(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(storeService.getAll(userDetails.getUsername()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<StoreDto> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(storeService.getById(id));
+    public ResponseEntity<StoreDto> getById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(storeService.getById(id, userDetails.getUsername()));
     }
 
     @GetMapping("/owner/{ownerId}")
-    public ResponseEntity<List<StoreDto>> getByOwner(@PathVariable Long ownerId) {
-        return ResponseEntity.ok(storeService.getByOwner(ownerId));
+    public ResponseEntity<List<StoreDto>> getByOwner(
+            @PathVariable Long ownerId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(storeService.getByOwner(ownerId, userDetails.getUsername()));
     }
 
     @GetMapping("/my")
@@ -53,8 +57,9 @@ public class StoreController {
     @PutMapping("/{id}")
     public ResponseEntity<StoreDto> update(
             @PathVariable Long id,
-            @Valid @RequestBody StoreRequest request) {
-        return ResponseEntity.ok(storeService.update(id, request));
+            @Valid @RequestBody StoreRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(storeService.update(id, request, userDetails.getUsername()));
     }
 
     @PatchMapping("/{id}/status")

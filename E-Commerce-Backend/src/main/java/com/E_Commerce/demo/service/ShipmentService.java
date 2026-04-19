@@ -4,11 +4,15 @@ import com.E_Commerce.demo.dto.request.ShipmentRequest;
 import com.E_Commerce.demo.dto.response.ShipmentDto;
 import com.E_Commerce.demo.entity.Order;
 import com.E_Commerce.demo.entity.Shipment;
+import com.E_Commerce.demo.entity.User;
 import com.E_Commerce.demo.repository.OrderRepository;
 import com.E_Commerce.demo.repository.ShipmentRepository;
+import com.E_Commerce.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,9 +24,21 @@ public class ShipmentService {
 
     private final ShipmentRepository shipmentRepository;
     private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
 
     public List<ShipmentDto> getAll() {
         return shipmentRepository.findAll().stream().map(ShipmentDto::from).toList();
+    }
+
+    public List<ShipmentDto> getAll(String callerEmail) {
+        User caller = getCaller(callerEmail);
+        if (caller.getRoleType() == User.RoleType.ADMIN) {
+            return getAll();
+        }
+        return shipmentRepository.findAll().stream()
+                .filter(shipment -> canReadShipment(caller, shipment))
+                .map(ShipmentDto::from)
+                .toList();
     }
 
     public ShipmentDto getById(Long id) {
@@ -30,14 +46,35 @@ public class ShipmentService {
                 .orElseThrow(() -> new RuntimeException("Shipment not found: " + id)));
     }
 
+    public ShipmentDto getById(Long id, String callerEmail) {
+        Shipment shipment = shipmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Shipment not found: " + id));
+        ensureCanReadShipment(getCaller(callerEmail), shipment);
+        return ShipmentDto.from(shipment);
+    }
+
     public ShipmentDto getByOrder(Long orderId) {
         return ShipmentDto.from(shipmentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new RuntimeException("Shipment not found for order: " + orderId)));
     }
 
+    public ShipmentDto getByOrder(Long orderId, String callerEmail) {
+        Shipment shipment = shipmentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new RuntimeException("Shipment not found for order: " + orderId));
+        ensureCanReadShipment(getCaller(callerEmail), shipment);
+        return ShipmentDto.from(shipment);
+    }
+
     public ShipmentDto getByTracking(String trackingNumber) {
         return ShipmentDto.from(shipmentRepository.findByTrackingNumber(trackingNumber)
                 .orElseThrow(() -> new RuntimeException("Shipment not found for tracking: " + trackingNumber)));
+    }
+
+    public ShipmentDto getByTracking(String trackingNumber, String callerEmail) {
+        Shipment shipment = shipmentRepository.findByTrackingNumber(trackingNumber)
+                .orElseThrow(() -> new RuntimeException("Shipment not found for tracking: " + trackingNumber));
+        ensureCanReadShipment(getCaller(callerEmail), shipment);
+        return ShipmentDto.from(shipment);
     }
 
     @Transactional
@@ -69,9 +106,26 @@ public class ShipmentService {
     }
 
     @Transactional
+    public ShipmentDto create(ShipmentRequest request, String callerEmail) {
+        Order order = orderRepository.findById(request.getOrderId())
+                .orElseThrow(() -> new RuntimeException("Order not found: " + request.getOrderId()));
+        ensureCanManageShipment(getCaller(callerEmail), order);
+        return create(request);
+    }
+
+    @Transactional
     public ShipmentDto updateStatus(Long id, String status) {
         Shipment shipment = shipmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Shipment not found: " + id));
+        shipment.setStatus(Shipment.ShipmentStatus.valueOf(status));
+        return ShipmentDto.from(shipmentRepository.save(shipment));
+    }
+
+    @Transactional
+    public ShipmentDto updateStatus(Long id, String status, String callerEmail) {
+        Shipment shipment = shipmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Shipment not found: " + id));
+        ensureCanManageShipment(getCaller(callerEmail), shipment.getOrder());
         shipment.setStatus(Shipment.ShipmentStatus.valueOf(status));
         return ShipmentDto.from(shipmentRepository.save(shipment));
     }
@@ -88,5 +142,53 @@ public class ShipmentService {
             shipment.setModeOfShipment(Shipment.ShipmentMode.valueOf(request.getModeOfShipment()));
         }
         return ShipmentDto.from(shipmentRepository.save(shipment));
+    }
+
+    @Transactional
+    public ShipmentDto update(Long id, ShipmentRequest request, String callerEmail) {
+        Shipment shipment = shipmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Shipment not found: " + id));
+        ensureCanManageShipment(getCaller(callerEmail), shipment.getOrder());
+        if (request.getWarehouse() != null) shipment.setWarehouse(request.getWarehouse());
+        if (request.getCarrier() != null) shipment.setCarrier(request.getCarrier());
+        if (request.getDestination() != null) shipment.setDestination(request.getDestination());
+        if (request.getEta() != null) shipment.setEta(request.getEta());
+        if (request.getModeOfShipment() != null) {
+            shipment.setModeOfShipment(Shipment.ShipmentMode.valueOf(request.getModeOfShipment()));
+        }
+        return ShipmentDto.from(shipmentRepository.save(shipment));
+    }
+
+    private User getCaller(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated user not found"));
+    }
+
+    private void ensureCanReadShipment(User caller, Shipment shipment) {
+        if (canReadShipment(caller, shipment)) {
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot access this shipment");
+    }
+
+    private boolean canReadShipment(User caller, Shipment shipment) {
+        Order order = shipment.getOrder();
+        return caller.getRoleType() == User.RoleType.ADMIN
+                || order.getUser().getId().equals(caller.getId())
+                || ownsOrderStore(caller, order);
+    }
+
+    private void ensureCanManageShipment(User caller, Order order) {
+        if (caller.getRoleType() == User.RoleType.ADMIN || ownsOrderStore(caller, order)) {
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot manage this shipment");
+    }
+
+    private boolean ownsOrderStore(User caller, Order order) {
+        return caller.getRoleType() == User.RoleType.CORPORATE
+                && order.getStore() != null
+                && order.getStore().getOwner() != null
+                && order.getStore().getOwner().getId().equals(caller.getId());
     }
 }

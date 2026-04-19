@@ -7,6 +7,8 @@ import com.E_Commerce.demo.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,8 +34,23 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Order not found: " + id)));
     }
 
+    public OrderDto getById(Long id, String callerEmail) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + id));
+        ensureCanReadOrder(getCaller(callerEmail), order);
+        return OrderDto.from(order);
+    }
+
     public List<OrderDto> getByUser(Long userId) {
         return orderRepository.findByUserId(userId).stream().map(OrderDto::from).toList();
+    }
+
+    public List<OrderDto> getByUser(Long userId, String callerEmail) {
+        User caller = getCaller(callerEmail);
+        if (caller.getRoleType() != User.RoleType.ADMIN && !caller.getId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only access your own orders");
+        }
+        return getByUser(userId);
     }
 
     public List<OrderDto> getByUserEmail(String email) {
@@ -44,6 +61,14 @@ public class OrderService {
 
     public List<OrderDto> getByStore(Long storeId) {
         return orderRepository.findByStoreId(storeId).stream().map(OrderDto::from).toList();
+    }
+
+    public List<OrderDto> getByStore(Long storeId, String callerEmail) {
+        User caller = getCaller(callerEmail);
+        if (caller.getRoleType() != User.RoleType.ADMIN && !ownsStore(caller, storeId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only access orders for your own stores");
+        }
+        return getByStore(storeId);
     }
 
     public List<OrderDto> getByStatus(String status) {
@@ -109,7 +134,46 @@ public class OrderService {
     }
 
     @Transactional
+    public OrderDto updateStatus(Long id, String status, String callerEmail) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + id));
+        ensureCanManageOrder(getCaller(callerEmail), order);
+        order.setStatus(Order.OrderStatus.valueOf(status));
+        OrderDto saved = OrderDto.from(orderRepository.save(order));
+        notificationService.sendOrderStatusUpdate(id, status, order.getUser().getEmail());
+        return saved;
+    }
+
+    @Transactional
     public void delete(Long id) {
         orderRepository.deleteById(id);
+    }
+
+    private User getCaller(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated user not found"));
+    }
+
+    private void ensureCanReadOrder(User caller, Order order) {
+        if (caller.getRoleType() == User.RoleType.ADMIN
+                || order.getUser().getId().equals(caller.getId())
+                || (order.getStore() != null && ownsStore(caller, order.getStore().getId()))) {
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot access this order");
+    }
+
+    private void ensureCanManageOrder(User caller, Order order) {
+        if (caller.getRoleType() == User.RoleType.ADMIN
+                || (order.getStore() != null && ownsStore(caller, order.getStore().getId()))) {
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot manage this order");
+    }
+
+    private boolean ownsStore(User caller, Long storeId) {
+        return caller.getRoleType() == User.RoleType.CORPORATE
+                && storeRepository.findByOwnerId(caller.getId()).stream()
+                        .anyMatch(store -> store.getId().equals(storeId));
     }
 }

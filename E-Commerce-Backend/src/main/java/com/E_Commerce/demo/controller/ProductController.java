@@ -76,20 +76,26 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductDto> create(@Valid @RequestBody ProductRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(productService.create(request));
+    public ResponseEntity<ProductDto> create(
+            @Valid @RequestBody ProductRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(productService.create(request, userDetails.getUsername()));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ProductDto> update(
             @PathVariable Long id,
-            @Valid @RequestBody ProductRequest request) {
-        return ResponseEntity.ok(productService.update(id, request));
+            @Valid @RequestBody ProductRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(productService.update(id, request, userDetails.getUsername()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        productService.delete(id);
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        productService.delete(id, userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
 }
