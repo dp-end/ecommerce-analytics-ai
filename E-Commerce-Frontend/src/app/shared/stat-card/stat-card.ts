@@ -26,7 +26,7 @@ export class StatCardComponent {
 
   getAccentStyle(): string {
     const colors: Record<string, string> = {
-      purple: 'rgba(124, 58, 237, 0.15)',
+      purple: 'rgba(15, 118, 110, 0.12)',
       blue: 'rgba(37, 99, 235, 0.15)',
       green: 'rgba(16, 185, 129, 0.15)',
       orange: 'rgba(249, 115, 22, 0.15)',
@@ -38,7 +38,7 @@ export class StatCardComponent {
 
   getIconColor(): string {
     const colors: Record<string, string> = {
-      purple: '#a78bfa',
+      purple: '#0F766E',
       blue: '#60a5fa',
       green: '#34d399',
       orange: '#fb923c',

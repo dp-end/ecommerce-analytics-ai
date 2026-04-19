@@ -100,12 +100,12 @@ export class CorporateDashboardComponent implements OnInit {
         datasets: [{
           label: 'Gelir',
           data: revenue,
-          borderColor: '#7c3aed',
-          backgroundColor: 'rgba(124,58,237,0.08)',
+          borderColor: '#0F766E',
+          backgroundColor: 'rgba(15,118,110,0.08)',
           fill: true,
           tension: 0.45,
-          pointBackgroundColor: '#7c3aed',
-          pointBorderColor: '#161b22',
+          pointBackgroundColor: '#0F766E',
+          pointBorderColor: '#FFFFFF',
           pointBorderWidth: 2,
           pointRadius: 5,
         }],
@@ -116,20 +116,20 @@ export class CorporateDashboardComponent implements OnInit {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#161b22', borderColor: '#30363d', borderWidth: 1,
-            titleColor: '#e6edf3', bodyColor: '#8b949e',
+            backgroundColor: '#FFFFFF', borderColor: '#D9E2EC', borderWidth: 1,
+            titleColor: '#172033', bodyColor: '#475569',
             callbacks: { label: ctx => ` $${(ctx.parsed.y ?? 0).toFixed(2)}` },
           },
         },
         scales: {
-          x: { ticks: { color: '#8b949e', font: { size: 11 } }, grid: { color: 'rgba(48,54,61,0.5)' } },
+          x: { ticks: { color: '#64748B', font: { size: 11 } }, grid: { color: 'rgba(217,226,236,0.8)' } },
           y: {
             beginAtZero: true,
             ticks: {
-              color: '#8b949e', font: { size: 11 },
+              color: '#64748B', font: { size: 11 },
               callback: v => '$' + Number(v).toLocaleString(),
             },
-            grid: { color: 'rgba(48,54,61,0.5)' },
+            grid: { color: 'rgba(217,226,236,0.8)' },
           },
         },
       },

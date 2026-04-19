@@ -65,6 +65,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03);
 }
 
 .navbar-left {
@@ -103,9 +104,9 @@
 }
 
 .icon-btn:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-  border-color: var(--accent-primary);
+  background: var(--bg-tertiary);
+  color: var(--accent-primary);
+  border-color: #C7E4E0;
 }
 
 .notif-badge {
@@ -241,8 +242,9 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: var(--accent-primary);
-  color: #fff;
+  background: #EEF6F5;
+  color: var(--accent-primary);
+  border: 1px solid #C7E4E0;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -10,6 +10,7 @@
   top: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  box-shadow: 4px 0 24px rgba(15, 23, 42, 0.04);
 }
 
 /* Logo */
@@ -24,13 +25,15 @@
 .logo-icon {
   width: 36px;
   height: 36px;
-  background: var(--accent-primary);
-  border-radius: 10px;
+  background: #EEF6F5;
+  color: var(--accent-primary);
+  border: 1px solid #C7E4E0;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(255, 96, 0, 0.3);
+  box-shadow: none;
   position: relative;
 }
 
@@ -48,7 +51,7 @@
 .logo-text {
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--accent-primary);
+  color: var(--text-primary);
   letter-spacing: -0.03em;
 }
 
@@ -82,12 +85,12 @@
 }
 
 .nav-item:hover {
-  background: var(--bg-hover);
+  background: var(--bg-tertiary);
   color: var(--text-primary);
 }
 
 .nav-item.active {
-  background: rgba(255, 96, 0, 0.10);
+  background: #EEF6F5;
   color: var(--accent-primary);
   font-weight: 600;
 }
@@ -137,8 +140,9 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: var(--accent-primary);
-  color: #fff;
+  background: #EEF6F5;
+  color: var(--accent-primary);
+  border: 1px solid #C7E4E0;
   display: flex;
   align-items: center;
   justify-content: center;

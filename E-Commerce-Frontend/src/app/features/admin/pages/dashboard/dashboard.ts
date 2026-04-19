@@ -58,10 +58,10 @@ export class AdminDashboardComponent implements OnInit {
   private initChart(stores: StoreRevenueItem[]): void {
     if (this.chart) this.chart.destroy();
     const colors = [
-      'rgba(124,58,237,0.7)', 'rgba(37,99,235,0.7)', 'rgba(16,185,129,0.7)',
-      'rgba(6,182,212,0.7)', 'rgba(245,158,11,0.7)', 'rgba(249,115,22,0.7)',
+      'rgba(15,118,110,0.72)', 'rgba(37,99,235,0.68)', 'rgba(16,185,129,0.68)',
+      'rgba(8,145,178,0.68)', 'rgba(217,119,6,0.68)', 'rgba(234,88,12,0.62)',
     ];
-    const borders = ['#7c3aed', '#2563eb', '#10b981', '#06b6d4', '#f59e0b', '#f97316'];
+    const borders = ['#0F766E', '#2563eb', '#10b981', '#0891b2', '#d97706', '#ea580c'];
 
     this.chart = new Chart(this.revenueChartRef.nativeElement, {
       type: 'bar',
@@ -82,16 +82,16 @@ export class AdminDashboardComponent implements OnInit {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#161b22', borderColor: '#30363d', borderWidth: 1,
-            titleColor: '#e6edf3', bodyColor: '#8b949e',
+            backgroundColor: '#FFFFFF', borderColor: '#D9E2EC', borderWidth: 1,
+            titleColor: '#172033', bodyColor: '#475569',
             callbacks: { label: ctx => ` $${(ctx.parsed.y ?? 0).toLocaleString()}` },
           },
         },
         scales: {
-          x: { ticks: { color: '#8b949e', font: { size: 11 } }, grid: { color: 'rgba(48,54,61,0.5)' } },
+          x: { ticks: { color: '#64748B', font: { size: 11 } }, grid: { color: 'rgba(217,226,236,0.8)' } },
           y: {
-            ticks: { color: '#8b949e', font: { size: 11 }, callback: v => `$${Number(v) / 1000}K` },
-            grid: { color: 'rgba(48,54,61,0.5)' },
+            ticks: { color: '#64748B', font: { size: 11 }, callback: v => `$${Number(v) / 1000}K` },
+            grid: { color: 'rgba(217,226,236,0.8)' },
           },
         },
       },

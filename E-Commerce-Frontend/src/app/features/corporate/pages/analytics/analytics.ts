@@ -153,10 +153,10 @@ export class CorporateAnalyticsComponent implements OnInit {
           {
             label: 'Gelir ($)',
             data: revenueData,
-            borderColor: '#7c3aed',
-            backgroundColor: 'rgba(124,58,237,0.08)',
+            borderColor: '#0F766E',
+            backgroundColor: 'rgba(15,118,110,0.08)',
             fill: true, tension: 0.4,
-            pointBackgroundColor: '#7c3aed', pointRadius: 4,
+            pointBackgroundColor: '#0F766E', pointRadius: 4,
             yAxisID: 'y',
           },
           {
@@ -174,19 +174,19 @@ export class CorporateAnalyticsComponent implements OnInit {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { labels: { color: '#8b949e', font: { size: 11 }, usePointStyle: true } },
-          tooltip: { backgroundColor: '#161b22', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e' },
+          legend: { labels: { color: '#64748B', font: { size: 11 }, usePointStyle: true } },
+          tooltip: { backgroundColor: '#FFFFFF', borderColor: '#D9E2EC', borderWidth: 1, titleColor: '#172033', bodyColor: '#475569' },
         },
         scales: {
-          x: { ticks: { color: '#8b949e', font: { size: 11 } }, grid: { color: 'rgba(48,54,61,0.5)' } },
+          x: { ticks: { color: '#64748B', font: { size: 11 } }, grid: { color: 'rgba(217,226,236,0.8)' } },
           y: {
             position: 'left',
-            ticks: { color: '#8b949e', font: { size: 11 }, callback: v => '$' + Number(v).toLocaleString() },
-            grid: { color: 'rgba(48,54,61,0.5)' },
+            ticks: { color: '#64748B', font: { size: 11 }, callback: v => '$' + Number(v).toLocaleString() },
+            grid: { color: 'rgba(217,226,236,0.8)' },
           },
           y1: {
             position: 'right',
-            ticks: { color: '#8b949e', font: { size: 11 } },
+            ticks: { color: '#64748B', font: { size: 11 } },
             grid: { drawOnChartArea: false },
           },
         },
@@ -211,8 +211,8 @@ export class CorporateAnalyticsComponent implements OnInit {
         labels,
         datasets: [{
           data,
-          backgroundColor: ['#7c3aed','#2563eb','#10b981','#06b6d4','#f59e0b','#f97316','#ef4444','#8b5cf6'],
-          borderColor: '#161b22',
+          backgroundColor: ['#0F766E','#2563eb','#10b981','#0891b2','#d97706','#ea580c','#dc2626','#64748B'],
+          borderColor: '#FFFFFF',
           borderWidth: 3,
         }],
       },
@@ -220,10 +220,10 @@ export class CorporateAnalyticsComponent implements OnInit {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'bottom', labels: { color: '#8b949e', font: { size: 11 }, padding: 12, usePointStyle: true } },
+          legend: { position: 'bottom', labels: { color: '#64748B', font: { size: 11 }, padding: 12, usePointStyle: true } },
           tooltip: {
-            backgroundColor: '#161b22', borderColor: '#30363d', borderWidth: 1,
-            titleColor: '#e6edf3', bodyColor: '#8b949e',
+            backgroundColor: '#FFFFFF', borderColor: '#D9E2EC', borderWidth: 1,
+            titleColor: '#172033', bodyColor: '#475569',
             callbacks: { label: ctx => ` $${(ctx.parsed ?? 0).toFixed(2)}` },
           },
         },
