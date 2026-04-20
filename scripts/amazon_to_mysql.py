@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from faker import Faker
 import datetime
 
-DB_URL = 'mysql+pymysql://root:admin@localhost:3306/ecommerce_db'
+DB_URL = "mysql+pymysql://root:1234@localhost:3306/ecommerce_db"
 engine = create_engine(DB_URL)
 fake = Faker()
 

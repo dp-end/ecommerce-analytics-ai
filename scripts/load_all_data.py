@@ -6,7 +6,6 @@ Tum veri dosyalarini veritabanina yukler:
   1. E-commerce Customer Behavior  -> customer_profiles (350 kayit)
   2. Pakistan Largest Ecommerce    -> orders, order_items, products (20K temiz kayit)
   3. amazon_reviews TSV            -> reviews (10K kayit)
-  4. online_retail_II              -> orders, order_items, products (20K kayit)
 
 Kullanim:
     cd scripts
@@ -23,7 +22,7 @@ import re
 import pandas as pd
 from sqlalchemy import create_engine, text
 
-DB_URL     = "mysql+pymysql://root:admin@localhost:3306/ecommerce_db"
+DB_URL = "mysql+pymysql://root:1234@localhost:3306/ecommerce_db"
 DUMMY_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh3y"
 
 engine = create_engine(DB_URL, echo=False)
@@ -425,6 +424,7 @@ for _, row in df_rev.iterrows():
         "verified_purchase": verified,
         "marketplace":       str(row.get("marketplace","US"))[:50],
         "created_at":        created,
+        "owner_liked":       False
     })
 
 if reviews_to_ins:
@@ -432,157 +432,6 @@ if reviews_to_ins:
     insert(pd.DataFrame(reviews_to_ins), "reviews", chunk=1000)
 
 print(f"  Toplam reviews: {count('reviews')}")
-
-# ============================================================
-# BOLUM 4 — Online Retail II
-# ============================================================
-print("\n" + "=" * 60)
-print("  BOLUM 4: Online Retail II CSV")
-print("=" * 60)
-
-retail_csv  = "data/online_retail_II.csv"
-RETAIL_LIMIT = 50000
-
-print(f"  Dosya okunuyor (ilk {RETAIL_LIMIT} satir)...")
-df_ret = pd.read_csv(retail_csv, nrows=RETAIL_LIMIT, encoding="utf-8",
-                     dtype={"StockCode": str, "Customer ID": str})
-df_ret = df_ret.dropna(subset=["Invoice", "StockCode", "Price"])
-df_ret = df_ret[pd.to_numeric(df_ret["Price"], errors="coerce") > 0]
-df_ret = df_ret[pd.to_numeric(df_ret["Quantity"], errors="coerce") > 0]
-print(f"  {len(df_ret)} temiz satir yuklendi.")
-
-existing_skus = set(read_db("products", "sku")["sku"].dropna().astype(str).tolist())
-cat_cache_ret = dict(cat_cache)
-ret_products  = []
-for _, row in df_ret.drop_duplicates(subset=["StockCode"]).iterrows():
-    sku = str(row["StockCode"]).strip()
-    if not sku or sku in existing_skus:
-        continue
-    cat_id = get_or_create_category("Home & Retail", cat_cache_ret)
-    price  = abs(float(row["Price"]))
-    desc   = str(row.get("Description",""))[:255] if pd.notna(row.get("Description")) else ""
-    ret_products.append({
-        "store_id":    random.choice(store_ids) if store_ids else None,
-        "category_id": cat_id,
-        "sku":         sku[:255],
-        "brand":       None,
-        "name":        desc[:255] or sku,
-        "unit_price":  max(price, 0.01),
-        "stock":       random.randint(10, 500),
-        "description": desc,
-        "emoji":       "🛒",
-        "image_url":   None,
-        "rating":      round(random.uniform(3.0, 5.0), 1),
-        "created_at":  datetime.datetime.now(),
-    })
-    existing_skus.add(sku)
-
-if ret_products:
-    print(f"  {len(ret_products)} yeni urun ekleniyor...")
-    insert(pd.DataFrame(ret_products), "products")
-
-prods_db   = read_db("products", "id, sku")
-sku_to_pid = {str(r["sku"]): int(r["id"]) for _, r in prods_db.iterrows()}
-
-existing_emails_set = set(read_db("users", "email")["email"].tolist())
-ret_users = []
-for cid in df_ret["Customer ID"].dropna().unique():
-    email = f"retail_{str(cid).strip()[:40]}@datapulse.shop"
-    if email in existing_emails_set:
-        continue
-    ret_users.append({
-        "email":         email,
-        "password_hash": DUMMY_HASH,
-        "name":          f"RetailCustomer {cid}",
-        "role_type":     "INDIVIDUAL",
-        "gender":        random.choice(["M", "F"]),
-        "avatar":        None,
-        "status":        "ACTIVE",
-        "created_at":    datetime.datetime.now(),
-    })
-    existing_emails_set.add(email)
-
-if ret_users:
-    print(f"  {len(ret_users)} yeni kullanici ekleniyor...")
-    insert(pd.DataFrame(ret_users), "users")
-
-users_db     = read_db("users", "id, email")
-email_to_uid = dict(zip(users_db["email"], users_db["id"].astype(int)))
-
-prev_max    = max_id("orders")
-ret_orders  = []
-ret_items   = []
-invoice_uid = {}
-
-for invoice, grp in df_ret.groupby("Invoice"):
-    cid = str(grp["Customer ID"].iloc[0]).strip() if pd.notna(grp["Customer ID"].iloc[0]) else None
-    email = f"retail_{cid[:40]}@datapulse.shop" if cid else None
-    uid   = email_to_uid.get(email) if email else None
-    if not uid:
-        continue
-    try:
-        created = pd.to_datetime(grp["InvoiceDate"].iloc[0], errors="coerce")
-        created = created if pd.notna(created) else datetime.datetime.now()
-    except Exception:
-        created = datetime.datetime.now()
-
-    total = float(sum(
-        float(r["Price"]) * int(float(r["Quantity"]))
-        for _, r in grp.iterrows()
-        if pd.notna(r["Price"]) and pd.notna(r["Quantity"])
-    ))
-    country = str(grp["Country"].iloc[0])[:100] if pd.notna(grp["Country"].iloc[0]) else "United Kingdom"
-    ret_orders.append({
-        "user_id":        uid,
-        "store_id":       random.choice(store_ids) if store_ids else None,
-        "status":         "COMPLETED",
-        "grand_total":    max(round(total, 2), 0.01),
-        "payment_method": "Credit Card",
-        "discount":       0.0,
-        "tax":            round(total * 0.20, 2),
-        "shipping_cost":  round(random.uniform(3, 15), 2),
-        "city":           None,
-        "state":          None,
-        "country":        country,
-        "created_at":     created,
-    })
-    invoice_uid[str(invoice)] = (uid, grp)
-
-print(f"  {len(ret_orders)} siparis ekleniyor...")
-if ret_orders:
-    insert(pd.DataFrame(ret_orders), "orders")
-    new_ids = pd.read_sql(
-        f"SELECT id FROM orders WHERE id > {prev_max} ORDER BY id ASC",
-        engine
-    )["id"].astype(int).tolist()
-
-    for idx, (invoice_key, (uid, grp)) in enumerate(invoice_uid.items()):
-        if idx >= len(new_ids):
-            break
-        order_id = new_ids[idx]
-        for _, row in grp.iterrows():
-            sku = str(row["StockCode"]).strip()
-            pid = sku_to_pid.get(sku)
-            if not pid:
-                continue
-            try:
-                qty   = max(int(float(row["Quantity"])), 1)
-                price = max(float(row["Price"]), 0.01)
-            except Exception:
-                continue
-            ret_items.append({
-                "order_id":   order_id,
-                "product_id": pid,
-                "quantity":   qty,
-                "price":      price,
-                "discount":   0.0,
-            })
-
-    if ret_items:
-        print(f"  {len(ret_items)} siparis kalemi ekleniyor...")
-        insert(pd.DataFrame(ret_items), "order_items", chunk=1000)
-
-print(f"  Toplam siparis: {count('orders')} | Kalem: {count('order_items')}")
 
 # ============================================================
 # OZET

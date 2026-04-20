@@ -22,7 +22,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 
 # ─── Ayarlar ────────────────────────────────────────────────────────────────
-DB_URL      = "mysql+pymysql://root:admin@localhost:3306/ecommerce_db"
+DB_URL = "mysql+pymysql://root:1234@localhost:3306/ecommerce_db"
 AMAZON_CSV  = "data/amazon.csv"
 TRAIN_CSV   = "data/Train.csv"
 ORDER_LIMIT = 2000
