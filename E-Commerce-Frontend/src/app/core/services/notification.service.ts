@@ -1,7 +1,6 @@
 import { Injectable, OnDestroy, inject } from '@angular/core';
-import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { Subject, timer, EMPTY } from 'rxjs';
-import { catchError, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { Client, IMessage } from '@stomp/stompjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import { ToastService } from './toast.service';
@@ -14,15 +13,14 @@ export interface NotificationMessage {
   read: boolean;
 }
 
-const RECONNECT_INTERVAL = 5000;
-const WS_URL = environment.apiUrl.replace(/^http/, 'ws') + '/ws/notifications';
+const WS_URL = environment.apiUrl.replace(/^http/, 'ws') + '/ws-native';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService implements OnDestroy {
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
 
-  private socket$!: WebSocketSubject<NotificationMessage>;
+  private client!: Client;
   private destroy$ = new Subject<void>();
   private messages$ = new Subject<NotificationMessage>();
 
@@ -31,39 +29,46 @@ export class NotificationService implements OnDestroy {
   connect(): void {
     if (!this.authService.isAuthenticated()) return;
 
-    this.socket$ = webSocket<NotificationMessage>({
-      url: WS_URL,
-      openObserver: {
-        next: () => console.log('[WS] Notification socket connected'),
-      },
-      closeObserver: {
-        next: () => console.log('[WS] Notification socket disconnected'),
+    const token = localStorage.getItem('datapulse_token') ?? '';
+    const role = this.authService.getRole();
+
+    this.client = new Client({
+      brokerURL: WS_URL,
+      connectHeaders: { Authorization: `Bearer ${token}` },
+      reconnectDelay: 5000,
+      onConnect: () => {
+        this.client.subscribe('/user/queue/notifications', (msg: IMessage) => {
+          this.handleMessage(msg);
+        });
+
+        if (role === 'admin') {
+          this.client.subscribe('/topic/admin/notifications', (msg: IMessage) => {
+            this.handleMessage(msg);
+          });
+        }
       },
     });
 
-    this.socket$.pipe(
-      tap(msg => {
-        this.messages$.next(msg);
-        this.toastService.show(msg.text, msg.type ?? 'info');
-      }),
-      catchError(() => {
-        // Reconnect after interval
-        return timer(RECONNECT_INTERVAL).pipe(
-          tap(() => this.connect()),
-          switchMap(() => EMPTY),
-        );
-      }),
-      takeUntil(this.destroy$),
-    ).subscribe();
+    this.client.activate();
   }
 
   disconnect(): void {
-    this.socket$?.complete();
+    this.client?.deactivate();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
     this.disconnect();
+  }
+
+  private handleMessage(msg: IMessage): void {
+    try {
+      const notification = JSON.parse(msg.body) as NotificationMessage;
+      this.messages$.next(notification);
+      this.toastService.show(notification.text, notification.type ?? 'info');
+    } catch {
+      // malformed message — ignore
+    }
   }
 }

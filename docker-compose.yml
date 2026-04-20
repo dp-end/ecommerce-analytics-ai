@@ -1,6 +1,8 @@
 services:
   mysql:
     image: mysql:8.0
+    # Windows'ta doğrudan (linux/amd64), Mac'te ise .env üzerinden özelleştirilebilir mimari
+    platform: ${DB_PLATFORM:-linux/amd64}
     container_name: eco_mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
