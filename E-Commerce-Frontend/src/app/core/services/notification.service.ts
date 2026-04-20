@@ -30,7 +30,7 @@ export class NotificationService implements OnDestroy {
     if (!this.authService.isAuthenticated()) return;
 
     const token = localStorage.getItem('datapulse_token') ?? '';
-    const role = this.authService.getRole();
+    const role = this.authService.getCurrentRole();
 
     this.client = new Client({
       brokerURL: WS_URL,
