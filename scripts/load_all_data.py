@@ -22,7 +22,7 @@ import re
 import pandas as pd
 from sqlalchemy import create_engine, text
 
-DB_URL = "mysql+pymysql://root:1234@localhost:3306/ecommerce_db"
+DB_URL = "mysql+pymysql://eco:ecopass@localhost:3307/ecommerce_db"
 DUMMY_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh3y"
 
 engine = create_engine(DB_URL, echo=False)
